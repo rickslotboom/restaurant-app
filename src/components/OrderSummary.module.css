@@ -1,0 +1,50 @@
+.root {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.controls button {
+  width: 36px;
+  height: 36px;
+}
+.qty {
+  min-width: 28px;
+  text-align: center;
+}
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.actions button {
+  padding: 8px 12px;
+}
