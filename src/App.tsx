@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MENU } from "./data/menuData";
 import Header from "./components/Header";
 import Menu from "./components/Menu";
 import OrderSummary from "./components/OrderSummary";
 import KitchenView from "./components/KitchenView";
 import { useOrdersContext } from "./hooks/useOrders";
+import { signInAnonymously, onAuthStateChanged } from "firebase/auth"; // ✅ Nieuw
+import { auth } from "./firebase"; // ✅ Nieuw
 import styles from "./App.module.css";
 
 export default function App() {
@@ -13,6 +15,17 @@ export default function App() {
   const [table] = useState("1");
 
   const { orders, updateOrderStatus } = useOrdersContext();
+
+  // ✅ Nieuw: automatisch anoniem inloggen bij Firebase
+  useEffect(() => {
+    signInAnonymously(auth)
+      .then(() => console.log("✅ Anoniem ingelogd bij Firebase"))
+      .catch((err) => console.error("❌ Fout bij anonieme login:", err));
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) console.log("Huidige anonieme gebruiker:", user.uid);
+    });
+  }, []);
 
   const handleAdd = (id: string) =>
     setSelected((s) => ({ ...s, [id]: (s[id] || 0) + 1 }));
