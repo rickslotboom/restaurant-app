@@ -1,6 +1,8 @@
 import React from "react";
-import { Dish, Order } from "../types";
+import { Dish, Order, OrderStatus } from "../types";
 import { useOrdersContext } from "../hooks/useOrders";
+import { useAuthContext } from "../hooks/useAuth";
+
 
 type Props = {
   menu: Dish[];
@@ -9,6 +11,7 @@ type Props = {
   onBack: () => void;
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
+  onClearCart: () => void;
 };
 
 export default function OrderSummary({
@@ -18,30 +21,45 @@ export default function OrderSummary({
   onBack,
   onAdd,
   onRemove,
+  onClearCart,
 }: Props) {
   const { addOrder } = useOrdersContext();
+  const { user } = useAuthContext();
+  console.log("[DEBUG] current user:", user);
 
-  const selectedDishes = menu.filter((dish) => selected[dish.id]);
+  // Filter alleen de gerechten die geselecteerd zijn
+  const selectedDishes = menu.filter((dish) => selected[dish.id] > 0);
+
   const total = selectedDishes.reduce(
     (sum, dish) => sum + dish.price * (selected[dish.id] || 0),
     0
   );
 
   const handleConfirm = async () => {
-    const order: Order = {
-      id: Date.now().toString(),
-      table,
-      items: Object.entries(selected).map(([dishId, count]) => ({
+
+   
+const order: Omit<Order, "id"> = {
+  table,
+  items: Object.entries(selected)
+    .filter(([, qty]) => qty > 0)
+    .map(([dishId, qty]) => {
+      const dish = menu.find(d => d.id === dishId);
+      return {
         dishId,
-        qty: count,
-      })),
-      status: "in voorbereiding",
-      timestamp: Date.now(),
-    };
+        name: dish?.name || "Onbekend",
+        price: dish?.price || 0,
+        qty,
+      };
+    }),
+  status: "Open",
+  timestamp: Date.now(),
+  waiter: user?.username || "Onbekend",
+};
 
     try {
       await addOrder(order);
       alert("✅ Bestelling is geplaatst!");
+      onClearCart();
       onBack();
     } catch (err) {
       console.error("❌ Fout bij plaatsen van bestelling:", err);
@@ -52,6 +70,7 @@ export default function OrderSummary({
   return (
     <div style={{ padding: "1rem" }}>
       <h2>Overzicht bestelling (tafel {table})</h2>
+
       {selectedDishes.length === 0 ? (
         <p>Geen gerechten geselecteerd.</p>
       ) : (
@@ -69,15 +88,18 @@ export default function OrderSummary({
                 <td>{dish.name}</td>
                 <td>
                   <button onClick={() => onRemove(dish.id)}>-</button>
-                  <span style={{ margin: "0 0.5rem" }}>{selected[dish.id]}</span>
+                  <span style={{ margin: "0 0.5rem" }}>
+                    {selected[dish.id]}
+                  </span>
                   <button onClick={() => onAdd(dish.id)}>+</button>
                 </td>
-                <td>€{dish.price * (selected[dish.id] || 0)}</td>
+                <td>€{(dish.price * selected[dish.id]).toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
       <h3>Totaal: €{total.toFixed(2)}</h3>
 
       <div style={{ marginTop: "1rem", display: "flex", gap: "1rem" }}>

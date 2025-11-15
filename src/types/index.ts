@@ -1,24 +1,25 @@
 export type Dish = {
+  image: string;
   id: string;
   name: string;
-  image: string;
   price: number;
 };
 
-// Elk order bestaat uit items (welk gerecht + aantal)
+export type OrderStatus = "Open" | "Afgehandeld" ;
+
 export type OrderItem = {
   dishId: string;
+  name: string;
+  price: number;
   qty: number;
 };
 
-// Status van een bestelling
-export type OrderStatus = "in voorbereiding" | "klaar" | "geserveerd";
-
-// Een bestelling (tafelnummer + gerechten + status)
 export type Order = {
   id: string;
   table: string;
   items: OrderItem[];
   status: OrderStatus;
-  timestamp: number;
+  waiter: string;     // 👈 nieuw
+  timestamp?: number;
+  createdAt?: any;
 };

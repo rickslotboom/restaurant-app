@@ -3,12 +3,17 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { OrdersProvider } from "./hooks/useOrders";
+import { AuthProvider } from "./hooks/useAuth";
+
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+
 root.render(
   <React.StrictMode>
-    <OrdersProvider>
-      <App />
-    </OrdersProvider>
+    <AuthProvider>
+      <OrdersProvider>
+        <App />
+      </OrdersProvider>
+    </AuthProvider>
   </React.StrictMode>
 );
