@@ -22,4 +22,5 @@ export type Order = {
   waiter: string;     // 👈 nieuw
   timestamp?: number;
   createdAt?: any;
+  orderNumber?: string;
 };

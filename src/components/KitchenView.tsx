@@ -10,11 +10,45 @@ type Props = {
 export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props) {
   const [tab, setTab] = useState<"open" | "history">("open");
 
+  // 🔍 Zoekvelden
+  const [searchDate, setSearchDate] = useState("");
+  const [searchWaiter, setSearchWaiter] = useState("");
+  const [searchTable, setSearchTable] = useState("");
+  const [searchOrderNumber, setSearchOrderNumber] = useState(""); // <- fix typo & nieuwe state
+
   const openOrders = orders.filter((o) => o.status === "Open");
   const historyOrders = orders.filter((o) => o.status === "Afgehandeld");
-  const displayed = tab === "open" ? openOrders : historyOrders;
+  let displayed = tab === "open" ? openOrders : historyOrders;
 
-  // 🔹 Helper om timestamp te formatteren
+  // 🔍 Filtering op datum + bediener + tafel + ordernummer
+  displayed = displayed.filter((o) => {
+    let matchesDate = true;
+    let matchesWaiter = true;
+    let matchesTable = true;
+    let matchesOrderNumber = true;
+
+    if (searchDate && o.timestamp) {
+      const d = new Date(o.timestamp);
+      const orderDate = d.toISOString().split("T")[0]; // yyyy-mm-dd
+      matchesDate = orderDate === searchDate;
+    }
+
+    if (searchWaiter) {
+      matchesWaiter = o.waiter?.toLowerCase().includes(searchWaiter.toLowerCase());
+    }
+
+    if (searchTable) {
+      matchesTable = o.table?.toLowerCase().includes(searchTable.toLowerCase());
+    }
+
+    if (searchOrderNumber) {
+      // orderNumber kan undefined zijn: veilig checken
+      matchesOrderNumber = (o.orderNumber ?? "").toLowerCase().includes(searchOrderNumber.toLowerCase());
+    }
+
+    return matchesDate && matchesWaiter && matchesTable && matchesOrderNumber;
+  });
+
   const formatTimestamp = (ts?: number) => {
     if (!ts) return "";
     const d = new Date(ts);
@@ -27,7 +61,6 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
 
   return (
     <div style={{ padding: "1rem", position: "relative" }}>
-      {/* Uitloggen */}
       <button
         onClick={onLogout}
         style={{
@@ -74,7 +107,52 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
         </button>
       </div>
 
-      {/* Orders lijst */}
+      {/* 🔍 Zoekfilters */}
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+        <div>
+          <label>Datum:</label><br />
+          <input
+            type="date"
+            value={searchDate}
+            onChange={(e) => setSearchDate(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        </div>
+
+        <div>
+          <label>Bediener:</label><br />
+          <input
+            type="text"
+            placeholder="Naam"
+            value={searchWaiter}
+            onChange={(e) => setSearchWaiter(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        </div>
+
+        <div>
+          <label>Tafel:</label><br />
+          <input
+            type="text"
+            placeholder="tafel"
+            value={searchTable}
+            onChange={(e) => setSearchTable(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        </div>
+
+        <div>
+          <label>Ordernummer:</label><br />
+          <input
+            type="text"
+            placeholder="bv. 202511-00001"
+            value={searchOrderNumber}
+            onChange={(e) => setSearchOrderNumber(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        </div>
+      </div>
+
       {displayed.length === 0 ? (
         <p>Geen bestellingen.</p>
       ) : (
@@ -90,7 +168,7 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
               }}
             >
               <h3 style={{ marginBottom: "0.3rem" }}>🍽️ Tafel {order.table}</h3>
-              
+
               {order.timestamp && (
                 <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
                   {formatTimestamp(order.timestamp)}
@@ -103,6 +181,12 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
                 </p>
               )}
 
+              {order.orderNumber && (
+                <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
+                  Ordernummer: {order.orderNumber}
+                </p>
+              )}
+
               <ul style={{ margin: "0.5rem 0" }}>
                 {order.items.map((item, idx) => (
                   <li key={idx}>
@@ -111,7 +195,6 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
                 ))}
               </ul>
 
-              {/* Actiebutton alleen voor open orders */}
               {order.status === "Open" && tab === "open" && (
                 <button
                   onClick={() => onUpdateStatus(order.id, "Afgehandeld")}
