@@ -3,6 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // ✅ Nieuw toegevoegd
 
+console.log("API KEY:", process.env.REACT_APP_FIREBASE_API_KEY);
+
 // ✅ Firebase configuratie (komt uit .env.local)
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY!,

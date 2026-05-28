@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Menu from "./components/Menu";
 import OrderSummary from "./components/OrderSummary";
 import KitchenView from "./components/KitchenView";
+import BillingView from "./components/BillingView";
 import Login from "./components/Login";
 import { useOrdersContext } from "./hooks/useOrders";
 import { signInAnonymously } from "firebase/auth";
@@ -15,7 +16,7 @@ export default function App() {
   const { user, login, logout } = useAuthContext();
   const { orders, updateOrderStatus } = useOrdersContext();
 
-  const [view, setView] = useState<"menu" | "summary" | "kitchen">("menu");
+  const [view, setView] = useState<"menu" | "summary" | "kitchen" | "billing">("menu");
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [table] = useState("1");
 
@@ -49,7 +50,7 @@ export default function App() {
   // 🔐 Logout
   const handleLogout = () => {
     logout();
-    setView("menu"); // reset view
+    setView("menu");
     clearCart();
   };
 
@@ -69,7 +70,6 @@ export default function App() {
       <Header
         view={view}
         setView={(newView) => {
-          // Kok mag geen menu of summary kiezen
           if (user.role === "keuken" && newView !== "kitchen") return;
           setView(newView);
         }}
@@ -97,6 +97,13 @@ export default function App() {
             onAdd={handleAdd}
             onRemove={handleRemove}
             onClearCart={clearCart}
+          />
+        )}
+
+        {user.role === "bediening" && view === "billing" && (
+          <BillingView
+            orders={orders}
+            onUpdateStatus={updateOrderStatus}
           />
         )}
 
