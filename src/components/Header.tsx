@@ -52,7 +52,7 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
       </nav>
 
       {/* Rechterkant: ingelogde gebruiker + logout */}
-      <div className={styles.userSection}
+      <div className={styles.userSection}>
         <button className={styles.logoutBtn} onClick={onLogout}>
           Uitloggen
         </button>
