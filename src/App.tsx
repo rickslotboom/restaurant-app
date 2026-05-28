@@ -13,7 +13,7 @@ import styles from "./App.module.css";
 import { useAuthContext } from "./hooks/useAuth";
 
 export default function App() {
-  const { user, login, logout } = useAuthContext();
+  const { user, logout } = useAuthContext();
   const { orders, updateOrderStatus } = useOrdersContext();
 
   const [view, setView] = useState<"menu" | "summary" | "kitchen" | "billing">("menu");

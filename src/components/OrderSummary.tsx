@@ -1,5 +1,5 @@
 import React from "react";
-import { Dish, Order, OrderStatus } from "../types";
+import { Dish, Order } from "../types";
 import { useOrdersContext } from "../hooks/useOrders";
 import { useAuthContext } from "../hooks/useAuth";
 

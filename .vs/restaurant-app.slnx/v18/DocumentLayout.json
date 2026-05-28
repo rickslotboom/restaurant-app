@@ -68,7 +68,7 @@
               "RelativeDocumentMoniker": "src\\App.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeToolTip": "src\\App.tsx",
-              "ViewState": "AgIAAFwAAAAAAAAAAAAYwHcAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAA8AAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-05-28T13:28:20.725Z",
               "EditorCaption": ""
@@ -93,9 +93,10 @@
               "RelativeDocumentMoniker": "src\\components\\OrderSummary.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\OrderSummary.tsx",
               "RelativeToolTip": "src\\components\\OrderSummary.tsx",
-              "ViewState": "AgIAAGEAAAAAAAAAAAAUwHwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:24:20.363Z"
+              "WhenOpened": "2026-05-28T13:24:20.363Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
