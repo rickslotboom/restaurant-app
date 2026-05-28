@@ -14,7 +14,6 @@ setView: React.Dispatch<React.SetStateAction<"menu" | "summary" | "kitchen" | "b
 export default function Header({ view, setView, orderCount, user, onLogout }: Props) {
   return (
     <header className={styles.header}>
-      <h1 className={styles.title}>Restaurant Bestel App</h1>
 
       <nav className={styles.nav}>
         {user.role === "bediening" && (
@@ -53,10 +52,7 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
       </nav>
 
       {/* Rechterkant: ingelogde gebruiker + logout */}
-      <div className={styles.userSection}>
-        <span>
-          Ingelogd als: <strong>{user.username}</strong> ({user.role})
-        </span>
+      <div className={styles.userSection}
         <button className={styles.logoutBtn} onClick={onLogout}>
           Uitloggen
         </button>
