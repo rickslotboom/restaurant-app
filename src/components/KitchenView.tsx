@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Order, OrderStatus } from "../types";
 
 type Props = {
@@ -10,17 +10,49 @@ type Props = {
 export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props) {
   const [tab, setTab] = useState<"open" | "history">("open");
 
-  // 🔍 Zoekvelden
   const [searchDate, setSearchDate] = useState("");
   const [searchWaiter, setSearchWaiter] = useState("");
   const [searchTable, setSearchTable] = useState("");
-  const [searchOrderNumber, setSearchOrderNumber] = useState(""); // <- fix typo & nieuwe state
+  const [searchOrderNumber, setSearchOrderNumber] = useState("");
+
+  const prevOrderIds = useRef<Set<string>>(new Set(orders.map((o) => o.id)));
+
+  // 🔔 Vraag notificatie permissie
+  useEffect(() => {
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // 🔔 Detecteer nieuwe orders en stuur notificaties
+  useEffect(() => {
+    orders.forEach((order) => {
+      if (!prevOrderIds.current.has(order.id) && order.status === "Open") {
+        // Browser notificatie (desktop)
+        if (Notification.permission === "granted") {
+          new Notification("🍽️ Nieuwe bestelling!", {
+            body: `Tafel ${order.table} — ${order.items.map(i => `${i.qty}× ${i.name}`).join(", ")}`,
+          });
+        }
+
+        // Telegram notificatie
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: `🍽️ Nieuwe bestelling!\nTafel ${order.table}\nBediener: ${order.waiter}\n${order.items.map(i => `${i.qty}× ${i.name}`).join("\n")}`,
+          }),
+        });
+      }
+    });
+
+    prevOrderIds.current = new Set(orders.map((o) => o.id));
+  }, [orders]);
 
   const openOrders = orders.filter((o) => o.status === "Open");
   const historyOrders = orders.filter((o) => o.status === "Afgehandeld");
   let displayed = tab === "open" ? openOrders : historyOrders;
 
-  // 🔍 Filtering op datum + bediener + tafel + ordernummer
   displayed = displayed.filter((o) => {
     let matchesDate = true;
     let matchesWaiter = true;
@@ -29,7 +61,7 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
 
     if (searchDate && o.timestamp) {
       const d = new Date(o.timestamp);
-      const orderDate = d.toISOString().split("T")[0]; // yyyy-mm-dd
+      const orderDate = d.toISOString().split("T")[0];
       matchesDate = orderDate === searchDate;
     }
 
@@ -42,7 +74,6 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
     }
 
     if (searchOrderNumber) {
-      // orderNumber kan undefined zijn: veilig checken
       matchesOrderNumber = (o.orderNumber ?? "").toLowerCase().includes(searchOrderNumber.toLowerCase());
     }
 
@@ -80,7 +111,6 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
 
       <h2>Keukenoverzicht</h2>
 
-      {/* Tabs */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
         <button
           onClick={() => setTab("open")}
@@ -107,7 +137,6 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
         </button>
       </div>
 
-      {/* 🔍 Zoekfilters */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <div>
           <label>Datum:</label><br />
