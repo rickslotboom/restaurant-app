@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chat_id: "719417983",
+      chat_id: "1719417983",
       text: message,
     }),
   });
