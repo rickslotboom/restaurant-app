@@ -1,9 +1,11 @@
 {
   "ExpandedNodes": [
     "",
+    "\\api",
     "\\public",
     "\\src",
     "\\src\\components"
   ],
+  "SelectedNode": "\\api\\notify.js",
   "PreviewInSolutionExplorer": false
 }
