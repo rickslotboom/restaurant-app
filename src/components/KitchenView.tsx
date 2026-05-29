@@ -15,7 +15,7 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
   const [searchTable, setSearchTable] = useState("");
   const [searchOrderNumber, setSearchOrderNumber] = useState("");
 
-  const prevOrderIds = useRef<Set<string>>(new Set(orders.map((o) => o.id)));
+  const prevOrderIds = useRef<Set<string>>(new Set());
 
   // 🔔 Vraag notificatie permissie
   useEffect(() => {
@@ -26,8 +26,14 @@ export default function KitchenView({ orders, onUpdateStatus, onLogout }: Props)
 
   // 🔔 Detecteer nieuwe orders en stuur notificaties
   useEffect(() => {
+    console.log("orders gewijzigd, aantal:", orders.length);
+    console.log("prevOrderIds:", prevOrderIds.current);
+
     orders.forEach((order) => {
+      console.log("check order:", order.id, "bekend?", prevOrderIds.current.has(order.id));
       if (!prevOrderIds.current.has(order.id) && order.status === "Open") {
+        console.log("🆕 Nieuwe order gevonden!", order.id);
+
         // Browser notificatie (desktop)
         if (Notification.permission === "granted") {
           new Notification("🍽️ Nieuwe bestelling!", {
