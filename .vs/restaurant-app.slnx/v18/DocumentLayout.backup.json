@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\api\\notify.ts||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:public\\api\\notify.ts||{8B382828-6202-11D1-8870-0000F87579D2}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\notify.ts||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:api\\notify.ts||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Header.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -56,10 +56,10 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "notify.ts",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\api\\notify.ts",
-              "RelativeDocumentMoniker": "public\\api\\notify.ts",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\api\\notify.ts",
-              "RelativeToolTip": "public\\api\\notify.ts",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\notify.ts",
+              "RelativeDocumentMoniker": "api\\notify.ts",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\notify.ts",
+              "RelativeToolTip": "api\\notify.ts",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-05-29T09:44:27.286Z",
@@ -75,8 +75,7 @@
               "RelativeToolTip": "src\\components\\Login.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAD4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:40:58.782Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:40:58.782Z"
             },
             {
               "$type": "Document",
@@ -88,8 +87,7 @@
               "RelativeToolTip": "src\\App.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:28:20.725Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:28:20.725Z"
             },
             {
               "$type": "Document",
@@ -101,8 +99,7 @@
               "RelativeToolTip": "src\\components\\BillingView.tsx",
               "ViewState": "AgIAAFUAAAAAAAAAAAAYwHAAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:26:09.337Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:26:09.337Z"
             },
             {
               "$type": "Document",
@@ -114,8 +111,7 @@
               "RelativeToolTip": "src\\components\\OrderSummary.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:24:20.363Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:24:20.363Z"
             },
             {
               "$type": "Document",
@@ -127,8 +123,7 @@
               "RelativeToolTip": "src\\components\\Menu.tsx",
               "ViewState": "AgIAADMAAAAAAAAAAAAUwE4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:24:12.786Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:24:12.786Z"
             },
             {
               "$type": "Document",
@@ -140,8 +135,7 @@
               "RelativeToolTip": "src\\components\\KitchenView.tsx",
               "ViewState": "AgIAAMEAAAAAAAAAAAAYwNwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:24:04.292Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:24:04.292Z"
             },
             {
               "$type": "Document",
@@ -153,8 +147,7 @@
               "RelativeToolTip": "src\\components\\Header.tsx",
               "ViewState": "AgIAACIAAAAAAAAAAAAAADYAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:23:56.985Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:23:56.985Z"
             },
             {
               "$type": "Document",
@@ -166,8 +159,7 @@
               "RelativeToolTip": "src\\components\\DishCard.tsx",
               "ViewState": "AgIAACAAAAAAAAAAAAAYwDsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:23:13.588Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:23:13.588Z"
             },
             {
               "$type": "Document",
@@ -179,8 +171,7 @@
               "RelativeToolTip": ".env.local",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-05-28T13:12:09.773Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:12:09.773Z"
             }
           ]
         }
