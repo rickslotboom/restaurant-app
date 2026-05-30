@@ -4,7 +4,10 @@
     "\\api",
     "\\public",
     "\\src",
-    "\\src\\components"
+    "\\src\\components",
+    "\\src\\hooks",
+    "\\src\\types"
   ],
+  "SelectedNode": "\\src\\hooks\\useOrders.tsx",
   "PreviewInSolutionExplorer": false
 }

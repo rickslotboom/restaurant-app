@@ -5,7 +5,7 @@ export type Dish = {
   price: number;
 };
 
-export type OrderStatus = "Open" | "Afgehandeld" ;
+export type OrderStatus = "Open" | "Afgehandeld" | "Betaald";
 
 export type OrderItem = {
   dishId: string;
