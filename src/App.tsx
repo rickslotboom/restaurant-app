@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { MENU } from "./data/menuData";
 import Header from "./components/Header";
 import Menu from "./components/Menu";
-import OrderSummary from "./components/OrderSummary";
 import KitchenView from "./components/KitchenView";
 import BillingView from "./components/BillingView";
 import Login from "./components/Login";
@@ -16,14 +15,12 @@ export default function App() {
   const { user, logout } = useAuthContext();
   const { orders, updateOrderStatus } = useOrdersContext();
 
-  const [view, setView] = useState<"menu" | "summary" | "kitchen" | "billing">("menu");
+  const [view, setView] = useState<"menu" | "kitchen" | "billing">("menu");
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [table] = useState("1");
 
-  // Clear cart
   const clearCart = () => setSelected({});
 
-  // 🔐 Anoniem inloggen voor Firestore permissies
   useEffect(() => {
     signInAnonymously(auth).catch((err) =>
       console.error("Anonieme login fout:", err)
@@ -31,30 +28,35 @@ export default function App() {
   }, []);
 
   const handleAdd = (id: string) =>
-    setSelected((s) => ({ ...s, [id]: (s[id] || 0) + 1 }));
+    setSelected((s) => ({
+      ...s,
+      [id]: (s[id] || 0) + 1,
+    }));
 
   const handleRemove = (id: string) =>
     setSelected((s) => {
       const val = (s[id] || 0) - 1;
+
       if (val <= 0) {
         const copy = { ...s };
         delete copy[id];
         return copy;
       }
-      return { ...s, [id]: val };
+
+      return {
+        ...s,
+        [id]: val,
+      };
     });
 
-  // 🔒 Pagina beveiliging: toon login als geen user
   if (!user) return <Login />;
 
-  // 🔐 Logout
   const handleLogout = () => {
     logout();
     setView("menu");
     clearCart();
   };
 
-  // Kok mag alleen de keuken zien
   if (user.role === "keuken" && view !== "kitchen") {
     return (
       <KitchenView
@@ -73,7 +75,9 @@ export default function App() {
           if (user.role === "keuken" && newView !== "kitchen") return;
           setView(newView);
         }}
-        orderCount={orders.filter((o) => o.status !== "Afgehandeld").length}
+        orderCount={
+          orders.filter((o) => o.status !== "Afgehandeld").length
+        }
         onLogout={handleLogout}
         user={user}
       />
@@ -83,19 +87,10 @@ export default function App() {
           <Menu
             menu={MENU}
             selected={selected}
-            onAdd={handleAdd}
-            onRemove={handleRemove}
-          />
-        )}
-
-        {user.role === "bediening" && view === "summary" && (
-          <OrderSummary
-            menu={MENU}
-            selected={selected}
             table={table}
-            onBack={() => setView("menu")}
             onAdd={handleAdd}
             onRemove={handleRemove}
+            onBack={() => setView("menu")}
             onClearCart={clearCart}
           />
         )}
