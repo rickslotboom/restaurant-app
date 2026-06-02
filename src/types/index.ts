@@ -1,8 +1,9 @@
 export type Dish = {
-  image: string;
   id: string;
   name: string;
   price: number;
+  image: string;
+  category: string;
 };
 
 export type OrderStatus = "Open" | "Afgehandeld" | "Betaald";

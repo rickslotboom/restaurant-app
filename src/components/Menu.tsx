@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dish, Order } from "../types";
 import { useOrdersContext } from "../hooks/useOrders";
 import { useAuthContext } from "../hooks/useAuth";
@@ -24,6 +24,16 @@ export default function Menu({
 }: Props) {
   const { addOrder } = useOrdersContext();
   const { user } = useAuthContext();
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    null
+  );
+
+  const categories = [...new Set(menu.map((dish) => dish.category))];
+
+  const visibleDishes = selectedCategory
+    ? menu.filter((dish) => dish.category === selectedCategory)
+    : [];
 
   const selectedDishes = menu.filter((dish) => selected[dish.id] > 0);
 
@@ -63,6 +73,17 @@ export default function Menu({
     }
   };
 
+  // 🎨 Icons per categorie
+  const categoryIcons: Record<string, string> = {
+    Ontbijt: "🍳",
+    Dranken: "🍹",
+    "Snelle hap": "🍔",
+    Soepen: "🍲",
+    "Salades & Bowls": "🥗",
+    Lunch: "🍽️",
+    Broodjes: "🥪",
+  };
+
   return (
     <div
       style={{
@@ -72,84 +93,148 @@ export default function Menu({
         alignItems: "flex-start",
       }}
     >
-      {/* Linkerkant - Menu */}
+      {/* LINKERKANT */}
       <div style={{ flex: 1 }}>
-        <h2 style={{ textAlign: "center" }}>Kies een gerecht:</h2>
+        <h2 style={{ textAlign: "center" }}>
+          {selectedCategory ? selectedCategory : "Kies een categorie"}
+        </h2>
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "1rem",
-            justifyContent: "center",
-            marginTop: "1rem",
-          }}
-        >
-          {menu.map((dish) => (
-            <div
-              key={dish.id}
-              onClick={() => onAdd(dish.id)}
-              style={{
-                border: "2px solid #ccc",
-                borderRadius: "12px",
-                padding: "1rem",
-                width: "180px",
-                textAlign: "center",
-                backgroundColor: "#fff",
-                boxShadow: "2px 2px 5px rgba(0,0,0,0.1)",
-                cursor: "pointer",
-                transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.transform = "scale(1.03)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "scale(1)")
-              }
-            >
-              <img
-                src={dish.image}
-                alt={dish.name}
-                style={{
-                  width: "100%",
-                  borderRadius: "8px",
-                  userSelect: "none",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <h3 style={{ margin: "0.5rem 0 0 0" }}>{dish.name}</h3>
-
-              <p
-                style={{
-                  margin: "0.25rem 0",
-                  fontWeight: "bold",
-                }}
-              >
-                €{dish.price.toFixed(2)}
-              </p>
-
+        {!selectedCategory ? (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "1rem",
+              justifyContent: "center",
+              marginTop: "1rem",
+            }}
+          >
+            {categories.map((category) => (
               <div
+                key={category}
+                onClick={() => setSelectedCategory(category)}
                 style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                  marginTop: "0.5rem",
+                  backgroundColor: "#2c3e50",
+                  color: "white",
+                  borderRadius: "16px",
+                  padding: "1.5rem",
+                  width: "200px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  boxShadow: "2px 4px 12px rgba(0,0,0,0.2)",
+                  transition: "transform 0.15s ease",
+                  userSelect: "none",
                 }}
-                onClick={(e) => e.stopPropagation()}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.transform = "scale(1.05)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
               >
-                <button onClick={() => onRemove(dish.id)}>-</button>
-
-                <span>{selected[dish.id] || 0}</span>
-
-                <button onClick={() => onAdd(dish.id)}>+</button>
+                <div style={{ fontSize: "2rem" }}>
+                  {categoryIcons[category] || "🍽️"}
+                </div>
+                <div style={{ marginTop: "0.5rem" }}>{category}</div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => setSelectedCategory(null)}
+              style={{
+                marginBottom: "1rem",
+                padding: "0.75rem 1rem",
+              }}
+            >
+              ← Terug naar categorieën
+            </button>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "1rem",
+                justifyContent: "center",
+                marginTop: "1rem",
+              }}
+            >
+              {visibleDishes.map((dish) => (
+                <div
+                  key={dish.id}
+                  onClick={() => onAdd(dish.id)}
+                  style={{
+                    border: "2px solid #ccc",
+                    borderRadius: "12px",
+                    padding: "1rem",
+                    width: "180px",
+                    textAlign: "center",
+                    backgroundColor: "#fff",
+                    boxShadow: "2px 2px 5px rgba(0,0,0,0.1)",
+                    cursor: "pointer",
+                    transition:
+                      "transform 0.15s ease, box-shadow 0.15s ease",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.transform = "scale(1.03)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  <img
+                    src={dish.image}
+                    alt={dish.name}
+                    style={{
+                      width: "100%",
+                      borderRadius: "8px",
+                      userSelect: "none",
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  <h3 style={{ margin: "0.5rem 0 0 0" }}>
+                    {dish.name}
+                  </h3>
+
+                  <p
+                    style={{
+                      margin: "0.25rem 0",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    €{dish.price.toFixed(2)}
+                  </p>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                      marginTop: "0.5rem",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button onClick={() => onRemove(dish.id)}>
+                      -
+                    </button>
+
+                    <span>{selected[dish.id] || 0}</span>
+
+                    <button onClick={() => onAdd(dish.id)}>
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
 
-      {/* Rechterkant - Besteloverzicht */}
+      {/* RECHTERKANT */}
       <div
         style={{
           width: "350px",
@@ -167,12 +252,7 @@ export default function Menu({
         {selectedDishes.length === 0 ? (
           <p>Geen gerechten geselecteerd.</p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-            }}
-          >
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left" }}>Gerecht</th>
@@ -187,13 +267,17 @@ export default function Menu({
                   <td>{dish.name}</td>
 
                   <td style={{ textAlign: "center" }}>
-                    <button onClick={() => onRemove(dish.id)}>-</button>
+                    <button onClick={() => onRemove(dish.id)}>
+                      -
+                    </button>
 
                     <span style={{ margin: "0 0.5rem" }}>
                       {selected[dish.id]}
                     </span>
 
-                    <button onClick={() => onAdd(dish.id)}>+</button>
+                    <button onClick={() => onAdd(dish.id)}>
+                      +
+                    </button>
                   </td>
 
                   <td style={{ textAlign: "right" }}>
@@ -218,9 +302,7 @@ export default function Menu({
             gap: "0.75rem",
           }}
         >
-          <button onClick={onBack}>
-            ← Terug
-          </button>
+          <button onClick={onBack}>← Terug</button>
 
           <button
             onClick={handleConfirm}

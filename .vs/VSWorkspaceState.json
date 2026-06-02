@@ -5,9 +5,9 @@
     "\\public",
     "\\src",
     "\\src\\components",
-    "\\src\\hooks",
+    "\\src\\data",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\App.tsx",
+  "SelectedNode": "\\src\\components\\Menu.tsx",
   "PreviewInSolutionExplorer": false
 }
