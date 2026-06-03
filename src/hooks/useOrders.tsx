@@ -16,12 +16,13 @@ import {
   serverTimestamp,
   runTransaction,
 } from "firebase/firestore";
-import { Order, OrderStatus } from "../types";
+import { Order, OrderItem, OrderStatus } from "../types";
 
 type OrdersContextValue = {
   orders: Order[];
   addOrder: (order: Omit<Order, "id">) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
+  updateOrderItems: (id: string, items: OrderItem[]) => Promise<void>;
 };
 
 const OrdersContext = createContext<OrdersContextValue | undefined>(undefined);
@@ -72,16 +73,13 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const orderNumber = await runTransaction(db, async (tx) => {
       const snap = await tx.get(counterRef);
-
       let newCount = 1;
-
       if (snap.exists()) {
         newCount = (snap.data().last ?? 0) + 1;
         tx.update(counterRef, { last: newCount });
       } else {
         tx.set(counterRef, { last: 1 });
       }
-
       return `${yearMonth}-${String(newCount).padStart(5, "0")}`;
     });
 
@@ -98,7 +96,15 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     await updateDoc(doc(db, "orders", id), { status });
   };
 
-  const value = useMemo(() => ({ orders, addOrder, updateOrderStatus }), [orders]);
+  const updateOrderItems = async (id: string, items: OrderItem[]) => {
+    console.log("[FIRESTORE] updateOrderItems", id, items);
+    await updateDoc(doc(db, "orders", id), { items });
+  };
+
+  const value = useMemo(
+    () => ({ orders, addOrder, updateOrderStatus, updateOrderItems }),
+    [orders]
+  );
 
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 };

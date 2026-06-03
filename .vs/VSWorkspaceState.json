@@ -6,8 +6,9 @@
     "\\src",
     "\\src\\components",
     "\\src\\data",
+    "\\src\\hooks",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\components\\Menu.tsx",
+  "SelectedNode": "\\src\\hooks\\useOrders.tsx",
   "PreviewInSolutionExplorer": false
 }

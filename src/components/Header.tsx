@@ -2,11 +2,9 @@ import React from "react";
 import styles from "./Header.module.css";
 
 type Props = {
-  view: "menu" | "kitchen" | "billing";
-setView: React.Dispatch<React.SetStateAction<"menu" | "kitchen" | "billing">>;
+  view: "floorplan" | "menu" | "kitchen" | "billing";
+  setView: React.Dispatch<React.SetStateAction<"floorplan" | "menu" | "kitchen" | "billing">>;
   orderCount: number;
-
-  // Nieuw toegevoegd
   user: { username: string; role: string };
   onLogout: () => void;
 };
@@ -14,10 +12,16 @@ setView: React.Dispatch<React.SetStateAction<"menu" | "kitchen" | "billing">>;
 export default function Header({ view, setView, orderCount, user, onLogout }: Props) {
   return (
     <header className={styles.header}>
-
       <nav className={styles.nav}>
         {user.role === "bediening" && (
           <>
+            <button
+              className={view === "floorplan" ? styles.active : ""}
+              onClick={() => setView("floorplan")}
+            >
+              Vloerplan
+            </button>
+
             <button
               className={view === "menu" ? styles.active : ""}
               onClick={() => setView("menu")}
@@ -25,13 +29,12 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
               Menu
             </button>
 
-
             <button
-  className={view === "billing" ? styles.active : ""}
-  onClick={() => setView("billing")}
->
-  Rekeningen
-</button>
+              className={view === "billing" ? styles.active : ""}
+              onClick={() => setView("billing")}
+            >
+              Rekeningen
+            </button>
           </>
         )}
 
@@ -45,7 +48,6 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
         )}
       </nav>
 
-      {/* Rechterkant: ingelogde gebruiker + logout */}
       <div className={styles.userSection}>
         <button className={styles.logoutBtn} onClick={onLogout}>
           Uitloggen
