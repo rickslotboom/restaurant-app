@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Order, OrderStatus } from "../types";
+import { Order } from "../types";
 
 type Props = {
   order: Order;
