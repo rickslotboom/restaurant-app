@@ -58,24 +58,10 @@ export default function App() {
   };
 
   const handleTableSelect = (tableNumber: string) => {
-    const existingOrder = orders.find(
-      (o) => o.table === tableNumber && o.status === "Open"
-    );
-
-    setTable(tableNumber);
-
-    if (existingOrder) {
-      const restoredSelected: Record<string, number> = {};
-      existingOrder.items.forEach((item) => {
-        restoredSelected[item.dishId] = item.qty;
-      });
-      setSelected(restoredSelected);
-    } else {
-      clearCart();
-    }
-
-    setView("menu");
-  };
+  setTable(tableNumber);
+  clearCart();
+  setView("menu");
+};
 
   if (user.role === "keuken" && view !== "kitchen") {
     return (

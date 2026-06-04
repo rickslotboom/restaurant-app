@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
@@ -13,10 +17,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\App.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\FloorPlan.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -70,11 +70,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Menu.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
               "RelativeDocumentMoniker": "src\\components\\Menu.tsx",
@@ -88,13 +88,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "PaymentModal.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
               "RelativeDocumentMoniker": "src\\components\\PaymentModal.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
               "RelativeToolTip": "src\\components\\PaymentModal.tsx",
-              "ViewState": "AgIAAI4AAAAAAAAAAAAYwKkAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-03T11:06:14.453Z",
               "EditorCaption": ""
@@ -109,8 +109,7 @@
               "RelativeToolTip": "src\\components\\FloorPlan.tsx",
               "ViewState": "AgIAAJEAAAAAAAAAAAAUwKwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-03T10:53:58.343Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T10:53:58.343Z"
             },
             {
               "$type": "Document",
@@ -138,7 +137,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "App.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeDocumentMoniker": "src\\App.tsx",
@@ -146,8 +145,7 @@
               "RelativeToolTip": "src\\App.tsx",
               "ViewState": "AgIAAHIAAAAAAAAAAAAUwI0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:28:20.725Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:28:20.725Z"
             },
             {
               "$type": "Document",
@@ -159,12 +157,11 @@
               "RelativeToolTip": "src\\components\\BillingView.tsx",
               "ViewState": "AgIAAFkAAAAAAAAAAAAYwHQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:26:09.337Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:26:09.337Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "useOrders.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx",
               "RelativeDocumentMoniker": "src\\hooks\\useOrders.tsx",
@@ -172,8 +169,7 @@
               "RelativeToolTip": "src\\hooks\\useOrders.tsx",
               "ViewState": "AgIAAFgAAAAAAAAAAAAUwHMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-30T13:44:16.098Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-30T13:44:16.098Z"
             },
             {
               "$type": "Document",
@@ -221,8 +217,7 @@
               "RelativeToolTip": "src\\components\\Header.tsx",
               "ViewState": "AgIAAB4AAAAAAAAAAAAYwDkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-28T13:23:56.985Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T13:23:56.985Z"
             },
             {
               "$type": "Document",

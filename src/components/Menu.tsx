@@ -44,7 +44,17 @@ export default function Menu({
     0
   );
 
-  const openOrder = orders.find((o) => o.table === table && o.status === "Open");
+  // Nieuw — pakt de actieve (onbetaalde) order voor deze tafel
+const openOrder = orders.find(
+  (o) => o.table === table && o.status !== "Betaald"
+);
+
+  const existingTotal = openOrder
+  ? openOrder.items.reduce(
+      (sum, item) => sum + item.price * item.qty,
+      0
+    )
+  : 0;
 
   // Bouw items array op vanuit huidige selected state
   const buildItems = (overrideSelected?: Record<string, number>): OrderItem[] => {
@@ -304,89 +314,197 @@ export default function Menu({
       </div>
 
       {/* RECHTERKANT */}
-      <div style={{
-        width: "350px", minWidth: "350px", border: "2px solid #ddd",
-        borderRadius: "12px", padding: "1rem", backgroundColor: "#fafafa",
-        position: "sticky", top: "1rem",
-      }}>
-        <h2>Bestelling tafel {table}</h2>
+<div
+  style={{
+    width: "350px",
+    minWidth: "350px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+    position: "sticky",
+    top: "1rem",
+  }}
+>
 
-        {selectedDishes.length === 0 ? (
-          <p>Geen gerechten geselecteerd.</p>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left" }}>Gerecht</th>
-                <th>Aantal</th>
-                <th>Prijs</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedDishes.map((dish) => (
-                <tr key={dish.id}>
-                  <td style={{ paddingRight: "0.5rem" }}>{dish.name}</td>
-                  <td style={{ textAlign: "center" }}>
-                    <button onClick={() => onRemove(dish.id)}>-</button>
-                    <span style={{ margin: "0 0.5rem" }}>{selected[dish.id]}</span>
-                    <button onClick={() => onAdd(dish.id)}>+</button>
-                  </td>
-                  <td style={{ textAlign: "right" }}>
-                    €{(dish.price * selected[dish.id]).toFixed(2)}
-                  </td>
-                  <td style={{ paddingLeft: "0.5rem" }}>
-                    <button
-                      onClick={() => setDeleteConfirmId(dish.id)}
-                      style={{
-                        background: "none", border: "none",
-                        color: "#d9534f", cursor: "pointer",
-                        fontSize: "1rem", padding: "0.2rem",
-                      }}
-                      title="Verwijder item"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+  {/* REEDS BESTELD */}
+  {openOrder && (
+    <div
+      style={{
+        border: "2px solid #4a90e2",
+        borderRadius: "12px",
+        padding: "1rem",
+        backgroundColor: "#eef6ff",
+      }}
+    >
+      <h2>📋 Reeds besteld</h2>
 
-        <hr style={{ margin: "1rem 0" }} />
-        <h3>Totaal: €{total.toFixed(2)}</h3>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left" }}>Gerecht</th>
+            <th>Aantal</th>
+            <th>Prijs</th>
+          </tr>
+        </thead>
 
-        <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <button onClick={onBack}>← Terug</button>
+        <tbody>
+          {openOrder.items.map((item) => (
+            <tr key={item.dishId}>
+              <td>{item.name}</td>
+              <td style={{ textAlign: "center" }}>
+                {item.qty}
+              </td>
+              <td style={{ textAlign: "right" }}>
+                €{(item.price * item.qty).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-          <button
-            onClick={handleConfirm}
-            disabled={selectedDishes.length === 0}
-            style={{
-              backgroundColor: "#4CAF50", color: "white", border: "none",
-              padding: "0.75rem",
-              cursor: selectedDishes.length === 0 ? "not-allowed" : "pointer",
-              borderRadius: "8px", fontWeight: "bold",
-            }}
-          >
-            Bestelling plaatsen
-          </button>
+      <hr style={{ margin: "1rem 0" }} />
 
-          {openOrder && (
-            <button
-              onClick={() => setShowPayment(true)}
-              style={{
-                backgroundColor: "#2196F3", color: "white", border: "none",
-                padding: "0.75rem", cursor: "pointer",
-                borderRadius: "8px", fontWeight: "bold",
-              }}
-            >
-              💳 Afrekenen
-            </button>
-          )}
-        </div>
-      </div>
+      <h3>
+        Geplaatst: €{existingTotal.toFixed(2)}
+      </h3>
+    </div>
+  )}
+
+  {/* NIEUWE ITEMS */}
+  <div
+    style={{
+      border: "2px solid #ddd",
+      borderRadius: "12px",
+      padding: "1rem",
+      backgroundColor: "#fafafa",
+    }}
+  >
+    <h2>🛒 Nieuwe items toevoegen</h2>
+
+    {selectedDishes.length === 0 ? (
+      <p>Geen gerechten geselecteerd.</p>
+    ) : (
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left" }}>Gerecht</th>
+            <th>Aantal</th>
+            <th>Prijs</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {selectedDishes.map((dish) => (
+            <tr key={dish.id}>
+              <td>{dish.name}</td>
+
+              <td style={{ textAlign: "center" }}>
+                <button onClick={() => onRemove(dish.id)}>
+                  -
+                </button>
+
+                <span style={{ margin: "0 0.5rem" }}>
+                  {selected[dish.id]}
+                </span>
+
+                <button onClick={() => onAdd(dish.id)}>
+                  +
+                </button>
+              </td>
+
+              <td style={{ textAlign: "right" }}>
+                €{(
+                  dish.price * selected[dish.id]
+                ).toFixed(2)}
+              </td>
+
+              <td>
+                <button
+                  onClick={() => setDeleteConfirmId(dish.id)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#d9534f",
+                    cursor: "pointer",
+                  }}
+                  title="Verwijder item"
+                >
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+
+    <hr style={{ margin: "1rem 0" }} />
+
+    <h3>
+      Nieuw totaal: €{total.toFixed(2)}
+    </h3>
+
+    <div
+      style={{
+        marginTop: "1rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.75rem",
+      }}
+    >
+      <button onClick={onBack}>
+        ← Terug
+      </button>
+
+      <button
+        onClick={handleConfirm}
+        disabled={selectedDishes.length === 0}
+        style={{
+          backgroundColor: "#4CAF50",
+          color: "white",
+          border: "none",
+          padding: "0.75rem",
+          cursor:
+            selectedDishes.length === 0
+              ? "not-allowed"
+              : "pointer",
+          borderRadius: "8px",
+          fontWeight: "bold",
+        }}
+      >
+        Bestelling plaatsen
+      </button>
+
+      {openOrder && (
+        <button
+          onClick={() => setShowPayment(true)}
+          style={{
+            backgroundColor: "#2196F3",
+            color: "white",
+            border: "none",
+            padding: "0.75rem",
+            cursor: "pointer",
+            borderRadius: "8px",
+            fontWeight: "bold",
+          }}
+        >
+          💳 Afrekenen
+        </button>
+      )}
+    </div>
+  </div>
+</div>
     </div>
   );
 }
