@@ -23,6 +23,7 @@ type OrdersContextValue = {
   addOrder: (order: Omit<Order, "id">) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
   updateOrderItems: (id: string, items: OrderItem[]) => Promise<void>;
+  updateOrderTable: (id: string, table: string) => Promise<void>;
 };
 
 const OrdersContext = createContext<OrdersContextValue | undefined>(undefined);
@@ -101,8 +102,13 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     await updateDoc(doc(db, "orders", id), { items });
   };
 
+  const updateOrderTable = async (id: string, table: string) => {
+    console.log("[FIRESTORE] updateOrderTable", id, table);
+    await updateDoc(doc(db, "orders", id), { table });
+  };
+
   const value = useMemo(
-    () => ({ orders, addOrder, updateOrderStatus, updateOrderItems }),
+    () => ({ orders, addOrder, updateOrderStatus, updateOrderItems, updateOrderTable }),
     [orders]
   );
 

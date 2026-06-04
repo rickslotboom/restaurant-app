@@ -21,7 +21,7 @@ console.log("Login:", Login);
 
 export default function App() {
   const { user, logout } = useAuthContext();
-  const { orders, updateOrderStatus } = useOrdersContext();
+  const { orders, updateOrderStatus, updateOrderTable } = useOrdersContext();
 
   const [view, setView] = useState<"floorplan" | "menu" | "kitchen" | "billing">("floorplan");
   const [selected, setSelected] = useState<Record<string, number>>({});
@@ -58,10 +58,23 @@ export default function App() {
   };
 
   const handleTableSelect = (tableNumber: string) => {
-  setTable(tableNumber);
-  clearCart();
-  setView("menu");
-};
+    setTable(tableNumber);
+    clearCart();
+    setView("menu");
+  };
+
+  const handleMoveTable = async (fromTable: string, toTable: string) => {
+    const order = orders.find(
+      (o) => o.table === fromTable && o.status !== "Betaald"
+    );
+    if (!order) return;
+    try {
+      await updateOrderTable(order.id, toTable);
+      alert(`✅ Tafel ${fromTable} verplaatst naar tafel ${toTable}`);
+    } catch (err) {
+      alert("Er ging iets mis bij het verplaatsen.");
+    }
+  };
 
   if (user.role === "keuken" && view !== "kitchen") {
     return (
@@ -91,6 +104,7 @@ export default function App() {
           <FloorPlan
             orders={orders}
             onTableSelect={handleTableSelect}
+            onMoveTable={handleMoveTable}
           />
         )}
 
