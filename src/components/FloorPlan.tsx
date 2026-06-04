@@ -10,7 +10,7 @@ export default function FloorPlan({ orders, onTableSelect }: Props) {
   const [floor, setFloor] = useState<"binnen" | "buiten">("binnen");
 
   const hasOpenOrder = (tableId: string) =>
-    orders.some((o) => o.table === tableId && o.status != "Betaald");
+    orders.some((o) => o.table === tableId && o.status !== "Betaald");
 
   const TableItem = ({
     id,
