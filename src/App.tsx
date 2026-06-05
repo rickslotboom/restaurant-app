@@ -6,11 +6,13 @@ import FloorPlan from "./components/FloorPlan";
 import KitchenView from "./components/KitchenView";
 import BillingView from "./components/BillingView";
 import Login from "./components/Login";
+import SplitPaymentModal from "./components/SplitPaymentModal";
 import { useOrdersContext } from "./hooks/useOrders";
 import { signInAnonymously } from "firebase/auth";
 import { auth } from "./firebase";
 import styles from "./App.module.css";
 import { useAuthContext } from "./hooks/useAuth";
+import { OrderItem } from "./types";
 
 console.log("Header:", Header);
 console.log("Menu:", Menu);
@@ -21,11 +23,12 @@ console.log("Login:", Login);
 
 export default function App() {
   const { user, logout } = useAuthContext();
-  const { orders, updateOrderStatus, updateOrderTable } = useOrdersContext();
+  const { orders, updateOrderStatus, updateOrderTable, updateOrderItems } = useOrdersContext();
 
   const [view, setView] = useState<"floorplan" | "menu" | "kitchen" | "billing">("floorplan");
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [table, setTable] = useState("1");
+  const [splitTable, setSplitTable] = useState<string | null>(null);
 
   const clearCart = () => setSelected({});
 
@@ -76,6 +79,39 @@ export default function App() {
     }
   };
 
+  const handleSplitBill = (tableId: string) => {
+    setSplitTable(tableId);
+  };
+
+  const handleSplitConfirm = async (
+    remainingItems: OrderItem[],
+    method: "cash" | "pin",
+    tip: number
+  ) => {
+    if (!splitTable) return;
+    const order = orders.find(
+      (o) => o.table === splitTable && o.status !== "Betaald"
+    );
+    if (!order) return;
+
+    try {
+      if (remainingItems.length === 0) {
+        // Alle items betaald → order afsluiten
+        await updateOrderStatus(order.id, "Betaald");
+      } else {
+        // Resterende items terugschrijven naar de order
+        await updateOrderItems(order.id, remainingItems);
+      }
+      setSplitTable(null);
+    } catch (err) {
+      alert("Er ging iets mis bij het splitsen.");
+    }
+  };
+
+  const splitOrder = splitTable
+    ? orders.find((o) => o.table === splitTable && o.status !== "Betaald")
+    : null;
+
   if (user.role === "keuken" && view !== "kitchen") {
     return (
       <KitchenView
@@ -105,6 +141,7 @@ export default function App() {
             orders={orders}
             onTableSelect={handleTableSelect}
             onMoveTable={handleMoveTable}
+            onSplitBill={handleSplitBill}
           />
         )}
 
@@ -137,6 +174,15 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Split modal — bovenop alles */}
+      {splitOrder && (
+        <SplitPaymentModal
+          order={splitOrder}
+          onConfirm={handleSplitConfirm}
+          onCancel={() => setSplitTable(null)}
+        />
+      )}
     </div>
   );
 }
