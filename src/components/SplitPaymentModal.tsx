@@ -52,11 +52,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   const handleConfirm = () => {
     if (!paymentMethod) return;
 
-    // Bereken resterende items
-    const remaining = [...lines];
-    selectedLines.forEach((sel) => {
-      
-    });
+    
 
     // Bouw resterende items terug op vanuit niet-geselecteerde regels
     const unselectedLines = lines.filter((l) => !l.selected);
