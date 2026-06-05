@@ -55,9 +55,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
     // Bereken resterende items
     const remaining = [...lines];
     selectedLines.forEach((sel) => {
-      const idx = remaining.findIndex(
-        (l) => l.dishId === sel.dishId && l.selected && l === sel
-      );
+      
     });
 
     // Bouw resterende items terug op vanuit niet-geselecteerde regels
