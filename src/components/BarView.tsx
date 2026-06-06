@@ -53,7 +53,7 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
     orders.forEach((order) => {
       if (!prevOrderIds.current.has(order.id) && order.status === "Open") {
         const barItems = filterBarItems(order);
-        if (barItems.length > 0 && Notification.permission === "granted") {
+        if (barItems.length > 0 && typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification("🍹 Nieuwe bardrank!", {
             body: `Tafel ${order.table} — ${barItems.map(i => `${i.qty}× ${i.name}`).join(", ")}`,
           });
