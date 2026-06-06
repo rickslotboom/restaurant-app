@@ -41,7 +41,7 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
   }, [menu]);
 
   useEffect(() => {
-    if (Notification.permission === "default") {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
     }
   }, []);
@@ -52,7 +52,7 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
         const kitchenItems = order.items.filter((i) => isKitchenItem(i.dishId));
         if (kitchenItems.length === 0) return;
 
-        if (Notification.permission === "granted") {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification("🍽️ Nieuwe bestelling!", {
             body: `Tafel ${order.table} — ${kitchenItems.map(i => `${i.qty}× ${i.name}`).join(", ")}`,
           });

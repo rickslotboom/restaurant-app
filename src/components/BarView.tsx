@@ -44,7 +44,7 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
   const hasBarItems = (order: Order) => filterBarItems(order).length > 0;
 
   useEffect(() => {
-    if (Notification.permission === "default") {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
     }
   }, []);
