@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Order, OrderStatus } from "../types";
-import { Dish } from "../types";
+import React, { useState, useEffect, useRef } from "react";
+import { Order, OrderItem, OrderStatus } from "../types";
 
 const BAR_CATEGORIES = ["Dranken"];
 
 type Props = {
   orders: Order[];
-  menu: Dish[];
+  menu: import("../types").Dish[];
   onUpdateStatus: (id: string, status: OrderStatus) => void;
   onLogout: () => void;
 };
 
-export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: Props) {
+export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Props) {
   const [tab, setTab] = useState<"open" | "history">("open");
   const [searchDate, setSearchDate] = useState("");
   const [searchWaiter, setSearchWaiter] = useState("");
@@ -19,11 +18,6 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
   const [searchOrderNumber, setSearchOrderNumber] = useState("");
 
   const prevOrderIds = useRef<Set<string>>(new Set());
-
-  const isKitchenItem = useCallback((dishId: string) => {
-    const dish = menu.find((d) => d.id === dishId);
-    return !dish || !BAR_CATEGORIES.includes(dish.category);
-  }, [menu]);
 
   useEffect(() => {
     if (Notification.permission === "default") {
@@ -34,33 +28,33 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
   useEffect(() => {
     orders.forEach((order) => {
       if (!prevOrderIds.current.has(order.id) && order.status === "Open") {
-        const kitchenItems = order.items.filter((i) => isKitchenItem(i.dishId));
-        if (kitchenItems.length === 0) return;
+        const barItems = order.items.filter((item) => {
+          const dish = menu.find((d) => d.id === item.dishId);
+          return dish && BAR_CATEGORIES.includes(dish.category);
+        });
 
-        if (Notification.permission === "granted") {
-          new Notification("🍽️ Nieuwe bestelling!", {
-            body: `Tafel ${order.table} — ${kitchenItems.map(i => `${i.qty}× ${i.name}`).join(", ")}`,
+        if (barItems.length > 0 && Notification.permission === "granted") {
+          new Notification("🍹 Nieuwe bardrank!", {
+            body: `Tafel ${order.table} — ${barItems.map(i => `${i.qty}× ${i.name}`).join(", ")}`,
           });
         }
-
-        fetch("/api/notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: `🍽️ Nieuwe bestelling!\nTafel ${order.table}\nBediener: ${order.waiter}\n${kitchenItems.map(i => `${i.qty}× ${i.name}`).join("\n")}`,
-          }),
-        });
       }
     });
 
     prevOrderIds.current = new Set(orders.map((o) => o.id));
-  }, [orders, isKitchenItem]);
+  }, [orders, menu]);
 
-  const hasKitchenItems = (order: Order) =>
-    order.items.some((i) => isKitchenItem(i.dishId));
+  // Filter orders: alleen orders met bar-items
+  const filterBarItems = (order: Order): OrderItem[] =>
+    order.items.filter((item) => {
+      const dish = menu.find((d) => d.id === item.dishId);
+      return dish && BAR_CATEGORIES.includes(dish.category);
+    });
 
-  const openOrders = orders.filter((o) => o.status === "Open" && hasKitchenItems(o));
-  const historyOrders = orders.filter((o) => o.status === "Afgehandeld" && hasKitchenItems(o));
+  const hasBarItems = (order: Order) => filterBarItems(order).length > 0;
+
+  const openOrders = orders.filter((o) => o.status === "Open" && hasBarItems(o));
+  const historyOrders = orders.filter((o) => o.status === "Afgehandeld" && hasBarItems(o));
   let displayed = tab === "open" ? openOrders : historyOrders;
 
   displayed = displayed.filter((o) => {
@@ -71,7 +65,8 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
 
     if (searchDate && o.timestamp) {
       const d = new Date(o.timestamp);
-      matchesDate = d.toISOString().split("T")[0] === searchDate;
+      const orderDate = d.toISOString().split("T")[0];
+      matchesDate = orderDate === searchDate;
     }
     if (searchWaiter) matchesWaiter = o.waiter?.toLowerCase().includes(searchWaiter.toLowerCase());
     if (searchTable) matchesTable = o.table?.toLowerCase().includes(searchTable.toLowerCase());
@@ -103,7 +98,7 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
         Uitloggen
       </button>
 
-      <h2>Keukenoverzicht</h2>
+      <h2>Baroverzicht</h2>
 
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
         <button
@@ -155,50 +150,54 @@ export default function KitchenView({ orders, menu, onUpdateStatus, onLogout }: 
         <p>Geen bestellingen.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {displayed.map((order) => (
-            <div
-              key={order.id}
-              style={{
-                border: "2px solid #ccc", borderRadius: "10px", padding: "1rem",
-                backgroundColor: order.status === "Afgehandeld" ? "#e8f5e9" : "#fff",
-              }}
-            >
-              <h3 style={{ marginBottom: "0.3rem" }}>🍽️ Tafel {order.table}</h3>
-              {order.timestamp && (
-                <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
-                  {formatTimestamp(order.timestamp)}
-                </p>
-              )}
-              {order.waiter && (
-                <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
-                  Bediener: {order.waiter}
-                </p>
-              )}
-              {order.orderNumber && (
-                <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
-                  Ordernummer: {order.orderNumber}
-                </p>
-              )}
-              <ul style={{ margin: "0.5rem 0" }}>
-                {order.items
-                  .filter((i) => isKitchenItem(i.dishId))
-                  .map((item, idx) => (
+          {displayed.map((order) => {
+            const barItems = filterBarItems(order);
+            return (
+              <div
+                key={order.id}
+                style={{
+                  border: "2px solid #ccc", borderRadius: "10px", padding: "1rem",
+                  backgroundColor: order.status === "Afgehandeld" ? "#e8f5e9" : "#fff",
+                }}
+              >
+                <h3 style={{ marginBottom: "0.3rem" }}>🍹 Tafel {order.table}</h3>
+
+                {order.timestamp && (
+                  <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
+                    {formatTimestamp(order.timestamp)}
+                  </p>
+                )}
+                {order.waiter && (
+                  <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
+                    Bediener: {order.waiter}
+                  </p>
+                )}
+                {order.orderNumber && (
+                  <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
+                    Ordernummer: {order.orderNumber}
+                  </p>
+                )}
+
+                <ul style={{ margin: "0.5rem 0" }}>
+                  {barItems.map((item, idx) => (
                     <li key={idx}>{item.qty}× {item.name}</li>
                   ))}
-              </ul>
-              {order.status === "Open" && tab === "open" && (
-                <button
-                  onClick={() => onUpdateStatus(order.id, "Afgehandeld")}
-                  style={{
-                    marginTop: "0.5rem", background: "#4CAF50", color: "white",
-                    border: "none", padding: "0.5rem 1rem", borderRadius: "8px", cursor: "pointer",
-                  }}
-                >
-                  Markeer als klaar
-                </button>
-              )}
-            </div>
-          ))}
+                </ul>
+
+                {order.status === "Open" && tab === "open" && (
+                  <button
+                    onClick={() => onUpdateStatus(order.id, "Afgehandeld")}
+                    style={{
+                      marginTop: "0.5rem", background: "#4CAF50", color: "white",
+                      border: "none", padding: "0.5rem 1rem", borderRadius: "8px", cursor: "pointer",
+                    }}
+                  >
+                    Markeer als klaar
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

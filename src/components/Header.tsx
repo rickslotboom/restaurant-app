@@ -2,8 +2,8 @@ import React from "react";
 import styles from "./Header.module.css";
 
 type Props = {
-  view: "floorplan" | "menu" | "kitchen" | "billing";
-  setView: React.Dispatch<React.SetStateAction<"floorplan" | "menu" | "kitchen" | "billing">>;
+  view: "floorplan" | "menu" | "kitchen" | "billing" | "bar";
+  setView: React.Dispatch<React.SetStateAction<"floorplan" | "menu" | "kitchen" | "billing" | "bar">>;
   orderCount: number;
   user: { username: string; role: string };
   onLogout: () => void;
@@ -21,14 +21,12 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
             >
               Vloerplan
             </button>
-
             <button
               className={view === "menu" ? styles.active : ""}
               onClick={() => setView("menu")}
             >
               Menu
             </button>
-
             <button
               className={view === "billing" ? styles.active : ""}
               onClick={() => setView("billing")}
@@ -38,13 +36,21 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
           </>
         )}
 
-        {user.role === "kok" && (
-          <button
-            className={view === "kitchen" ? styles.active : ""}
-            onClick={() => setView("kitchen")}
-          >
-            Keuken ({orderCount})
-          </button>
+        {user.role === "keuken" && (
+          <>
+            <button
+              className={view === "kitchen" ? styles.active : ""}
+              onClick={() => setView("kitchen")}
+            >
+              Keuken ({orderCount})
+            </button>
+            <button
+              className={view === "bar" ? styles.active : ""}
+              onClick={() => setView("bar")}
+            >
+              Bar
+            </button>
+          </>
         )}
       </nav>
 

@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Menu from "./components/Menu";
 import FloorPlan from "./components/FloorPlan";
 import KitchenView from "./components/KitchenView";
+import BarView from "./components/BarView";
 import BillingView from "./components/BillingView";
 import Login from "./components/Login";
 import SplitPaymentModal from "./components/SplitPaymentModal";
@@ -18,19 +19,28 @@ console.log("Header:", Header);
 console.log("Menu:", Menu);
 console.log("FloorPlan:", FloorPlan);
 console.log("KitchenView:", KitchenView);
+console.log("BarView:", BarView);
 console.log("BillingView:", BillingView);
 console.log("Login:", Login);
+
+type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar";
 
 export default function App() {
   const { user, logout } = useAuthContext();
   const { orders, updateOrderStatus, updateOrderTable, updateOrderItems } = useOrdersContext();
 
-  const [view, setView] = useState<"floorplan" | "menu" | "kitchen" | "billing">("floorplan");
+  const [view, setView] = useState<ViewType>("floorplan");
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [table, setTable] = useState("1");
   const [splitTable, setSplitTable] = useState<string | null>(null);
 
   const clearCart = () => setSelected({});
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === "keuken") setView("kitchen");
+    else setView("floorplan");
+  }, [user]);
 
   useEffect(() => {
     signInAnonymously(auth).catch((err) =>
@@ -93,13 +103,10 @@ export default function App() {
       (o) => o.table === splitTable && o.status !== "Betaald"
     );
     if (!order) return;
-
     try {
       if (remainingItems.length === 0) {
-        // Alle items betaald → order afsluiten
         await updateOrderStatus(order.id, "Betaald");
       } else {
-        // Resterende items terugschrijven naar de order
         await updateOrderItems(order.id, remainingItems);
       }
       setSplitTable(null);
@@ -112,22 +119,12 @@ export default function App() {
     ? orders.find((o) => o.table === splitTable && o.status !== "Betaald")
     : null;
 
-  if (user.role === "keuken" && view !== "kitchen") {
-    return (
-      <KitchenView
-        orders={orders}
-        onUpdateStatus={updateOrderStatus}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
   return (
     <div className={styles.app}>
       <Header
         view={view}
         setView={(newView) => {
-          if (user.role === "keuken" && newView !== "kitchen") return;
+          if (user.role === "keuken" && newView !== "kitchen" && newView !== "bar") return;
           setView(newView);
         }}
         orderCount={orders.filter((o) => o.status === "Open").length}
@@ -168,14 +165,23 @@ export default function App() {
 
         {user.role === "keuken" && view === "kitchen" && (
           <KitchenView
+            menu={MENU}
             orders={orders}
+            onUpdateStatus={updateOrderStatus}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {user.role === "keuken" && view === "bar" && (
+          <BarView
+            orders={orders}
+            menu={MENU}
             onUpdateStatus={updateOrderStatus}
             onLogout={handleLogout}
           />
         )}
       </main>
 
-      {/* Split modal — bovenop alles */}
       {splitOrder && (
         <SplitPaymentModal
           order={splitOrder}

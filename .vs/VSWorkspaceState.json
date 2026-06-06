@@ -4,10 +4,12 @@
     "\\api",
     "\\public",
     "\\src",
+    "\\src\\auth",
     "\\src\\components",
     "\\src\\data",
     "\\src\\hooks",
     "\\src\\types"
   ],
+  "SelectedNode": "\\src\\App.tsx",
   "PreviewInSolutionExplorer": false
 }
