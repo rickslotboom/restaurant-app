@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 type User = {
   username: string;
-  role: string; // bv. "keuken" of "bediener"
+  role: string;
 };
 
 type AuthContextValue = {
@@ -13,11 +13,28 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+const STORAGE_KEY = "speciaalzaak_user";
 
-  const login = (username: string, role: string) => setUser({ username, role });
-  const logout = () => setUser(null);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const login = (username: string, role: string) => {
+    const newUser = { username, role };
+    setUser(newUser);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
