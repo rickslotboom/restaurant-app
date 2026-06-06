@@ -1,23 +1,47 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Order, OrderItem, OrderStatus } from "../types";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Order, OrderItem, OrderStatus, Dish } from "../types";
 
 const BAR_CATEGORIES = ["Dranken"];
 
+const isToday = (ts?: number) => {
+  if (!ts) return false;
+  const d = new Date(ts);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+};
+
+const isBeforeToday = (ts?: number) => {
+  if (!ts) return false;
+  const d = new Date(ts);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return d < today;
+};
+
 type Props = {
   orders: Order[];
-  menu: import("../types").Dish[];
+  menu: Dish[];
   onUpdateStatus: (id: string, status: OrderStatus) => void;
   onLogout: () => void;
 };
 
 export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Props) {
   const [tab, setTab] = useState<"open" | "history">("open");
-  const [searchDate, setSearchDate] = useState("");
   const [searchWaiter, setSearchWaiter] = useState("");
   const [searchTable, setSearchTable] = useState("");
   const [searchOrderNumber, setSearchOrderNumber] = useState("");
 
   const prevOrderIds = useRef<Set<string>>(new Set());
+
+  const filterBarItems = useCallback((order: Order): OrderItem[] =>
+    order.items.filter((item) => {
+      const dish = menu.find((d) => d.id === item.dishId);
+      return dish && BAR_CATEGORIES.includes(dish.category);
+    }), [menu]);
+
+  const hasBarItems = (order: Order) => filterBarItems(order).length > 0;
 
   useEffect(() => {
     if (Notification.permission === "default") {
@@ -28,11 +52,7 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
   useEffect(() => {
     orders.forEach((order) => {
       if (!prevOrderIds.current.has(order.id) && order.status === "Open") {
-        const barItems = order.items.filter((item) => {
-          const dish = menu.find((d) => d.id === item.dishId);
-          return dish && BAR_CATEGORIES.includes(dish.category);
-        });
-
+        const barItems = filterBarItems(order);
         if (barItems.length > 0 && Notification.permission === "granted") {
           new Notification("🍹 Nieuwe bardrank!", {
             body: `Tafel ${order.table} — ${barItems.map(i => `${i.qty}× ${i.name}`).join(", ")}`,
@@ -40,39 +60,35 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
         }
       }
     });
-
     prevOrderIds.current = new Set(orders.map((o) => o.id));
-  }, [orders, menu]);
+  }, [orders, filterBarItems]);
 
-  // Filter orders: alleen orders met bar-items
-  const filterBarItems = (order: Order): OrderItem[] =>
-    order.items.filter((item) => {
-      const dish = menu.find((d) => d.id === item.dishId);
-      return dish && BAR_CATEGORIES.includes(dish.category);
-    });
+  // Openstaande bonnen van vóór vandaag
+  const oldOpenOrders = orders.filter((o) =>
+    o.status === "Open" && hasBarItems(o) && isBeforeToday(o.timestamp)
+  );
 
-  const hasBarItems = (order: Order) => filterBarItems(order).length > 0;
+  // Alleen bonnen van vandaag
+  const openOrders = orders
+    .filter((o) => o.status === "Open" && hasBarItems(o) && isToday(o.timestamp))
+    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
 
-  const openOrders = orders.filter((o) => o.status === "Open" && hasBarItems(o));
-  const historyOrders = orders.filter((o) => o.status === "Afgehandeld" && hasBarItems(o));
+  const historyOrders = orders
+    .filter((o) => o.status === "Afgehandeld" && hasBarItems(o) && isToday(o.timestamp))
+    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
+
   let displayed = tab === "open" ? openOrders : historyOrders;
 
   displayed = displayed.filter((o) => {
-    let matchesDate = true;
     let matchesWaiter = true;
     let matchesTable = true;
     let matchesOrderNumber = true;
 
-    if (searchDate && o.timestamp) {
-      const d = new Date(o.timestamp);
-      const orderDate = d.toISOString().split("T")[0];
-      matchesDate = orderDate === searchDate;
-    }
     if (searchWaiter) matchesWaiter = o.waiter?.toLowerCase().includes(searchWaiter.toLowerCase());
     if (searchTable) matchesTable = o.table?.toLowerCase().includes(searchTable.toLowerCase());
     if (searchOrderNumber) matchesOrderNumber = (o.orderNumber ?? "").toLowerCase().includes(searchOrderNumber.toLowerCase());
 
-    return matchesDate && matchesWaiter && matchesTable && matchesOrderNumber;
+    return matchesWaiter && matchesTable && matchesOrderNumber;
   });
 
   const formatTimestamp = (ts?: number) => {
@@ -100,6 +116,35 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
 
       <h2>Baroverzicht</h2>
 
+      {/* Waarschuwing openstaande bonnen van gisteren of eerder */}
+      {oldOpenOrders.length > 0 && (
+        <div style={{
+          background: "#fff3cd", border: "2px solid #ffc107", borderRadius: "10px",
+          padding: "1rem 1.25rem", marginBottom: "1.25rem",
+        }}>
+          <strong>⚠️ Let op:</strong> Er {oldOpenOrders.length === 1 ? "staat" : "staan"} nog{" "}
+          <strong>{oldOpenOrders.length} openstaande {oldOpenOrders.length === 1 ? "bon" : "bonnen"}</strong>{" "}
+          van een vorige dag:
+          <ul style={{ margin: "0.5rem 0 0 0" }}>
+            {oldOpenOrders.map((o) => (
+              <li key={o.id}>
+                Tafel {o.table} — {formatTimestamp(o.timestamp)}
+                <button
+                  onClick={() => onUpdateStatus(o.id, "Afgehandeld")}
+                  style={{
+                    marginLeft: "0.75rem", background: "#4CAF50", color: "white",
+                    border: "none", padding: "0.2rem 0.6rem", borderRadius: "6px",
+                    cursor: "pointer", fontSize: "0.85rem",
+                  }}
+                >
+                  Markeer als klaar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
         <button
           onClick={() => setTab("open")}
@@ -125,11 +170,6 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
 
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <div>
-          <label>Datum:</label><br />
-          <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)}
-            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }} />
-        </div>
-        <div>
           <label>Bediener:</label><br />
           <input type="text" placeholder="Naam" value={searchWaiter} onChange={(e) => setSearchWaiter(e.target.value)}
             style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }} />
@@ -147,7 +187,7 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
       </div>
 
       {displayed.length === 0 ? (
-        <p>Geen bestellingen.</p>
+        <p>Geen bestellingen vandaag.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {displayed.map((order) => {
@@ -161,7 +201,6 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
                 }}
               >
                 <h3 style={{ marginBottom: "0.3rem" }}>🍹 Tafel {order.table}</h3>
-
                 {order.timestamp && (
                   <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
                     {formatTimestamp(order.timestamp)}
@@ -177,13 +216,11 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
                     Ordernummer: {order.orderNumber}
                   </p>
                 )}
-
                 <ul style={{ margin: "0.5rem 0" }}>
                   {barItems.map((item, idx) => (
                     <li key={idx}>{item.qty}× {item.name}</li>
                   ))}
                 </ul>
-
                 {order.status === "Open" && tab === "open" && (
                   <button
                     onClick={() => onUpdateStatus(order.id, "Afgehandeld")}
