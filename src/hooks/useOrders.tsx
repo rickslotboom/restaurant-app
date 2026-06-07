@@ -12,6 +12,7 @@ import {
   addDoc,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
   runTransaction,
@@ -24,6 +25,7 @@ type OrdersContextValue = {
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
   updateOrderItems: (id: string, items: OrderItem[]) => Promise<void>;
   updateOrderTable: (id: string, table: string) => Promise<void>;
+  deleteOrder: (id: string) => Promise<void>;
 };
 
 const OrdersContext = createContext<OrdersContextValue | undefined>(undefined);
@@ -37,7 +39,6 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const unsub = onSnapshot(collection(db, "orders"), (snapshot) => {
       const formatted = snapshot.docs.map((d) => {
         const data = d.data();
-
         return {
           id: d.id,
           table: data.table ?? "",
@@ -67,7 +68,6 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const addOrder = async (order: Omit<Order, "id">) => {
     console.log("[FIRESTORE] addOrder =", order);
-
     const now = new Date();
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
     const counterRef = doc(db, "orderCounters", yearMonth);
@@ -107,8 +107,13 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     await updateDoc(doc(db, "orders", id), { table });
   };
 
+  const deleteOrder = async (id: string) => {
+    console.log("[FIRESTORE] deleteOrder", id);
+    await deleteDoc(doc(db, "orders", id));
+  };
+
   const value = useMemo(
-    () => ({ orders, addOrder, updateOrderStatus, updateOrderItems, updateOrderTable }),
+    () => ({ orders, addOrder, updateOrderStatus, updateOrderItems, updateOrderTable, deleteOrder }),
     [orders]
   );
 
