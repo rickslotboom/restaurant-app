@@ -27,7 +27,7 @@ type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar";
 
 export default function App() {
   const { user, logout } = useAuthContext();
-  const { orders, updateOrderStatus, updateOrderTable, updateOrderItems, deleteOrder } = useOrdersContext();
+  const { orders, updateOrderStatus, updateOrderTable, updateOrderItems } = useOrdersContext();
 
   const [view, setView] = useState<ViewType>("floorplan");
   const [selected, setSelected] = useState<Record<string, number>>({});
