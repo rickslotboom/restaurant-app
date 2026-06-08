@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dish, Order, OrderItem, OrderStatus } from "../types";
+import { Dish, Modifier, Order, OrderItem, OrderStatus } from "../types";
 import { useOrdersContext } from "../hooks/useOrders";
 import { useAuthContext } from "../hooks/useAuth";
 import PaymentModal from "./PaymentModal";
@@ -16,6 +16,151 @@ type Props = {
   onUpdateStatus: (id: string, status: OrderStatus) => void;
 };
 
+// Eén orderregel in de winkelwagen (kan meerdere modifier-combinaties zijn)
+type CartLine = {
+  lineId: string;         // uniek per regel (dishId + modifier-combo)
+  dishId: string;
+  name: string;           // basisnaam
+  basePrice: number;
+  modifiers: { id: string; name: string; price: number }[];
+  qty: number;
+};
+
+// Hulpfunctie: maak een unieke lineId op basis van dishId + gekozen modifiers
+function makeLineId(dishId: string, modifierIds: string[]): string {
+  return [dishId, ...[...modifierIds].sort()].join("|");
+}
+
+// Modifier popup component
+function ModifierModal({
+  dish,
+  onConfirm,
+  onCancel,
+}: {
+  dish: Dish;
+  onConfirm: (chosen: { id: string; name: string; price: number }[]) => void;
+  onCancel: () => void;
+}) {
+  const [chosen, setChosen] = useState<Record<string, boolean>>({});
+
+  const toggle = (id: string) =>
+    setChosen((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const selectedModifiers = (dish.modifiers || []).filter((m) => chosen[m.id]);
+  const extraPrice = selectedModifiers.reduce((s, m) => s + m.price, 0);
+  const totalPrice = dish.price + extraPrice;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2000,
+      }}
+    >
+      <div
+        style={{
+          background: "white",
+          borderRadius: "16px",
+          padding: "2rem",
+          width: "340px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+        }}
+      >
+        <h2 style={{ margin: "0 0 0.25rem 0" }}>{dish.name}</h2>
+        <p style={{ margin: "0 0 1.25rem 0", color: "#555" }}>
+          Basisprijs: €{dish.price.toFixed(2)}
+        </p>
+
+        <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
+          Toevoegingen (optioneel):
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+          {(dish.modifiers || []).map((mod) => (
+            <label
+              key={mod.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                cursor: "pointer",
+                padding: "0.6rem 0.75rem",
+                borderRadius: "8px",
+                background: chosen[mod.id] ? "#e8f5e9" : "#f5f5f5",
+                border: chosen[mod.id] ? "2px solid #4CAF50" : "2px solid transparent",
+                transition: "all 0.15s",
+                userSelect: "none",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={!!chosen[mod.id]}
+                onChange={() => toggle(mod.id)}
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
+              />
+              <span style={{ flex: 1 }}>{mod.name}</span>
+              <span style={{ color: mod.price === 0 ? "#888" : "#2e7d32", fontWeight: "bold" }}>
+                {mod.price === 0 ? "gratis" : `+€${mod.price.toFixed(2)}`}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <div
+          style={{
+            marginTop: "1.5rem",
+            paddingTop: "1rem",
+            borderTop: "1px solid #eee",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
+            Totaal: €{totalPrice.toFixed(2)}
+          </span>
+        </div>
+
+        <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              padding: "0.75rem",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              cursor: "pointer",
+              background: "#fff",
+            }}
+          >
+            Annuleren
+          </button>
+          <button
+            onClick={() => onConfirm(selectedModifiers)}
+            style={{
+              flex: 1,
+              padding: "0.75rem",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              background: "#4CAF50",
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            Toevoegen
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Menu({
   menu,
   selected,
@@ -31,146 +176,160 @@ export default function Menu({
   const { user } = useAuthContext();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmLineId, setDeleteConfirmLineId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+
+  // Winkelwagen: lijst van CartLines (per modifier-combinatie apart)
+  const [cart, setCart] = useState<CartLine[]>([]);
+
+  // Welk gerecht heeft de modifier-popup open?
+  const [modifierDish, setModifierDish] = useState<Dish | null>(null);
 
   const categories = [...new Set(menu.map((dish) => dish.category))];
   const visibleDishes = selectedCategory
     ? menu.filter((dish) => dish.category === selectedCategory)
     : [];
-  const selectedDishes = menu.filter((dish) => selected[dish.id] > 0);
-  const total = selectedDishes.reduce(
-    (sum, dish) => sum + dish.price * (selected[dish.id] || 0),
+
+  const openOrder = orders.find(
+    (o) => o.table === table && o.status !== "Betaald"
+  );
+
+  const existingTotal = openOrder
+    ? openOrder.items.reduce((sum, item) => sum + item.price * item.qty, 0)
+    : 0;
+
+  const cartTotal = cart.reduce(
+    (sum, line) =>
+      sum + (line.basePrice + line.modifiers.reduce((s, m) => s + m.price, 0)) * line.qty,
     0
   );
 
-  // Nieuw — pakt de actieve (onbetaalde) order voor deze tafel
-const openOrder = orders.find(
-  (o) => o.table === table && o.status !== "Betaald"
-);
-
-  const existingTotal = openOrder
-  ? openOrder.items.reduce(
-      (sum, item) => sum + item.price * item.qty,
-      0
-    )
-  : 0;
-
-  // Bouw items array op vanuit huidige selected state
-  const buildItems = (overrideSelected?: Record<string, number>): OrderItem[] => {
-    const src = overrideSelected ?? selected;
-    return Object.entries(src)
-      .filter(([, qty]) => qty > 0)
-      .map(([dishId, qty]) => {
-        const dish = menu.find((d) => d.id === dishId);
-        return {
-          dishId,
-          name: dish?.name || "Onbekend",
-          price: dish?.price || 0,
-          qty,
-        };
-      });
+  // Gerecht aangeklikt — heeft het modifiers? → popup, anders direct toevoegen
+  const handleDishClick = (dish: Dish) => {
+    if (dish.modifiers && dish.modifiers.length > 0) {
+      setModifierDish(dish);
+    } else {
+      addToCart(dish, []);
+    }
   };
 
-  const handleConfirm = async () => {
-  if (openOrder) {
-    // Bereken alleen de NIEUWE items (verschil met bestaande order)
-    const newItems: OrderItem[] = Object.entries(selected)
-      .filter(([dishId, qty]) => {
-        const existingItem = openOrder.items.find((i) => i.dishId === dishId);
-        const existingQty = existingItem?.qty ?? 0;
-        return qty > existingQty; // alleen items die zijn toegevoegd
-      })
-      .map(([dishId, qty]) => {
-        const dish = menu.find((d) => d.id === dishId);
-        const existingQty = openOrder.items.find((i) => i.dishId === dishId)?.qty ?? 0;
-        return {
-          dishId,
-          name: dish?.name || "Onbekend",
-          price: dish?.price || 0,
-          qty: qty - existingQty, // alleen het verschil
-        };
-      });
+  const addToCart = (
+    dish: Dish,
+    chosenModifiers: { id: string; name: string; price: number }[]
+  ) => {
+    const lineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
+    setCart((prev) => {
+      const existing = prev.find((l) => l.lineId === lineId);
+      if (existing) {
+        return prev.map((l) =>
+          l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l
+        );
+      }
+      return [
+        ...prev,
+        {
+          lineId,
+          dishId: dish.id,
+          name: dish.name,
+          basePrice: dish.price,
+          modifiers: chosenModifiers,
+          qty: 1,
+        },
+      ];
+    });
+  };
 
-    if (newItems.length === 0) {
+  const removeFromCart = (lineId: string) => {
+    setCart((prev) => {
+      const line = prev.find((l) => l.lineId === lineId);
+      if (!line) return prev;
+      if (line.qty === 1) return prev.filter((l) => l.lineId !== lineId);
+      return prev.map((l) => (l.lineId === lineId ? { ...l, qty: l.qty - 1 } : l));
+    });
+  };
+
+  const deleteFromCart = (lineId: string) => {
+    setCart((prev) => prev.filter((l) => l.lineId !== lineId));
+    setDeleteConfirmLineId(null);
+  };
+
+  // Zet CartLine om naar OrderItem (prijs inclusief modifiers)
+  const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
+    lines.map((line) => {
+      const extraPrice = line.modifiers.reduce((s, m) => s + m.price, 0);
+      return {
+        dishId: line.lineId, // lineId als unieke sleutel zodat combinaties apart staan
+        name:
+          line.modifiers.length > 0
+            ? `${line.name} (${line.modifiers.map((m) => m.name).join(", ")})`
+            : line.name,
+        price: line.basePrice + extraPrice,
+        qty: line.qty,
+        modifiers: line.modifiers,
+      };
+    });
+
+  const handleConfirm = async () => {
+    if (cart.length === 0) {
       alert("ℹ️ Geen nieuwe items om te bestellen.");
       return;
     }
 
-    // Voeg nieuwe items toe aan bestaande order
-    const updatedItems: OrderItem[] = [...openOrder.items];
-    newItems.forEach((newItem) => {
-      const existing = updatedItems.find((i) => i.dishId === newItem.dishId);
-      if (existing) {
-        existing.qty += newItem.qty;
-      } else {
-        updatedItems.push(newItem);
-      }
-    });
+    const newItems = cartToOrderItems(cart);
 
-    try {
-      await updateOrderItems(openOrder.id, updatedItems);
-      alert("✅ Extra items zijn toegevoegd aan de bestaande bestelling!");
-      onClearCart();
-      onBack();
-    } catch (err) {
-      console.error("❌ Fout bij updaten van bestelling:", err);
-      alert("Er ging iets mis bij het updaten van de bestelling.");
-    }
-
-  } else {
-    // Geen open order — maak nieuwe aan
-    const order: Omit<Order, "id"> = {
-      table,
-      items: buildItems(),
-      status: "Open",
-      timestamp: Date.now(),
-      waiter: user?.username || "Onbekend",
-    };
-
-    try {
-      await addOrder(order);
-      alert("✅ Bestelling is geplaatst!");
-      onClearCart();
-      onBack();
-    } catch (err) {
-      console.error("❌ Fout bij plaatsen van bestelling:", err);
-      alert("Er ging iets mis bij het plaatsen van de bestelling.");
-    }
-  }
-};
-
-  const handleDeleteExecute = async () => {
-    if (!deleteConfirmId) return;
-
-    // Verwijder uit lokale state
-    const qty = selected[deleteConfirmId] || 0;
-    const newSelected = { ...selected };
-    delete newSelected[deleteConfirmId];
-
-    // Update lokale state via onRemove voor elk item
-    for (let i = 0; i < qty; i++) {
-      onRemove(deleteConfirmId);
-    }
-
-    // Als er een open order is, update ook Firestore
     if (openOrder) {
-      const newItems = buildItems(newSelected);
-      if (newItems.length === 0) {
-        // Geen items meer — markeer als afgehandeld
-        await onUpdateStatus(openOrder.id, "Afgehandeld");
-      } else {
-        await updateOrderItems(openOrder.id, newItems);
+      // Voeg toe aan bestaande order
+      const updatedItems: OrderItem[] = [...openOrder.items];
+      newItems.forEach((newItem) => {
+        const existing = updatedItems.find((i) => i.dishId === newItem.dishId);
+        if (existing) {
+          existing.qty += newItem.qty;
+        } else {
+          updatedItems.push(newItem);
+        }
+      });
+
+      try {
+        await updateOrderItems(openOrder.id, updatedItems);
+        alert("✅ Extra items zijn toegevoegd aan de bestaande bestelling!");
+        setCart([]);
+        onClearCart();
+        onBack();
+      } catch (err) {
+        console.error("❌ Fout bij updaten van bestelling:", err);
+        alert("Er ging iets mis bij het updaten van de bestelling.");
+      }
+    } else {
+      const order: Omit<Order, "id"> = {
+        table,
+        items: newItems,
+        status: "Open",
+        timestamp: Date.now(),
+        waiter: user?.username || "Onbekend",
+      };
+
+      try {
+        await addOrder(order);
+        alert("✅ Bestelling is geplaatst!");
+        setCart([]);
+        onClearCart();
+        onBack();
+      } catch (err) {
+        console.error("❌ Fout bij plaatsen van bestelling:", err);
+        alert("Er ging iets mis bij het plaatsen van de bestelling.");
       }
     }
-
-    setDeleteConfirmId(null);
   };
 
-  const handlePaymentConfirm = (orderId: string, method: "cash" | "pin", tip: number) => {
+  const handlePaymentConfirm = (
+    orderId: string,
+    method: "cash" | "pin",
+    tip: number
+  ) => {
     console.log("Betaald via:", method, "Fooi:", tip);
     onUpdateStatus(orderId, "Betaald");
     setShowPayment(false);
+    setCart([]);
     onClearCart();
     onBack();
   };
@@ -185,25 +344,47 @@ const openOrder = orders.find(
     Broodjes: "🥪",
   };
 
+  const lineToDelete = cart.find((l) => l.lineId === deleteConfirmLineId);
+
   return (
     <div style={{ display: "flex", gap: "2rem", padding: "1rem", alignItems: "flex-start" }}>
 
+      {/* Modifier popup */}
+      {modifierDish && (
+        <ModifierModal
+          dish={modifierDish}
+          onConfirm={(chosen) => {
+            addToCart(modifierDish, chosen);
+            setModifierDish(null);
+          }}
+          onCancel={() => setModifierDish(null)}
+        />
+      )}
+
       {/* Verwijder bevestiging modal */}
-      {deleteConfirmId && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
-        }}>
-          <div style={{
-            background: "white", borderRadius: "12px", padding: "2rem",
-            width: "300px", boxShadow: "0 4px 20px rgba(0,0,0,0.2)", textAlign: "center",
-          }}>
+      {deleteConfirmLineId && lineToDelete && (
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: "white", borderRadius: "12px", padding: "2rem",
+              width: "320px", boxShadow: "0 4px 20px rgba(0,0,0,0.2)", textAlign: "center",
+            }}
+          >
             <p style={{ fontSize: "1.1rem", marginBottom: "1.5rem" }}>
-              Wil je <strong>{menu.find((d) => d.id === deleteConfirmId)?.name}</strong> verwijderen?
+              Wil je <strong>{lineToDelete.name}</strong>
+              {lineToDelete.modifiers.length > 0 && (
+                <> ({lineToDelete.modifiers.map((m) => m.name).join(", ")})</>
+              )}{" "}
+              verwijderen?
             </p>
             <div style={{ display: "flex", gap: "1rem" }}>
               <button
-                onClick={() => setDeleteConfirmId(null)}
+                onClick={() => setDeleteConfirmLineId(null)}
                 style={{
                   flex: 1, padding: "0.75rem", borderRadius: "8px",
                   border: "1px solid #ccc", cursor: "pointer", background: "#fff",
@@ -212,7 +393,7 @@ const openOrder = orders.find(
                 Annuleren
               </button>
               <button
-                onClick={handleDeleteExecute}
+                onClick={() => deleteFromCart(deleteConfirmLineId)}
                 style={{
                   flex: 1, padding: "0.75rem", borderRadius: "8px",
                   border: "none", cursor: "pointer",
@@ -235,17 +416,19 @@ const openOrder = orders.find(
         />
       )}
 
-      {/* LINKERKANT */}
+      {/* LINKERKANT — menu */}
       <div style={{ flex: 1 }}>
         <h2 style={{ textAlign: "center" }}>
           {selectedCategory ? selectedCategory : "Kies een categorie"}
         </h2>
 
         {!selectedCategory ? (
-          <div style={{
-            display: "flex", flexWrap: "wrap", gap: "1rem",
-            justifyContent: "center", marginTop: "1rem",
-          }}>
+          <div
+            style={{
+              display: "flex", flexWrap: "wrap", gap: "1rem",
+              justifyContent: "center", marginTop: "1rem",
+            }}
+          >
             {categories.map((category) => (
               <div
                 key={category}
@@ -274,38 +457,52 @@ const openOrder = orders.find(
               ← Terug naar categorieën
             </button>
 
-            <div style={{
-              display: "flex", flexWrap: "wrap", gap: "1rem",
-              justifyContent: "center", marginTop: "1rem",
-            }}>
+            <div
+              style={{
+                display: "flex", flexWrap: "wrap", gap: "1rem",
+                justifyContent: "center", marginTop: "1rem",
+              }}
+            >
               {visibleDishes.map((dish) => (
                 <div
                   key={dish.id}
-                  onClick={() => onAdd(dish.id)}
+                  onClick={() => handleDishClick(dish)}
                   style={{
                     border: "2px solid #ccc", borderRadius: "12px", padding: "1rem",
                     width: "180px", textAlign: "center", backgroundColor: "#fff",
                     boxShadow: "2px 2px 5px rgba(0,0,0,0.1)", cursor: "pointer",
                     transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                    position: "relative",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
                   onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
+                  {/* Badge als het gerecht modifiers heeft */}
+                  {dish.modifiers && dish.modifiers.length > 0 && (
+                    <span
+                      style={{
+                        position: "absolute", top: "8px", right: "8px",
+                        background: "#ff9800", color: "white", borderRadius: "99px",
+                        fontSize: "0.65rem", fontWeight: "bold", padding: "2px 7px",
+                      }}
+                    >
+                      opties
+                    </span>
+                  )}
                   <img
                     src={dish.image}
                     alt={dish.name}
                     style={{ width: "100%", borderRadius: "8px", userSelect: "none", pointerEvents: "none" }}
                   />
                   <h3 style={{ margin: "0.5rem 0 0 0" }}>{dish.name}</h3>
-                  <p style={{ margin: "0.25rem 0", fontWeight: "bold" }}>€{dish.price.toFixed(2)}</p>
-                  <div
-                    style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginTop: "0.5rem" }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button onClick={() => onRemove(dish.id)}>-</button>
-                    <span>{selected[dish.id] || 0}</span>
-                    <button onClick={() => onAdd(dish.id)}>+</button>
-                  </div>
+                  <p style={{ margin: "0.25rem 0", fontWeight: "bold" }}>
+                    €{dish.price.toFixed(2)}
+                  </p>
+                  {dish.modifiers && dish.modifiers.length > 0 && (
+                    <p style={{ margin: "0.25rem 0", fontSize: "0.75rem", color: "#888" }}>
+                      Tik om opties te kiezen
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -314,197 +511,154 @@ const openOrder = orders.find(
       </div>
 
       {/* RECHTERKANT */}
-<div
-  style={{
-    width: "350px",
-    minWidth: "350px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-    position: "sticky",
-    top: "1rem",
-  }}
->
-
-  {/* REEDS BESTELD */}
-  {openOrder && (
-    <div
-      style={{
-        border: "2px solid #4a90e2",
-        borderRadius: "12px",
-        padding: "1rem",
-        backgroundColor: "#eef6ff",
-      }}
-    >
-      <h2>📋 Reeds besteld</h2>
-
-      <table
+      <div
         style={{
-          width: "100%",
-          borderCollapse: "collapse",
+          width: "370px", minWidth: "370px",
+          display: "flex", flexDirection: "column", gap: "1rem",
+          position: "sticky", top: "1rem",
         }}
       >
-        <thead>
-          <tr>
-            <th style={{ textAlign: "left" }}>Gerecht</th>
-            <th>Aantal</th>
-            <th>Prijs</th>
-          </tr>
-        </thead>
+        {/* REEDS BESTELD */}
+        {openOrder && (
+          <div
+            style={{
+              border: "2px solid #4a90e2", borderRadius: "12px",
+              padding: "1rem", backgroundColor: "#eef6ff",
+            }}
+          >
+            <h2>📋 Reeds besteld</h2>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left" }}>Gerecht</th>
+                  <th>Aantal</th>
+                  <th style={{ textAlign: "right" }}>Prijs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {openOrder.items.map((item) => (
+                  <tr key={item.dishId}>
+                    <td style={{ paddingRight: "0.5rem" }}>{item.name}</td>
+                    <td style={{ textAlign: "center" }}>{item.qty}</td>
+                    <td style={{ textAlign: "right" }}>
+                      €{(item.price * item.qty).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <hr style={{ margin: "1rem 0" }} />
+            <h3>Geplaatst: €{existingTotal.toFixed(2)}</h3>
+          </div>
+        )}
 
-        <tbody>
-          {openOrder.items.map((item) => (
-            <tr key={item.dishId}>
-              <td>{item.name}</td>
-              <td style={{ textAlign: "center" }}>
-                {item.qty}
-              </td>
-              <td style={{ textAlign: "right" }}>
-                €{(item.price * item.qty).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <hr style={{ margin: "1rem 0" }} />
-
-      <h3>
-        Geplaatst: €{existingTotal.toFixed(2)}
-      </h3>
-    </div>
-  )}
-
-  {/* NIEUWE ITEMS */}
-  <div
-    style={{
-      border: "2px solid #ddd",
-      borderRadius: "12px",
-      padding: "1rem",
-      backgroundColor: "#fafafa",
-    }}
-  >
-    <h2>🛒 Nieuwe items toevoegen</h2>
-
-    {selectedDishes.length === 0 ? (
-      <p>Geen gerechten geselecteerd.</p>
-    ) : (
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-        }}
-      >
-        <thead>
-          <tr>
-            <th style={{ textAlign: "left" }}>Gerecht</th>
-            <th>Aantal</th>
-            <th>Prijs</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {selectedDishes.map((dish) => (
-            <tr key={dish.id}>
-              <td>{dish.name}</td>
-
-              <td style={{ textAlign: "center" }}>
-                <button onClick={() => onRemove(dish.id)}>
-                  -
-                </button>
-
-                <span style={{ margin: "0 0.5rem" }}>
-                  {selected[dish.id]}
-                </span>
-
-                <button onClick={() => onAdd(dish.id)}>
-                  +
-                </button>
-              </td>
-
-              <td style={{ textAlign: "right" }}>
-                €{(
-                  dish.price * selected[dish.id]
-                ).toFixed(2)}
-              </td>
-
-              <td>
-                <button
-                  onClick={() => setDeleteConfirmId(dish.id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#d9534f",
-                    cursor: "pointer",
-                  }}
-                  title="Verwijder item"
-                >
-                  🗑️
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )}
-
-    <hr style={{ margin: "1rem 0" }} />
-
-    <h3>
-      Nieuw totaal: €{total.toFixed(2)}
-    </h3>
-
-    <div
-      style={{
-        marginTop: "1rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.75rem",
-      }}
-    >
-      <button onClick={onBack}>
-        ← Terug
-      </button>
-
-      <button
-        onClick={handleConfirm}
-        disabled={selectedDishes.length === 0}
-        style={{
-          backgroundColor: "#4CAF50",
-          color: "white",
-          border: "none",
-          padding: "0.75rem",
-          cursor:
-            selectedDishes.length === 0
-              ? "not-allowed"
-              : "pointer",
-          borderRadius: "8px",
-          fontWeight: "bold",
-        }}
-      >
-        Bestelling plaatsen
-      </button>
-
-      {openOrder && (
-        <button
-          onClick={() => setShowPayment(true)}
+        {/* WINKELWAGEN — nieuwe items */}
+        <div
           style={{
-            backgroundColor: "#2196F3",
-            color: "white",
-            border: "none",
-            padding: "0.75rem",
-            cursor: "pointer",
-            borderRadius: "8px",
-            fontWeight: "bold",
+            border: "2px solid #ddd", borderRadius: "12px",
+            padding: "1rem", backgroundColor: "#fafafa",
           }}
         >
-          💳 Afrekenen
-        </button>
-      )}
-    </div>
-  </div>
-</div>
+          <h2>🛒 Nieuwe items toevoegen</h2>
+
+          {cart.length === 0 ? (
+            <p>Geen gerechten geselecteerd.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left" }}>Gerecht</th>
+                  <th>Aantal</th>
+                  <th style={{ textAlign: "right" }}>Prijs</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map((line) => {
+                  const linePrice =
+                    (line.basePrice + line.modifiers.reduce((s, m) => s + m.price, 0)) *
+                    line.qty;
+                  return (
+                    <tr key={line.lineId}>
+                      <td style={{ paddingRight: "0.5rem" }}>
+                        <div>{line.name}</div>
+                        {line.modifiers.length > 0 && (
+                          <div style={{ fontSize: "0.75rem", color: "#666" }}>
+                            + {line.modifiers.map((m) => m.name).join(", ")}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                        <button onClick={() => removeFromCart(line.lineId)}>-</button>
+                        <span style={{ margin: "0 0.4rem" }}>{line.qty}</span>
+                        <button
+                          onClick={() => {
+                            const dish = menu.find((d) => d.id === line.dishId);
+                            if (dish) addToCart(dish, line.modifiers);
+                          }}
+                        >
+                          +
+                        </button>
+                      </td>
+                      <td style={{ textAlign: "right" }}>€{linePrice.toFixed(2)}</td>
+                      <td>
+                        <button
+                          onClick={() => setDeleteConfirmLineId(line.lineId)}
+                          style={{
+                            background: "none", border: "none",
+                            color: "#d9534f", cursor: "pointer",
+                          }}
+                          title="Verwijder"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+
+          <hr style={{ margin: "1rem 0" }} />
+          <h3>Nieuw totaal: €{cartTotal.toFixed(2)}</h3>
+
+          <div
+            style={{
+              marginTop: "1rem", display: "flex",
+              flexDirection: "column", gap: "0.75rem",
+            }}
+          >
+            <button onClick={onBack}>← Terug</button>
+
+            <button
+              onClick={handleConfirm}
+              disabled={cart.length === 0}
+              style={{
+                backgroundColor: "#4CAF50", color: "white",
+                border: "none", padding: "0.75rem",
+                cursor: cart.length === 0 ? "not-allowed" : "pointer",
+                borderRadius: "8px", fontWeight: "bold",
+              }}
+            >
+              Bestelling plaatsen
+            </button>
+
+            {openOrder && (
+              <button
+                onClick={() => setShowPayment(true)}
+                style={{
+                  backgroundColor: "#2196F3", color: "white",
+                  border: "none", padding: "0.75rem",
+                  cursor: "pointer", borderRadius: "8px", fontWeight: "bold",
+                }}
+              >
+                💳 Afrekenen
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

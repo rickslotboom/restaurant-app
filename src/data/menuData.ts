@@ -22,6 +22,12 @@ export const MENU: Dish[] = [
     image: "/images/pannenkoeken.jpg",
     price: 8.95,
     category: "Ontbijt",
+    modifiers: [
+      { id: "stroop", name: "Stroop", price: 0 },
+      { id: "suiker", name: "Poedersuiker", price: 0 },
+      { id: "spek-pk", name: "Spek", price: 1.5 },
+      { id: "kaas-pk", name: "Kaas", price: 1.0 },
+    ],
   },
   {
     id: "d04",
@@ -34,7 +40,7 @@ export const MENU: Dish[] = [
   // Dranken
   {
     id: "d05",
-    name: "Verse jus d’orange",
+    name: "Verse jus d'orange",
     image: "/images/jus.jpg",
     price: 5.0,
     category: "Dranken",
@@ -47,13 +53,18 @@ export const MENU: Dish[] = [
     category: "Dranken",
   },
 
-  // Tosti & Panini
+  // Snelle hap
   {
     id: "d07",
     name: "Tosti Speciaalzaak",
     image: "/images/tosti.jpg",
     price: 8.5,
     category: "Snelle hap",
+    modifiers: [
+      { id: "tomaat", name: "Tomaat", price: 0.5 },
+      { id: "spek", name: "Spek", price: 0.5 },
+      { id: "extra-kaas", name: "Extra kaas", price: 0.75 },
+    ],
   },
   {
     id: "d08",
@@ -61,6 +72,10 @@ export const MENU: Dish[] = [
     image: "/images/panini-caprese.jpg",
     price: 8.5,
     category: "Snelle hap",
+    modifiers: [
+      { id: "extra-pesto", name: "Extra pesto", price: 0.5 },
+      { id: "olijven", name: "Olijven", price: 0.5 },
+    ],
   },
   {
     id: "d09",
@@ -68,6 +83,10 @@ export const MENU: Dish[] = [
     image: "/images/panini-brie.jpg",
     price: 8.5,
     category: "Snelle hap",
+    modifiers: [
+      { id: "cranberry", name: "Cranberrysaus", price: 0.5 },
+      { id: "walnoot", name: "Walnoot", price: 0.75 },
+    ],
   },
 
   // Soepen
@@ -77,6 +96,9 @@ export const MENU: Dish[] = [
     image: "/images/tomatensoep.jpg",
     price: 7.95,
     category: "Soepen",
+    modifiers: [
+      { id: "brood-soep", name: "Brood erbij", price: 1.0 },
+    ],
   },
   {
     id: "d11",
@@ -84,6 +106,9 @@ export const MENU: Dish[] = [
     image: "/images/soep-van-de-dag.jpg",
     price: 7.95,
     category: "Soepen",
+    modifiers: [
+      { id: "brood-soep2", name: "Brood erbij", price: 1.0 },
+    ],
   },
 
   // Salades & Bowls
@@ -93,6 +118,11 @@ export const MENU: Dish[] = [
     image: "/images/pokebowl.jpg",
     price: 14.5,
     category: "Salades & Bowls",
+    modifiers: [
+      { id: "extra-avocado", name: "Extra avocado", price: 1.5 },
+      { id: "geen-rijst", name: "Zonder rijst", price: 0 },
+      { id: "edamame", name: "Edamame", price: 1.0 },
+    ],
   },
   {
     id: "d13",
@@ -130,6 +160,10 @@ export const MENU: Dish[] = [
     image: "/images/kip-cashew.jpg",
     price: 13.5,
     category: "Lunch",
+    modifiers: [
+      { id: "extra-cashew", name: "Extra cashew", price: 1.0 },
+      { id: "geen-ui", name: "Zonder ui", price: 0 },
+    ],
   },
 
   // Broodjes
@@ -139,6 +173,10 @@ export const MENU: Dish[] = [
     image: "/images/pittige-tonijn.jpg",
     price: 10.95,
     category: "Broodjes",
+    modifiers: [
+      { id: "extra-pittig", name: "Extra pittig", price: 0 },
+      { id: "zonder-ui-t", name: "Zonder ui", price: 0 },
+    ],
   },
   {
     id: "d19",
@@ -153,5 +191,10 @@ export const MENU: Dish[] = [
     image: "/images/bagel.jpg",
     price: 9.95,
     category: "Broodjes",
+    modifiers: [
+      { id: "extra-roomkaas", name: "Extra roomkaas", price: 0.5 },
+      { id: "zalm", name: "Zalm", price: 2.0 },
+      { id: "avocado-bagel", name: "Avocado", price: 1.5 },
+    ],
   },
 ];
