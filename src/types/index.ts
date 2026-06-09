@@ -15,12 +15,19 @@ export type Dish = {
 
 export type OrderStatus = "Open" | "Afgehandeld" | "Betaald";
 
+export type DiscountPercentage = 0 | 30 | 50 | 100;
+
 export type OrderItem = {
-  dishId: string;       // let op: bij modifier-combo's is dit de lineId (dishId|mod1|mod2)
-  name: string;         // inclusief modifier-namen, bijv. "Tosti (Tomaat, Spek)"
-  price: number;        // prijs inclusief geselecteerde modifiers
+  dishId: string;
+  name: string;
+  price: number;
   qty: number;
-  modifiers?: { id: string; name: string; price: number }[]; // gekozen modifiers
+  modifiers?: {
+    id: string;
+    name: string;
+    price: number;
+  }[];
+  discount?: DiscountPercentage;
 };
 
 export type Order = {
@@ -29,7 +36,11 @@ export type Order = {
   items: OrderItem[];
   status: OrderStatus;
   waiter: string;
+
   timestamp?: number;
   createdAt?: any;
   orderNumber?: string;
+
+  // NIEUW
+  discount?: DiscountPercentage;
 };
