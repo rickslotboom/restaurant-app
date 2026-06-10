@@ -23,7 +23,7 @@ console.log("BarView:", BarView);
 console.log("BillingView:", BillingView);
 console.log("Login:", Login);
 
-type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar";
+type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer";
 
 export default function App() {
   const { user, logout } = useAuthContext();
@@ -119,12 +119,16 @@ export default function App() {
     ? orders.find((o) => o.table === splitTable && o.status !== "Betaald")
     : null;
 
+  const isManager = user.role === "manager";
+  const isBediening = user.role === "bediening";
+  const isKeuken = user.role === "keuken";
+
   return (
     <div className={styles.app}>
       <Header
         view={view}
         setView={(newView) => {
-          if (user.role === "keuken" && newView !== "kitchen" && newView !== "bar") return;
+          if (isKeuken && newView !== "kitchen" && newView !== "bar") return;
           setView(newView);
         }}
         orderCount={orders.filter((o) => o.status === "Open").length}
@@ -133,7 +137,9 @@ export default function App() {
       />
 
       <main className={styles.main}>
-        {user.role === "bediening" && view === "floorplan" && (
+
+        {/* Plattegrond */}
+        {(isBediening || isManager) && view === "floorplan" && (
           <FloorPlan
             orders={orders}
             onTableSelect={handleTableSelect}
@@ -142,7 +148,8 @@ export default function App() {
           />
         )}
 
-        {user.role === "bediening" && view === "menu" && (
+        {/* Menu / bestellen */}
+        {(isBediening || isManager) && view === "menu" && (
           <Menu
             menu={MENU}
             selected={selected}
@@ -156,14 +163,16 @@ export default function App() {
           />
         )}
 
-        {user.role === "bediening" && view === "billing" && (
+        {/* Afrekenen */}
+        {(isBediening || isManager) && view === "billing" && (
           <BillingView
             orders={orders}
             onUpdateStatus={updateOrderStatus}
           />
         )}
 
-        {user.role === "keuken" && view === "kitchen" && (
+        {/* Keuken */}
+        {(isKeuken || isManager) && view === "kitchen" && (
           <KitchenView
             menu={MENU}
             orders={orders}
@@ -172,7 +181,8 @@ export default function App() {
           />
         )}
 
-        {user.role === "keuken" && view === "bar" && (
+        {/* Bar */}
+        {(isKeuken || isManager) && view === "bar" && (
           <BarView
             orders={orders}
             menu={MENU}
@@ -180,6 +190,15 @@ export default function App() {
             onLogout={handleLogout}
           />
         )}
+
+        {/* Beheer — alleen manager */}
+        {isManager && view === "beheer" && (
+          <div style={{ padding: "2rem" }}>
+            <h2 style={{ marginTop: 0 }}>⚙️ Beheer</h2>
+            <p style={{ color: "#888" }}>Komt binnenkort...</p>
+          </div>
+        )}
+
       </main>
 
       {splitOrder && (
