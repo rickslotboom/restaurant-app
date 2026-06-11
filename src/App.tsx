@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { MENU } from "./data/menuData";
 import Header from "./components/Header";
 import Menu from "./components/Menu";
 import FloorPlan from "./components/FloorPlan";
 import KitchenView from "./components/KitchenView";
 import BarView from "./components/BarView";
 import BillingView from "./components/BillingView";
+import BeheerView from "./components/BeheerView";
 import Login from "./components/Login";
 import SplitPaymentModal from "./components/SplitPaymentModal";
 import { useOrdersContext } from "./hooks/useOrders";
+import { useMenuContext } from "./hooks/useMenu";
 import { signInAnonymously } from "firebase/auth";
 import { auth } from "./firebase";
 import styles from "./App.module.css";
@@ -28,6 +29,7 @@ type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer";
 export default function App() {
   const { user, logout } = useAuthContext();
   const { orders, updateOrderStatus, updateOrderTable, updateOrderItems } = useOrdersContext();
+  const { menu, addDish } = useMenuContext();
 
   const [view, setView] = useState<ViewType>("floorplan");
   const [selected, setSelected] = useState<Record<string, number>>({});
@@ -151,7 +153,7 @@ export default function App() {
         {/* Menu / bestellen */}
         {(isBediening || isManager) && view === "menu" && (
           <Menu
-            menu={MENU}
+            menu={menu}
             selected={selected}
             table={table}
             onAdd={handleAdd}
@@ -174,7 +176,7 @@ export default function App() {
         {/* Keuken */}
         {(isKeuken || isManager) && view === "kitchen" && (
           <KitchenView
-            menu={MENU}
+            menu={menu}
             orders={orders}
             onUpdateStatus={updateOrderStatus}
             onLogout={handleLogout}
@@ -185,7 +187,7 @@ export default function App() {
         {(isKeuken || isManager) && view === "bar" && (
           <BarView
             orders={orders}
-            menu={MENU}
+            menu={menu}
             onUpdateStatus={updateOrderStatus}
             onLogout={handleLogout}
           />
@@ -193,10 +195,10 @@ export default function App() {
 
         {/* Beheer — alleen manager */}
         {isManager && view === "beheer" && (
-          <div style={{ padding: "2rem" }}>
-            <h2 style={{ marginTop: 0 }}>⚙️ Beheer</h2>
-            <p style={{ color: "#888" }}>Komt binnenkort...</p>
-          </div>
+          <BeheerView
+            menu={menu}
+            onAddDish={addDish}
+          />
         )}
 
       </main>

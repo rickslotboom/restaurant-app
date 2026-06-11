@@ -4,7 +4,7 @@ import App from "./App";
 import "./index.css";
 import { OrdersProvider } from "./hooks/useOrders";
 import { AuthProvider } from "./hooks/useAuth";
-
+import { MenuProvider } from "./hooks/useMenu";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
@@ -12,7 +12,9 @@ root.render(
   <React.StrictMode>
     <AuthProvider>
       <OrdersProvider>
-        <App />
+        <MenuProvider>
+          <App />
+        </MenuProvider>
       </OrdersProvider>
     </AuthProvider>
   </React.StrictMode>
