@@ -11,12 +11,12 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\App.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\index.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\index.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useMenu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\hooks\\useMenu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\index.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\index.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -99,7 +99,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "index.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\index.tsx",
               "RelativeDocumentMoniker": "src\\index.tsx",
@@ -107,18 +107,17 @@
               "RelativeToolTip": "src\\index.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-11T12:19:12.444Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-11T12:19:12.444Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "useMenu.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useMenu.tsx",
               "RelativeDocumentMoniker": "src\\hooks\\useMenu.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useMenu.tsx",
               "RelativeToolTip": "src\\hooks\\useMenu.tsx",
-              "ViewState": "AgIAADUAAAAAAAAAAAAkwEIAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAmwF0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-11T12:18:22.681Z",
               "EditorCaption": ""
@@ -131,7 +130,7 @@
               "RelativeDocumentMoniker": "src\\components\\BeheerView.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BeheerView.tsx",
               "RelativeToolTip": "src\\components\\BeheerView.tsx",
-              "ViewState": "AgIAAJsAAAAAAAAAAAAkwMMAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAACoAAAAAAAAAAAAAADUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-11T12:16:32.793Z",
               "EditorCaption": ""
@@ -146,8 +145,7 @@
               "RelativeToolTip": "src\\components\\Header.tsx",
               "ViewState": "AgIAAE4AAAAAAAAAAAAUwGkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-10T10:41:49.703Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-10T10:41:49.703Z"
             },
             {
               "$type": "Document",
@@ -195,8 +193,7 @@
               "RelativeToolTip": "src\\types\\index.ts",
               "ViewState": "AgIAAAUAAAAAAAAAAAAmwC0AAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-05-30T13:39:29.413Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-30T13:39:29.413Z"
             },
             {
               "$type": "Document",
@@ -218,7 +215,7 @@
               "RelativeDocumentMoniker": "src\\App.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeToolTip": "src\\App.tsx",
-              "ViewState": "AgIAAK4AAAAAAAAAAAAkwNYAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-05-28T13:28:20.725Z",
               "EditorCaption": ""
@@ -245,8 +242,7 @@
               "RelativeToolTip": "src\\hooks\\useOrders.tsx",
               "ViewState": "AgIAAFYAAAAAAAAAAAAmwH4AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-07T05:37:09.086Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-07T05:37:09.086Z"
             },
             {
               "$type": "Document",
@@ -270,8 +266,7 @@
               "RelativeToolTip": "src\\data\\menuData.ts",
               "ViewState": "AgIAAJ8AAAAAAAAAAAAmwMcAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-08T15:44:10.851Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-08T15:44:10.851Z"
             },
             {
               "$type": "Document",
