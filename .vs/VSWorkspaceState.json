@@ -10,6 +10,6 @@
     "\\src\\hooks",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\App.tsx",
+  "SelectedNode": "\\src\\hooks\\useMenu.tsx",
   "PreviewInSolutionExplorer": false
 }

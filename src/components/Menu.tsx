@@ -16,22 +16,19 @@ type Props = {
   onUpdateStatus: (id: string, status: OrderStatus) => void;
 };
 
-// Eén orderregel in de winkelwagen (kan meerdere modifier-combinaties zijn)
 type CartLine = {
-  lineId: string;         // uniek per regel (dishId + modifier-combo)
+  lineId: string;
   dishId: string;
-  name: string;           // basisnaam
+  name: string;
   basePrice: number;
   modifiers: { id: string; name: string; price: number }[];
   qty: number;
 };
 
-// Hulpfunctie: maak een unieke lineId op basis van dishId + gekozen modifiers
 function makeLineId(dishId: string, modifierIds: string[]): string {
   return [dishId, ...[...modifierIds].sort()].join("|");
 }
 
-// Modifier popup component
 function ModifierModal({
   dish,
   onConfirm,
@@ -51,26 +48,14 @@ function ModifierModal({
   const totalPrice = dish.price + extraPrice;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.55)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 2000,
-      }}
-    >
-      <div
-        style={{
-          background: "white",
-          borderRadius: "16px",
-          padding: "2rem",
-          width: "340px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
-        }}
-      >
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
+      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000,
+    }}>
+      <div style={{
+        background: "white", borderRadius: "16px", padding: "2rem",
+        width: "340px", boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+      }}>
         <h2 style={{ margin: "0 0 0.25rem 0" }}>{dish.name}</h2>
         <p style={{ margin: "0 0 1.25rem 0", color: "#555" }}>
           Basisprijs: €{dish.price.toFixed(2)}
@@ -82,21 +67,13 @@ function ModifierModal({
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
           {(dish.modifiers || []).map((mod) => (
-            <label
-              key={mod.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                cursor: "pointer",
-                padding: "0.6rem 0.75rem",
-                borderRadius: "8px",
-                background: chosen[mod.id] ? "#e8f5e9" : "#f5f5f5",
-                border: chosen[mod.id] ? "2px solid #4CAF50" : "2px solid transparent",
-                transition: "all 0.15s",
-                userSelect: "none",
-              }}
-            >
+            <label key={mod.id} style={{
+              display: "flex", alignItems: "center", gap: "0.75rem",
+              cursor: "pointer", padding: "0.6rem 0.75rem", borderRadius: "8px",
+              background: chosen[mod.id] ? "#e8f5e9" : "#f5f5f5",
+              border: chosen[mod.id] ? "2px solid #4CAF50" : "2px solid transparent",
+              transition: "all 0.15s", userSelect: "none",
+            }}>
               <input
                 type="checkbox"
                 checked={!!chosen[mod.id]}
@@ -111,48 +88,27 @@ function ModifierModal({
           ))}
         </div>
 
-        <div
-          style={{
-            marginTop: "1.5rem",
-            paddingTop: "1rem",
-            borderTop: "1px solid #eee",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <div style={{
+          marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #eee",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
           <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
             Totaal: €{totalPrice.toFixed(2)}
           </span>
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-          <button
-            onClick={onCancel}
-            style={{
-              flex: 1,
-              padding: "0.75rem",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              cursor: "pointer",
-              background: "#fff",
-            }}
-          >
+          <button onClick={onCancel} style={{
+            flex: 1, padding: "0.75rem", borderRadius: "8px",
+            border: "1px solid #ccc", cursor: "pointer", background: "#fff",
+          }}>
             Annuleren
           </button>
-          <button
-            onClick={() => onConfirm(selectedModifiers)}
-            style={{
-              flex: 1,
-              padding: "0.75rem",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-              background: "#4CAF50",
-              color: "white",
-              fontWeight: "bold",
-            }}
-          >
+          <button onClick={() => onConfirm(selectedModifiers)} style={{
+            flex: 1, padding: "0.75rem", borderRadius: "8px",
+            border: "none", cursor: "pointer",
+            background: "#4CAF50", color: "white", fontWeight: "bold",
+          }}>
             Toevoegen
           </button>
         </div>
@@ -178,16 +134,16 @@ export default function Menu({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [deleteConfirmLineId, setDeleteConfirmLineId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-
-  // Winkelwagen: lijst van CartLines (per modifier-combinatie apart)
   const [cart, setCart] = useState<CartLine[]>([]);
-
-  // Welk gerecht heeft de modifier-popup open?
   const [modifierDish, setModifierDish] = useState<Dish | null>(null);
 
-  const categories = [...new Set(menu.map((dish) => dish.category))];
+  // ── Filter geblokkeerde items ──
+  const activeMenu = menu.filter((dish) => !(dish as any).blocked);
+
+  const categories = [...new Set(activeMenu.map((dish) => dish.category))];
+
   const visibleDishes = selectedCategory
-    ? menu.filter((dish) => dish.category === selectedCategory)
+    ? activeMenu.filter((dish) => dish.category === selectedCategory)
     : [];
 
   const openOrder = orders.find(
@@ -204,7 +160,6 @@ export default function Menu({
     0
   );
 
-  // Gerecht aangeklikt — heeft het modifiers? → popup, anders direct toevoegen
   const handleDishClick = (dish: Dish) => {
     if (dish.modifiers && dish.modifiers.length > 0) {
       setModifierDish(dish);
@@ -225,17 +180,10 @@ export default function Menu({
           l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l
         );
       }
-      return [
-        ...prev,
-        {
-          lineId,
-          dishId: dish.id,
-          name: dish.name,
-          basePrice: dish.price,
-          modifiers: chosenModifiers,
-          qty: 1,
-        },
-      ];
+      return [...prev, {
+        lineId, dishId: dish.id, name: dish.name,
+        basePrice: dish.price, modifiers: chosenModifiers, qty: 1,
+      }];
     });
   };
 
@@ -253,16 +201,14 @@ export default function Menu({
     setDeleteConfirmLineId(null);
   };
 
-  // Zet CartLine om naar OrderItem (prijs inclusief modifiers)
   const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
     lines.map((line) => {
       const extraPrice = line.modifiers.reduce((s, m) => s + m.price, 0);
       return {
-        dishId: line.lineId, // lineId als unieke sleutel zodat combinaties apart staan
-        name:
-          line.modifiers.length > 0
-            ? `${line.name} (${line.modifiers.map((m) => m.name).join(", ")})`
-            : line.name,
+        dishId: line.lineId,
+        name: line.modifiers.length > 0
+          ? `${line.name} (${line.modifiers.map((m) => m.name).join(", ")})`
+          : line.name,
         price: line.basePrice + extraPrice,
         qty: line.qty,
         modifiers: line.modifiers,
@@ -278,7 +224,6 @@ export default function Menu({
     const newItems = cartToOrderItems(cart);
 
     if (openOrder) {
-      // Voeg toe aan bestaande order
       const updatedItems: OrderItem[] = [...openOrder.items];
       newItems.forEach((newItem) => {
         const existing = updatedItems.find((i) => i.dishId === newItem.dishId);
@@ -363,24 +308,19 @@ export default function Menu({
 
       {/* Verwijder bevestiging modal */}
       {deleteConfirmLineId && lineToDelete && (
-        <div
-          style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "white", borderRadius: "12px", padding: "2rem",
-              width: "320px", boxShadow: "0 4px 20px rgba(0,0,0,0.2)", textAlign: "center",
-            }}
-          >
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+        }}>
+          <div style={{
+            background: "white", borderRadius: "12px", padding: "2rem",
+            width: "320px", boxShadow: "0 4px 20px rgba(0,0,0,0.2)", textAlign: "center",
+          }}>
             <p style={{ fontSize: "1.1rem", marginBottom: "1.5rem" }}>
               Wil je <strong>{lineToDelete.name}</strong>
               {lineToDelete.modifiers.length > 0 && (
                 <> ({lineToDelete.modifiers.map((m) => m.name).join(", ")})</>
-              )}{" "}
-              verwijderen?
+              )}{" "}verwijderen?
             </p>
             <div style={{ display: "flex", gap: "1rem" }}>
               <button
@@ -416,19 +356,17 @@ export default function Menu({
         />
       )}
 
-      {/* LINKERKANT — menu */}
+      {/* LINKERKANT */}
       <div style={{ flex: 1 }}>
         <h2 style={{ textAlign: "center" }}>
           {selectedCategory ? selectedCategory : "Kies een categorie"}
         </h2>
 
         {!selectedCategory ? (
-          <div
-            style={{
-              display: "flex", flexWrap: "wrap", gap: "1rem",
-              justifyContent: "center", marginTop: "1rem",
-            }}
-          >
+          <div style={{
+            display: "flex", flexWrap: "wrap", gap: "1rem",
+            justifyContent: "center", marginTop: "1rem",
+          }}>
             {categories.map((category) => (
               <div
                 key={category}
@@ -457,12 +395,10 @@ export default function Menu({
               ← Terug naar categorieën
             </button>
 
-            <div
-              style={{
-                display: "flex", flexWrap: "wrap", gap: "1rem",
-                justifyContent: "center", marginTop: "1rem",
-              }}
-            >
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: "1rem",
+              justifyContent: "center", marginTop: "1rem",
+            }}>
               {visibleDishes.map((dish) => (
                 <div
                   key={dish.id}
@@ -477,15 +413,12 @@ export default function Menu({
                   onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
                   onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
-                  {/* Badge als het gerecht modifiers heeft */}
                   {dish.modifiers && dish.modifiers.length > 0 && (
-                    <span
-                      style={{
-                        position: "absolute", top: "8px", right: "8px",
-                        background: "#ff9800", color: "white", borderRadius: "99px",
-                        fontSize: "0.65rem", fontWeight: "bold", padding: "2px 7px",
-                      }}
-                    >
+                    <span style={{
+                      position: "absolute", top: "8px", right: "8px",
+                      background: "#ff9800", color: "white", borderRadius: "99px",
+                      fontSize: "0.65rem", fontWeight: "bold", padding: "2px 7px",
+                    }}>
                       opties
                     </span>
                   )}
@@ -511,21 +444,18 @@ export default function Menu({
       </div>
 
       {/* RECHTERKANT */}
-      <div
-        style={{
-          width: "370px", minWidth: "370px",
-          display: "flex", flexDirection: "column", gap: "1rem",
-          position: "sticky", top: "1rem",
-        }}
-      >
+      <div style={{
+        width: "370px", minWidth: "370px",
+        display: "flex", flexDirection: "column", gap: "1rem",
+        position: "sticky", top: "1rem",
+      }}>
+
         {/* REEDS BESTELD */}
         {openOrder && (
-          <div
-            style={{
-              border: "2px solid #4a90e2", borderRadius: "12px",
-              padding: "1rem", backgroundColor: "#eef6ff",
-            }}
-          >
+          <div style={{
+            border: "2px solid #4a90e2", borderRadius: "12px",
+            padding: "1rem", backgroundColor: "#eef6ff",
+          }}>
             <h2>📋 Reeds besteld</h2>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -552,13 +482,11 @@ export default function Menu({
           </div>
         )}
 
-        {/* WINKELWAGEN — nieuwe items */}
-        <div
-          style={{
-            border: "2px solid #ddd", borderRadius: "12px",
-            padding: "1rem", backgroundColor: "#fafafa",
-          }}
-        >
+        {/* WINKELWAGEN */}
+        <div style={{
+          border: "2px solid #ddd", borderRadius: "12px",
+          padding: "1rem", backgroundColor: "#fafafa",
+        }}>
           <h2>🛒 Nieuwe items toevoegen</h2>
 
           {cart.length === 0 ? (
@@ -576,8 +504,7 @@ export default function Menu({
               <tbody>
                 {cart.map((line) => {
                   const linePrice =
-                    (line.basePrice + line.modifiers.reduce((s, m) => s + m.price, 0)) *
-                    line.qty;
+                    (line.basePrice + line.modifiers.reduce((s, m) => s + m.price, 0)) * line.qty;
                   return (
                     <tr key={line.lineId}>
                       <td style={{ paddingRight: "0.5rem" }}>
@@ -591,14 +518,10 @@ export default function Menu({
                       <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                         <button onClick={() => removeFromCart(line.lineId)}>-</button>
                         <span style={{ margin: "0 0.4rem" }}>{line.qty}</span>
-                        <button
-                          onClick={() => {
-                            const dish = menu.find((d) => d.id === line.dishId);
-                            if (dish) addToCart(dish, line.modifiers);
-                          }}
-                        >
-                          +
-                        </button>
+                        <button onClick={() => {
+                          const dish = menu.find((d) => d.id === line.dishId);
+                          if (dish) addToCart(dish, line.modifiers);
+                        }}>+</button>
                       </td>
                       <td style={{ textAlign: "right" }}>€{linePrice.toFixed(2)}</td>
                       <td>
@@ -623,12 +546,10 @@ export default function Menu({
           <hr style={{ margin: "1rem 0" }} />
           <h3>Nieuw totaal: €{cartTotal.toFixed(2)}</h3>
 
-          <div
-            style={{
-              marginTop: "1rem", display: "flex",
-              flexDirection: "column", gap: "0.75rem",
-            }}
-          >
+          <div style={{
+            marginTop: "1rem", display: "flex",
+            flexDirection: "column", gap: "0.75rem",
+          }}>
             <button onClick={onBack}>← Terug</button>
 
             <button

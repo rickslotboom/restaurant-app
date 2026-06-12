@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Dish, Modifier } from "../types";
+import { useMenuContext } from "../hooks/useMenu";
 
 type Props = {
   menu: Dish[];
@@ -8,15 +9,9 @@ type Props = {
   onDeleteDish: (id: string) => Promise<void>;
 };
 
-const DEFAULT_CATEGORIES = [
-  "Ontbijt",
-  "Dranken",
-  "Snelle hap",
-  "Soepen",
-  "Salades & Bowls",
-  "Lunch",
-  "Broodjes",
-];
+
+
+const isFirestoreItem = (id: string) => /^[a-zA-Z0-9]{20}$/.test(id);
 
 export default function BeheerView({
   menu,
@@ -24,292 +19,387 @@ export default function BeheerView({
   onUpdateDish,
   onDeleteDish,
 }: Props) {
-  // ─────────────────────────────
-  // CATEGORIES
-  // ─────────────────────────────
-  const [extraCategories, setExtraCategories] = useState<string[]>([]);
-  const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
-  const [newCategory, setNewCategory] = useState("");
+  const { categories, addCategory, updateCategory, deleteCategory } = useMenuContext();
 
-  const categories = useMemo(
-    () => [...DEFAULT_CATEGORIES, ...extraCategories],
-    [extraCategories]
-  );
+  const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
+  const [filterCategory, setFilterCategory] = useState<string>("Alle");
 
-  const activeCategories = categories.filter(
-    (c) => !blockedCategories.includes(c)
-  );
-
-  // ─────────────────────────────
-  // ADD DISH FORM
-  // ─────────────────────────────
+  // ── Add dish form ──
   const [form, setForm] = useState({
     name: "",
     price: "",
-    category: DEFAULT_CATEGORIES[0],
+    category: categories[0] ?? "",
     image: "",
     modifiers: [] as Modifier[],
   });
-
- 
   const [saving, setSaving] = useState(false);
+  const [newModifier, setNewModifier] = useState({ name: "", price: "" });
 
-  // ─────────────────────────────
-  // EDIT DISH
-  // ─────────────────────────────
+  // ── Edit dish ──
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [editNewModifier, setEditNewModifier] = useState({ name: "", price: "" });
 
-  // ─────────────────────────────
-  // ADD DISH
-  // ─────────────────────────────
-  
+  // ── Category edit ──
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editCategoryValue, setEditCategoryValue] = useState("");
 
+  const DEFAULT_CATEGORIES = [
+    "Ontbijt", "Dranken", "Snelle hap", "Soepen",
+    "Salades & Bowls", "Lunch", "Broodjes",
+  ];
+
+  const filteredMenu = filterCategory === "Alle"
+    ? menu
+    : menu.filter((d) => d.category === filterCategory);
+
+  // ── Add dish ──
   const submitDish = async () => {
-    if (!form.name.trim()) return;
-
+    if (!form.name.trim() || !form.price) return;
     setSaving(true);
-
     try {
       await onAddDish({
-        name: form.name,
+        name: form.name.trim(),
         price: parseFloat(form.price),
-        category: form.category,
+        category: form.category || categories[0],
         image: form.image || "/images/placeholder.jpg",
         modifiers: form.modifiers ?? [],
-        blocked: false,
       } as any);
-
-      setForm({
-        name: "",
-        price: "",
-        category: DEFAULT_CATEGORIES[0],
-        image: "",
-        modifiers: [],
-      });
+      setForm({ name: "", price: "", category: categories[0] ?? "", image: "", modifiers: [] });
     } finally {
       setSaving(false);
     }
   };
 
-  // ─────────────────────────────
-  // EDIT DISH
-  // ─────────────────────────────
+  // ── Edit dish ──
   const startEdit = (dish: Dish) => {
     setEditingId(dish.id);
-    setEditForm({
-      ...dish,
-      modifiers: dish.modifiers ?? [],
-    });
+    setEditForm({ ...dish, modifiers: dish.modifiers ?? [] });
+    setEditNewModifier({ name: "", price: "" });
   };
 
   const saveEdit = async () => {
     if (!editingId) return;
-
     await onUpdateDish(editingId, {
       name: editForm.name,
-      price: editForm.price,
+      price: parseFloat(editForm.price),
       category: editForm.category,
       image: editForm.image,
       modifiers: editForm.modifiers ?? [],
     });
-
     setEditingId(null);
   };
 
-  // ─────────────────────────────
-  // DISH BLOCK
-  // ─────────────────────────────
+  // ── Block ──
   const toggleDishBlock = async (dish: Dish) => {
-    await onUpdateDish(dish.id, {
-      blocked: !(dish as any).blocked,
-    } as any);
+    await onUpdateDish(dish.id, { blocked: !(dish as any).blocked } as any);
   };
 
-  // ─────────────────────────────
-  // DISH DELETE
-  // ─────────────────────────────
-  const deleteDish = async (id: string) => {
-    if (!window.confirm("Verwijderen?")) return;
-    await onDeleteDish(id);
+  // ── Delete ──
+  const deleteDish = async (dish: Dish) => {
+    if (!isFirestoreItem(dish.id)) {
+      alert("Statische items kunnen niet verwijderd worden. Blokkeer ze in plaats daarvan.");
+      return;
+    }
+    if (!window.confirm(`"${dish.name}" verwijderen?`)) return;
+    await onDeleteDish(dish.id);
   };
 
-  // ─────────────────────────────
-  // CATEGORY
-  // ─────────────────────────────
-  const addCategory = () => {
-    const c = newCategory.trim();
-    if (!c || categories.includes(c)) return;
-    setExtraCategories((p) => [...p, c]);
-    setNewCategory("");
+  // ── Modifiers ──
+  const addModifierToForm = () => {
+    if (!newModifier.name.trim()) return;
+    setForm((f) => ({
+      ...f,
+      modifiers: [...f.modifiers, { id: Date.now().toString(), name: newModifier.name.trim(), price: parseFloat(newModifier.price) || 0 }],
+    }));
+    setNewModifier({ name: "", price: "" });
   };
 
-  const deleteCategory = (cat: string) => {
-    setExtraCategories((p) => p.filter((c) => c !== cat));
-    setBlockedCategories((p) => p.filter((c) => c !== cat));
+  const addModifierToEdit = () => {
+    if (!editNewModifier.name.trim()) return;
+    setEditForm((f: any) => ({
+      ...f,
+      modifiers: [...(f.modifiers ?? []), { id: Date.now().toString(), name: editNewModifier.name.trim(), price: parseFloat(editNewModifier.price) || 0 }],
+    }));
+    setEditNewModifier({ name: "", price: "" });
   };
 
-  const toggleCategoryBlock = (cat: string) => {
-    setBlockedCategories((p) =>
-      p.includes(cat) ? p.filter((c) => c !== cat) : [...p, cat]
-    );
+  const inputStyle: React.CSSProperties = {
+    padding: "0.5rem 0.75rem", borderRadius: "6px",
+    border: "1px solid #ccc", fontSize: "14px", width: "100%",
+    boxSizing: "border-box",
   };
 
-  // ─────────────────────────────
+  const btn = (color: string, small = false): React.CSSProperties => ({
+    padding: small ? "0.3rem 0.6rem" : "0.5rem 1rem",
+    borderRadius: "6px", border: "none", background: color,
+    color: "white", cursor: "pointer", fontSize: small ? "12px" : "13px",
+    fontWeight: "500", whiteSpace: "nowrap",
+  });
+
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>Beheer</h2>
+    <div style={{ padding: "1.5rem", maxWidth: "960px", margin: "0 auto" }}>
+      <h2 style={{ marginBottom: "1.5rem" }}>Beheer</h2>
 
-      {/* ───────── ADD DISH ───────── */}
-      <div style={{ marginBottom: "2rem" }}>
-        <input
-          placeholder="Naam"
-          value={form.name}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, name: e.target.value }))
-          }
-        />
-
-        <input
-          placeholder="Prijs"
-          value={form.price}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, price: e.target.value }))
-          }
-        />
-
-        <select
-          value={form.category}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, category: e.target.value }))
-          }
-        >
-          {activeCategories.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-
-        <input
-          placeholder="Afbeelding"
-          value={form.image}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, image: e.target.value }))
-          }
-        />
-
-        <button onClick={submitDish}>
-          {saving ? "Opslaan..." : "Toevoegen"}
-        </button>
-      </div>
-
-      {/* ───────── CATEGORY MANAGEMENT ───────── */}
-      <h3>Categorieën</h3>
-
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <input
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
-          placeholder="Nieuwe categorie"
-        />
-        <button onClick={addCategory}>+</button>
-      </div>
-
-      {categories.map((c) => (
-        <div
-          key={c}
-          style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}
-        >
-          <span>{c}</span>
-
-          <button onClick={() => toggleCategoryBlock(c)}>
-            {blockedCategories.includes(c) ? "Unhide" : "Block"}
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
+        {(["menu", "categories"] as const).map((t) => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{
+            padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
+            background: activeTab === t ? "#2196F3" : "#eee",
+            color: activeTab === t ? "white" : "#333",
+            fontWeight: "600", cursor: "pointer",
+          }}>
+            {t === "menu" ? "Menu" : "Categorieën"}
           </button>
+        ))}
+      </div>
 
-          <button onClick={() => deleteCategory(c)}>Delete</button>
-        </div>
-      ))}
-
-      {/* ───────── MENU LIST ───────── */}
-      <h3>Menu</h3>
-
-      {menu.map((dish) => {
-        const blocked = (dish as any).blocked;
-
-        return (
-          <div
-            key={dish.id}
-            style={{
-              padding: "0.5rem",
-              marginBottom: "0.5rem",
-              background: blocked ? "#ffe6e6" : "#f5f5f5",
-            }}
-          >
-            {editingId === dish.id ? (
-              <>
-                <input
-                  value={editForm.name || ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({
-                      ...f,
-                      name: e.target.value,
-                    }))
-                  }
-                />
-
-                <input
-                  value={editForm.price || ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({
-                      ...f,
-                      price: parseFloat(e.target.value),
-                    }))
-                  }
-                />
-
-                <select
-                  value={editForm.category}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({
-                      ...f,
-                      category: e.target.value,
-                    }))
-                  }
-                >
-                  {categories.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
+      {/* ───── MENU TAB ───── */}
+      {activeTab === "menu" && (
+        <>
+          {/* Add form */}
+          <div style={{
+            background: "#f9f9f9", borderRadius: "10px",
+            padding: "1.25rem", marginBottom: "2rem", border: "1px solid #e0e0e0",
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Nieuw gerecht toevoegen</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+              <div>
+                <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Naam *</label>
+                <input style={inputStyle} placeholder="Naam" value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Prijs *</label>
+                <input style={inputStyle} type="number" step="0.01" placeholder="0.00" value={form.price}
+                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Categorie</label>
+                <select style={inputStyle} value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}>
+                  {categories.map((c) => <option key={c}>{c}</option>)}
                 </select>
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Afbeelding URL</label>
+                <input style={inputStyle} placeholder="/images/..." value={form.image}
+                  onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} />
+              </div>
+            </div>
 
-                <input
-                  value={editForm.image || ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({
-                      ...f,
-                      image: e.target.value,
-                    }))
-                  }
-                />
-
-                <button onClick={saveEdit}>Opslaan</button>
-              </>
-            ) : (
-              <>
-                <strong>{dish.name}</strong> €{dish.price}
-
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => startEdit(dish)}>✏️</button>
-                  <button onClick={() => toggleDishBlock(dish)}>
-                    {blocked ? "Unblock" : "Block"}
-                  </button>
-                  <button onClick={() => deleteDish(dish.id)}>
-                    🗑
-                  </button>
+            <div style={{ marginBottom: "0.75rem" }}>
+              <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Opties / extras</label>
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                <input style={{ ...inputStyle, flex: 1, width: "auto" }} placeholder="Naam (bv. havermelk)"
+                  value={newModifier.name} onChange={(e) => setNewModifier((m) => ({ ...m, name: e.target.value }))} />
+                <input style={{ ...inputStyle, width: "80px" }} type="number" step="0.01" placeholder="€0.00"
+                  value={newModifier.price} onChange={(e) => setNewModifier((m) => ({ ...m, price: e.target.value }))} />
+                <button style={btn("#555")} onClick={addModifierToForm}>+ Optie</button>
+              </div>
+              {form.modifiers.map((m, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "13px", flex: 1 }}>{m.name} — €{Number(m.price).toFixed(2)}</span>
+                  <button style={btn("#d9534f", true)} onClick={() =>
+                    setForm((f) => ({ ...f, modifiers: f.modifiers.filter((_, i) => i !== idx) }))}>✕</button>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
+
+            <button style={btn("#4CAF50")} onClick={submitDish} disabled={saving}>
+              {saving ? "Opslaan..." : "➕ Toevoegen"}
+            </button>
           </div>
-        );
-      })}
+
+          {/* Category filter */}
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+            {["Alle", ...categories].map((c) => (
+              <button key={c} onClick={() => setFilterCategory(c)} style={{
+                padding: "0.3rem 0.75rem", borderRadius: "20px", border: "none",
+                background: filterCategory === c ? "#2196F3" : "#eee",
+                color: filterCategory === c ? "white" : "#333",
+                cursor: "pointer", fontSize: "13px",
+              }}>{c}</button>
+            ))}
+          </div>
+
+          {/* Menu list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {filteredMenu.map((dish) => {
+              const blocked = (dish as any).blocked;
+              const editable = isFirestoreItem(dish.id);
+
+              return (
+                <div key={dish.id} style={{
+                  background: blocked ? "#fff5f5" : "#fff",
+                  border: `1px solid ${blocked ? "#ffcccc" : "#e0e0e0"}`,
+                  borderRadius: "8px", padding: "0.75rem 1rem",
+                }}>
+                  {editingId === dish.id ? (
+                    <div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                        <input style={inputStyle} value={editForm.name || ""}
+                          onChange={(e) => setEditForm((f: any) => ({ ...f, name: e.target.value }))} />
+                        <input style={inputStyle} type="number" step="0.01" value={editForm.price || ""}
+                          onChange={(e) => setEditForm((f: any) => ({ ...f, price: e.target.value }))} />
+                        <select style={inputStyle} value={editForm.category}
+                          onChange={(e) => setEditForm((f: any) => ({ ...f, category: e.target.value }))}>
+                          {categories.map((c) => <option key={c}>{c}</option>)}
+                        </select>
+                        <input style={inputStyle} value={editForm.image || ""}
+                          onChange={(e) => setEditForm((f: any) => ({ ...f, image: e.target.value }))} />
+                      </div>
+
+                      <div style={{ marginBottom: "0.5rem" }}>
+                        <label style={{ fontSize: "12px", color: "#666" }}>Opties / extras</label>
+                        <div style={{ display: "flex", gap: "0.5rem", margin: "0.4rem 0" }}>
+                          <input style={{ ...inputStyle, flex: 1, width: "auto" }} placeholder="Naam"
+                            value={editNewModifier.name} onChange={(e) => setEditNewModifier((m) => ({ ...m, name: e.target.value }))} />
+                          <input style={{ ...inputStyle, width: "80px" }} type="number" step="0.01" placeholder="€0.00"
+                            value={editNewModifier.price} onChange={(e) => setEditNewModifier((m) => ({ ...m, price: e.target.value }))} />
+                          <button style={btn("#555")} onClick={addModifierToEdit}>+ Optie</button>
+                        </div>
+                        {(editForm.modifiers ?? []).map((m: any, idx: number) => (
+                          <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
+                            <span style={{ fontSize: "13px", flex: 1 }}>{m.name} — €{Number(m.price).toFixed(2)}</span>
+                            <button style={btn("#d9534f", true)} onClick={() =>
+                              setEditForm((f: any) => ({ ...f, modifiers: f.modifiers.filter((_: any, i: number) => i !== idx) }))}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button style={btn("#4CAF50")} onClick={saveEdit}>✅ Opslaan</button>
+                        <button style={btn("#999")} onClick={() => setEditingId(null)}>Annuleren</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <img src={dish.image} alt={dish.name} style={{
+                        width: "40px", height: "40px", borderRadius: "6px",
+                        objectFit: "cover", flexShrink: 0,
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: "600", fontSize: "14px" }}>{dish.name}</div>
+                        <div style={{ fontSize: "12px", color: "#888" }}>
+                          {dish.category} · €{dish.price.toFixed(2)}
+                          {(dish.modifiers ?? []).length > 0 && ` · ${dish.modifiers!.length} optie(s)`}
+                        </div>
+                      </div>
+
+                      {!editable && (
+                        <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>statisch</span>
+                      )}
+                      {blocked && (
+                        <span style={{
+                          fontSize: "11px", background: "#ffcccc", color: "#c00",
+                          padding: "2px 6px", borderRadius: "4px",
+                        }}>geblokkeerd</span>
+                      )}
+
+                      <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                        {editable && (
+                          <button style={btn("#2196F3", true)} onClick={() => startEdit(dish)}>✏️</button>
+                        )}
+                        <button style={btn(blocked ? "#4CAF50" : "#FF9800", true)} onClick={() => toggleDishBlock(dish)}>
+                          {blocked ? "🔓 Tonen" : "🚫 Blokkeren"}
+                        </button>
+                        {editable && (
+                          <button style={btn("#d9534f", true)} onClick={() => deleteDish(dish)}>🗑</button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* ───── CATEGORIES TAB ───── */}
+      {activeTab === "categories" && (
+        <div>
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+            <input
+              style={{ ...inputStyle, flex: 1, width: "auto" }}
+              placeholder="Nieuwe categorie naam"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  addCategory(newCategoryName);
+                  setNewCategoryName("");
+                }
+              }}
+            />
+            <button style={btn("#4CAF50")} onClick={() => {
+              addCategory(newCategoryName);
+              setNewCategoryName("");
+            }}>+ Toevoegen</button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {categories.map((c) => {
+              const isDefault = DEFAULT_CATEGORIES.includes(c);
+              const dishCount = menu.filter((d) => d.category === c).length;
+
+              return (
+                <div key={c} style={{
+                  display: "flex", alignItems: "center", gap: "0.75rem",
+                  background: "#fff", border: "1px solid #e0e0e0",
+                  borderRadius: "8px", padding: "0.75rem 1rem",
+                }}>
+                  {editingCategory === c ? (
+                    <>
+                      <input
+                        style={{ ...inputStyle, flex: 1 }}
+                        value={editCategoryValue}
+                        onChange={(e) => setEditCategoryValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            updateCategory(c, editCategoryValue);
+                            setEditingCategory(null);
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <button style={btn("#4CAF50")} onClick={() => {
+                        updateCategory(c, editCategoryValue);
+                        setEditingCategory(null);
+                      }}>✅ Opslaan</button>
+                      <button style={btn("#999")} onClick={() => setEditingCategory(null)}>Annuleren</button>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ flex: 1, fontWeight: "500" }}>{c}</span>
+                      <span style={{ fontSize: "12px", color: "#aaa" }}>{dishCount} item(s)</span>
+                      {isDefault && (
+                        <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>standaard</span>
+                      )}
+                      <button style={btn("#2196F3", true)} onClick={() => {
+                        setEditingCategory(c);
+                        setEditCategoryValue(c);
+                      }}>✏️ Hernoemen</button>
+                      {!isDefault && (
+                        <button style={btn("#d9534f", true)} onClick={() => {
+                          if (dishCount > 0) {
+                            alert(`Er zijn nog ${dishCount} items in deze categorie. Verplaats ze eerst.`);
+                            return;
+                          }
+                          deleteCategory(c);
+                        }}>🗑 Verwijderen</button>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
