@@ -10,6 +10,6 @@
     "\\src\\hooks",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\index.tsx",
+  "SelectedNode": "\\src\\hooks\\useOrders.tsx",
   "PreviewInSolutionExplorer": false
 }

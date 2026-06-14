@@ -9,28 +9,34 @@ type Props = {
 
 const DISC_OPTIONS = [0, 30, 50, 100];
 
+// Helper: prijs van één item inclusief modifiers
+const itemFullPrice = (item: Order["items"][0]) => {
+  return item.price * item.qty;
+};
+
 export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   const [paymentStep, setPaymentStep] = useState<"discount" | "method" | "tip">("discount");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "pin" | null>(null);
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
 
-  // Per-item discounts
   const [itemDiscounts, setItemDiscounts] = useState<number[]>(order.items.map(() => 0));
   const [itemCustomDisc, setItemCustomDisc] = useState<string[]>(order.items.map(() => ""));
-  // Order-level discount
   const [orderDiscount, setOrderDiscount] = useState<number>(0);
   const [orderCustomDisc, setOrderCustomDisc] = useState<string>("");
 
   const tipOptions = [0, 1, 2, 5];
 
+  console.log("order items:", JSON.stringify(order.items, null, 2));
+
+  // Subtotaal: basisprijs + modifiers per item, na regelkorting
   const subtotal = order.items.reduce(
-    (sum, item, i) => sum + item.price * item.qty * (1 - itemDiscounts[i] / 100),
+    (sum, item, i) => sum + itemFullPrice(item) * (1 - itemDiscounts[i] / 100),
     0
   );
   const orderDiscAmt = subtotal * orderDiscount / 100;
   const total = subtotal - orderDiscAmt;
-  const origTotal = order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const origTotal = order.items.reduce((sum, item) => sum + itemFullPrice(item), 0);
   const savings = origTotal - total;
 
   const setItemDisc = (i: number, pct: number) => {
@@ -60,12 +66,51 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
     width: "80px", padding: "0.4rem", borderRadius: "6px",
     border: "1px solid #ccc", fontSize: "0.95rem",
   };
+
   const discBtnStyle = (active: boolean) => ({
     padding: "0.4rem 0.7rem", borderRadius: "8px",
     border: `2px solid ${active ? "#2196F3" : "#ccc"}`,
     background: active ? "#e3f2fd" : "#fff",
     cursor: "pointer", fontWeight: "bold" as const, fontSize: "0.85rem",
   });
+
+  // Herbruikbaar item overzicht met modifiers
+  const ItemOverview = ({ showDiscount = false }: { showDiscount?: boolean }) => (
+    <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
+      {order.items.map((item, i) => {
+        const disc = itemDiscounts[i];
+        const orig = itemFullPrice(item);
+        const final = orig * (1 - disc / 100);
+        return (
+          <li key={i} style={{ marginBottom: "0.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+              <span style={{ fontWeight: "500" }}>{item.qty}× {item.name}</span>
+              <span>
+                {showDiscount && disc > 0 && (
+                  <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px", fontSize: "0.8rem" }}>
+                    €{orig.toFixed(2)}
+                  </span>
+                )}
+                €{final.toFixed(2)}
+              </span>
+            </div>
+            {(item.modifiers ?? []).map((mod, mIdx) => (
+              <div key={mIdx} style={{
+                display: "flex", justifyContent: "space-between",
+                paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#555",
+                marginBottom: "2px",
+              }}>
+                <span>↳ {mod.name}</span>
+                {mod.price > 0 && (
+                  <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
+                )}
+              </div>
+            ))}
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   return (
     <div style={{
@@ -74,7 +119,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
     }}>
       <div style={{
         background: "white", borderRadius: "12px", padding: "2rem",
-        width: "380px", maxHeight: "90vh", overflowY: "auto",
+        width: "400px", maxHeight: "90vh", overflowY: "auto",
         boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
       }}>
         <h3 style={{ marginTop: 0 }}>Afrekenen — Tafel {order.table}</h3>
@@ -84,13 +129,13 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Korting per regel:</p>
             {order.items.map((item, i) => {
-              const orig = item.price * item.qty;
+              const orig = itemFullPrice(item);
               const disc = itemDiscounts[i];
               const final = orig * (1 - disc / 100);
               return (
                 <div key={i} style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #eee" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                    <span>{item.qty}× {item.name}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                    <span style={{ fontWeight: "500" }}>{item.qty}× {item.name}</span>
                     <span>
                       {disc > 0 && (
                         <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px" }}>
@@ -100,7 +145,18 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
                       <strong>€{final.toFixed(2)}</strong>
                     </span>
                   </div>
-                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "0.4rem" }}>
+                  {(item.modifiers ?? []).map((mod, mIdx) => (
+                    <div key={mIdx} style={{
+                      display: "flex", justifyContent: "space-between",
+                      paddingLeft: "1.25rem", fontSize: "0.82rem", color: "#555", marginBottom: "0.2rem",
+                    }}>
+                      <span>↳ {mod.name}</span>
+                      {mod.price > 0 && (
+                        <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
+                      )}
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "0.5rem", marginBottom: "0.4rem" }}>
                     {DISC_OPTIONS.map(p => (
                       <button key={p} onClick={() => setItemDisc(i, p)}
                         style={discBtnStyle(disc === p && itemCustomDisc[i] === "")}>
@@ -154,22 +210,28 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
               width: "100%", background: "#2196F3", color: "white",
               border: "none", padding: "0.75rem", borderRadius: "8px",
               cursor: "pointer", fontSize: "1rem", fontWeight: "bold",
-            }}>
-              Doorgaan →
-            </button>
+            }}>Doorgaan →</button>
             <button onClick={onCancel} style={{
               marginTop: "0.5rem", width: "100%", background: "#fff",
               border: "1px solid #ccc", padding: "0.5rem", borderRadius: "8px",
               cursor: "pointer", color: "#d9534f",
-            }}>
-              Annuleren
-            </button>
+            }}>Annuleren</button>
           </>
         )}
 
         {/* Stap 2: Betaalmethode */}
         {paymentStep === "method" && (
           <>
+            <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>
+            <ItemOverview showDiscount />
+            {savings > 0.001 && (
+              <p style={{ fontSize: "0.9rem", color: "#2e7d32", margin: "0 0 0.25rem" }}>
+                Korting: −€{savings.toFixed(2)}
+              </p>
+            )}
+            <strong style={{ fontSize: "1.1rem", display: "block", marginBottom: "1rem" }}>
+              Totaal: €{total.toFixed(2)}
+            </strong>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem" }}>
               <button onClick={() => handleMethodSelect("cash")} style={{
@@ -193,6 +255,9 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
         {/* Stap 3: Fooi */}
         {paymentStep === "tip" && (
           <>
+            <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>
+            <ItemOverview showDiscount />
+
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Fooi toevoegen?</p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
               {tipOptions.map((t) => (
@@ -213,6 +278,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
                 onChange={e => { setCustomTip(e.target.value); setTipAmount(parseFloat(e.target.value) || 0); }}
                 style={{ width: "80px", padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc", fontSize: "0.95rem" }} />
             </div>
+
             <div style={{ background: "#f5f5f5", borderRadius: "8px", padding: "0.75rem", marginBottom: "1rem" }}>
               <p style={{ margin: 0, fontSize: "0.9rem", color: "#555" }}>
                 Betaalmethode: <strong>{paymentMethod === "cash" ? "💵 Cash" : "💳 Pin"}</strong>
@@ -229,6 +295,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
                 Totaal incl. fooi: €{(total + tipAmount).toFixed(2)}
               </p>
             </div>
+
             <button onClick={handleConfirmPayment} style={{
               width: "100%", background: "#4CAF50", color: "white",
               border: "none", padding: "0.75rem", borderRadius: "8px",
@@ -238,6 +305,11 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
               marginTop: "0.5rem", width: "100%", background: "#eee",
               border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer",
             }}>← Terug</button>
+            <button onClick={onCancel} style={{
+              marginTop: "0.5rem", width: "100%", background: "#fff",
+              border: "1px solid #ccc", padding: "0.5rem", borderRadius: "8px",
+              cursor: "pointer", color: "#d9534f",
+            }}>Annuleren</button>
           </>
         )}
       </div>

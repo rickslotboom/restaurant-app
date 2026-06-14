@@ -55,6 +55,11 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             name: i.name ?? "Onbekend",
             price: i.price ?? 0,
             qty: i.qty ?? 0,
+            modifiers: (i.modifiers ?? []).map((m: any) => ({
+              id: m.id ?? "",
+              name: m.name ?? "",
+              price: m.price ?? 0,
+            })),
           })),
         } as Order;
       });

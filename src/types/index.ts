@@ -1,8 +1,10 @@
 export type Modifier = {
   id: string;
   name: string;
-  price: number; // extra prijs bovenop basisprijs (0 = gratis optie)
+  price: number;
 };
+
+export type VatRate = 9 | 21;
 
 export type Dish = {
   id: string;
@@ -10,7 +12,8 @@ export type Dish = {
   price: number;
   image: string;
   category: string;
-  modifiers?: Modifier[]; // optioneel — alleen voor gerechten met keuzes
+  vatRate?: VatRate;
+  modifiers?: Modifier[];
 };
 
 export type OrderStatus = "Open" | "Afgehandeld" | "Betaald";
@@ -22,6 +25,7 @@ export type OrderItem = {
   name: string;
   price: number;
   qty: number;
+  vatRate?: VatRate;
   modifiers?: {
     id: string;
     name: string;
@@ -36,11 +40,8 @@ export type Order = {
   items: OrderItem[];
   status: OrderStatus;
   waiter: string;
-
   timestamp?: number;
   createdAt?: any;
   orderNumber?: string;
-
-  // NIEUW
   discount?: DiscountPercentage;
 };

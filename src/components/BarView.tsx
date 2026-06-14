@@ -20,6 +20,31 @@ const isBeforeToday = (ts?: number) => {
   return d < today;
 };
 
+function OrderItemsList({ items }: { items: OrderItem[] }) {
+  return (
+    <ul style={{ margin: "0.5rem 0", listStyle: "none", padding: 0 }}>
+      {items.map((item, idx) => (
+        <li key={idx}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span><strong>{item.qty}×</strong> {item.name}</span>
+          </div>
+          {(item.modifiers ?? []).map((mod, mIdx) => (
+            <div key={mIdx} style={{
+              display: "flex", justifyContent: "space-between",
+              paddingLeft: "1.5rem", fontSize: "0.875rem", color: "#555",
+            }}>
+              <span>↳ {mod.name}</span>
+              {mod.price > 0 && (
+                <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
+              )}
+            </div>
+          ))}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 type Props = {
   orders: Order[];
   menu: Dish[];
@@ -63,12 +88,10 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
     prevOrderIds.current = new Set(orders.map((o) => o.id));
   }, [orders, filterBarItems]);
 
-  // Openstaande bonnen van vóór vandaag
   const oldOpenOrders = orders.filter((o) =>
     o.status === "Open" && hasBarItems(o) && isBeforeToday(o.timestamp)
   );
 
-  // Alleen bonnen van vandaag
   const openOrders = orders
     .filter((o) => o.status === "Open" && hasBarItems(o) && isToday(o.timestamp))
     .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
@@ -83,11 +106,9 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
     let matchesWaiter = true;
     let matchesTable = true;
     let matchesOrderNumber = true;
-
     if (searchWaiter) matchesWaiter = o.waiter?.toLowerCase().includes(searchWaiter.toLowerCase());
     if (searchTable) matchesTable = o.table?.toLowerCase().includes(searchTable.toLowerCase());
     if (searchOrderNumber) matchesOrderNumber = (o.orderNumber ?? "").toLowerCase().includes(searchOrderNumber.toLowerCase());
-
     return matchesWaiter && matchesTable && matchesOrderNumber;
   });
 
@@ -116,7 +137,6 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
 
       <h2>Baroverzicht</h2>
 
-      {/* Waarschuwing openstaande bonnen van gisteren of eerder */}
       {oldOpenOrders.length > 0 && (
         <div style={{
           background: "#fff3cd", border: "2px solid #ffc107", borderRadius: "10px",
@@ -146,24 +166,18 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
       )}
 
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <button
-          onClick={() => setTab("open")}
-          style={{
-            padding: "0.5rem 1rem", borderRadius: "8px",
-            background: tab === "open" ? "#2196F3" : "#eee",
-            color: tab === "open" ? "white" : "black",
-          }}
-        >
+        <button onClick={() => setTab("open")} style={{
+          padding: "0.5rem 1rem", borderRadius: "8px",
+          background: tab === "open" ? "#2196F3" : "#eee",
+          color: tab === "open" ? "white" : "black",
+        }}>
           Open orders ({openOrders.length})
         </button>
-        <button
-          onClick={() => setTab("history")}
-          style={{
-            padding: "0.5rem 1rem", borderRadius: "8px",
-            background: tab === "history" ? "#2196F3" : "#eee",
-            color: tab === "history" ? "white" : "black",
-          }}
-        >
+        <button onClick={() => setTab("history")} style={{
+          padding: "0.5rem 1rem", borderRadius: "8px",
+          background: tab === "history" ? "#2196F3" : "#eee",
+          color: tab === "history" ? "white" : "black",
+        }}>
           Geschiedenis ({historyOrders.length})
         </button>
       </div>
@@ -171,17 +185,20 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <div>
           <label>Bediener:</label><br />
-          <input type="text" placeholder="Naam" value={searchWaiter} onChange={(e) => setSearchWaiter(e.target.value)}
+          <input type="text" placeholder="Naam" value={searchWaiter}
+            onChange={(e) => setSearchWaiter(e.target.value)}
             style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }} />
         </div>
         <div>
           <label>Tafel:</label><br />
-          <input type="text" placeholder="tafel" value={searchTable} onChange={(e) => setSearchTable(e.target.value)}
+          <input type="text" placeholder="tafel" value={searchTable}
+            onChange={(e) => setSearchTable(e.target.value)}
             style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }} />
         </div>
         <div>
           <label>Ordernummer:</label><br />
-          <input type="text" placeholder="bv. 202511-00001" value={searchOrderNumber} onChange={(e) => setSearchOrderNumber(e.target.value)}
+          <input type="text" placeholder="bv. 202511-00001" value={searchOrderNumber}
+            onChange={(e) => setSearchOrderNumber(e.target.value)}
             style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }} />
         </div>
       </div>
@@ -193,13 +210,10 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
           {displayed.map((order) => {
             const barItems = filterBarItems(order);
             return (
-              <div
-                key={order.id}
-                style={{
-                  border: "2px solid #ccc", borderRadius: "10px", padding: "1rem",
-                  backgroundColor: order.status === "Afgehandeld" ? "#e8f5e9" : "#fff",
-                }}
-              >
+              <div key={order.id} style={{
+                border: "2px solid #ccc", borderRadius: "10px", padding: "1rem",
+                backgroundColor: order.status === "Afgehandeld" ? "#e8f5e9" : "#fff",
+              }}>
                 <h3 style={{ marginBottom: "0.3rem" }}>🍹 Tafel {order.table}</h3>
                 {order.timestamp && (
                   <p style={{ fontSize: "0.9rem", color: "#555", margin: "0 0 0.5rem 0" }}>
@@ -216,11 +230,7 @@ export default function BarView({ orders, menu, onUpdateStatus, onLogout }: Prop
                     Ordernummer: {order.orderNumber}
                   </p>
                 )}
-                <ul style={{ margin: "0.5rem 0" }}>
-                  {barItems.map((item, idx) => (
-                    <li key={idx}>{item.qty}× {item.name}</li>
-                  ))}
-                </ul>
+                <OrderItemsList items={barItems} />
                 {order.status === "Open" && tab === "open" && (
                   <button
                     onClick={() => onUpdateStatus(order.id, "Afgehandeld")}

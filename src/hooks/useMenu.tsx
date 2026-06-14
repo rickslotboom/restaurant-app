@@ -17,7 +17,7 @@ import {
   updateDoc,
   setDoc,
 } from "firebase/firestore";
-import { Dish } from "../types";
+import { Dish, VatRate } from "../types";
 import { MENU } from "../data/menuData";
 
 type MenuContextValue = {
@@ -59,6 +59,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           category: data.category ?? "",
           image: data.image ?? "/images/placeholder.jpg",
           modifiers: data.modifiers ?? [],
+          vatRate: (data.vatRate ?? 9) as VatRate,
           blocked: data.blocked ?? false,
         } as Dish & { blocked?: boolean };
       });
@@ -141,6 +142,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await addDoc(collection(db, "menu"), {
       ...dish,
       modifiers: dish.modifiers ?? [],
+      vatRate: dish.vatRate ?? 9,
       blocked: false,
     });
   }, []);

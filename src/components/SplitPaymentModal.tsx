@@ -11,6 +11,7 @@ type SplitLine = {
   dishId: string;
   name: string;
   price: number;
+  modifiers: { id: string; name: string; price: number }[];
   selected: boolean;
   discount: number;
   customDisc: string;
@@ -30,6 +31,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
         dishId: item.dishId,
         name: item.name,
         price: item.price,
+        modifiers: item.modifiers ?? [],
         selected: false,
         discount: 0,
         customDisc: "",
@@ -37,7 +39,6 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
     )
   );
 
-  // Order-level discount op geselecteerde regels
   const [orderDiscount, setOrderDiscount] = useState<number>(0);
   const [orderCustomDisc, setOrderCustomDisc] = useState<string>("");
 
@@ -69,17 +70,19 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   const selectedLines = lines.filter((l) => l.selected);
   const anySelected = selectedLines.length > 0;
 
-  // Subtotaal na regelkortingen
+  // Prijs per regel inclusief modifiers
+  const lineFullPrice = (line: SplitLine) => {
+    const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
+    return line.price + modTotal;
+  };
+
   const subtotal = selectedLines.reduce(
-    (sum, l) => sum + l.price * (1 - l.discount / 100),
+    (sum, l) => sum + lineFullPrice(l) * (1 - l.discount / 100),
     0
   );
-  // Totaal na orderkorting
   const orderDiscAmt = subtotal * orderDiscount / 100;
   const total = subtotal - orderDiscAmt;
-
-  // Origineel subtotaal (zonder korting) voor besparing
-  const origSubtotal = selectedLines.reduce((sum, l) => sum + l.price, 0);
+  const origSubtotal = selectedLines.reduce((sum, l) => sum + lineFullPrice(l), 0);
   const savings = origSubtotal - total;
 
   const handleMethodSelect = (method: "cash" | "pin") => {
@@ -100,6 +103,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
           name: line.name,
           price: line.price,
           qty: 1,
+          modifiers: line.modifiers,
         };
       }
     });
@@ -139,16 +143,31 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1rem" }}>
               {lines.map((line, idx) => (
                 <label key={idx} style={{
-                  display: "flex", alignItems: "center", gap: "0.75rem",
+                  display: "flex", alignItems: "flex-start", gap: "0.75rem",
                   padding: "0.6rem 0.75rem", borderRadius: "8px", cursor: "pointer",
                   background: line.selected ? "#e3f2fd" : "#f9f9f9",
                   border: `2px solid ${line.selected ? "#2196F3" : "#e0e0e0"}`,
                 }}>
                   <input type="checkbox" checked={line.selected}
                     onChange={() => toggleLine(idx)}
-                    style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                  <span style={{ flex: 1 }}>{line.name}</span>
-                  <span style={{ fontWeight: "bold" }}>€{line.price.toFixed(2)}</span>
+                    style={{ width: "18px", height: "18px", cursor: "pointer", marginTop: "2px" }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>{line.name}</span>
+                      <span style={{ fontWeight: "bold" }}>€{lineFullPrice(line).toFixed(2)}</span>
+                    </div>
+                    {line.modifiers.map((mod, mIdx) => (
+                      <div key={mIdx} style={{
+                        display: "flex", justifyContent: "space-between",
+                        paddingLeft: "0.75rem", fontSize: "0.8rem", color: "#555", marginTop: "2px",
+                      }}>
+                        <span>↳ {mod.name}</span>
+                        {mod.price > 0 && (
+                          <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </label>
               ))}
             </div>
@@ -159,7 +178,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
             }}>
               <span style={{ fontWeight: "bold" }}>Geselecteerd:</span>
               <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-                €{selectedLines.reduce((s, l) => s + l.price, 0).toFixed(2)}
+                €{selectedLines.reduce((s, l) => s + lineFullPrice(l), 0).toFixed(2)}
               </span>
             </div>
 
@@ -168,15 +187,11 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
               color: "white", border: "none", padding: "0.75rem",
               borderRadius: "8px", cursor: anySelected ? "pointer" : "not-allowed",
               fontSize: "1rem", fontWeight: "bold", marginBottom: "0.5rem",
-            }}>
-              Verder →
-            </button>
+            }}>Verder →</button>
             <button onClick={onCancel} style={{
               width: "100%", background: "#fff", border: "1px solid #ccc",
               padding: "0.5rem", borderRadius: "8px", cursor: "pointer", color: "#d9534f",
-            }}>
-              Annuleren
-            </button>
+            }}>Annuleren</button>
           </>
         )}
 
@@ -186,15 +201,14 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Korting per gerecht:</p>
             {selectedLines.map((line, i) => {
               const globalIdx = lines.indexOf(line);
-              const orig = line.price;
+              const orig = lineFullPrice(line);
               const final = orig * (1 - line.discount / 100);
               return (
                 <div key={i} style={{
-                  marginBottom: "0.85rem", paddingBottom: "0.85rem",
-                  borderBottom: "1px solid #eee",
+                  marginBottom: "0.85rem", paddingBottom: "0.85rem", borderBottom: "1px solid #eee",
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.35rem" }}>
-                    <span style={{ fontSize: "0.95rem" }}>{line.name}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.2rem" }}>
+                    <span style={{ fontSize: "0.95rem", fontWeight: "500" }}>{line.name}</span>
                     <span>
                       {line.discount > 0 && (
                         <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px", fontSize: "0.85rem" }}>
@@ -204,7 +218,18 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
                       <strong>€{final.toFixed(2)}</strong>
                     </span>
                   </div>
-                  <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "0.3rem" }}>
+                  {line.modifiers.map((mod, mIdx) => (
+                    <div key={mIdx} style={{
+                      display: "flex", justifyContent: "space-between",
+                      paddingLeft: "1rem", fontSize: "0.8rem", color: "#555", marginBottom: "2px",
+                    }}>
+                      <span>↳ {mod.name}</span>
+                      {mod.price > 0 && (
+                        <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
+                      )}
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "0.4rem", marginBottom: "0.3rem" }}>
                     {DISC_OPTIONS.map(p => (
                       <button key={p} onClick={() => setLineDisc(globalIdx, p)}
                         style={discBtnStyle(line.discount === p && line.customDisc === "")}>
@@ -258,35 +283,42 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
               width: "100%", background: "#2196F3", color: "white",
               border: "none", padding: "0.75rem", borderRadius: "8px",
               cursor: "pointer", fontSize: "1rem", fontWeight: "bold", marginBottom: "0.5rem",
-            }}>
-              Doorgaan →
-            </button>
+            }}>Doorgaan →</button>
             <button onClick={() => setStep("select")} style={{
               width: "100%", background: "#eee", border: "none",
               padding: "0.5rem", borderRadius: "8px", cursor: "pointer", marginBottom: "0.5rem",
-            }}>
-              ← Terug
-            </button>
+            }}>← Terug</button>
             <button onClick={onCancel} style={{
               width: "100%", background: "#fff", border: "1px solid #ccc",
               padding: "0.5rem", borderRadius: "8px", cursor: "pointer", color: "#d9534f",
-            }}>
-              Annuleren
-            </button>
+            }}>Annuleren</button>
           </>
         )}
 
         {/* STAP 3: Betaalmethode */}
         {step === "method" && (
           <>
-            <ul style={{ margin: "0 0 0.75rem 0", paddingLeft: "1.2rem" }}>
+            <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>
+            <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
               {selectedLines.map((line, idx) => (
-                <li key={idx} style={{ fontSize: "0.9rem" }}>
-                  {line.name}
-                  {line.discount > 0 && (
-                    <span style={{ color: "#2e7d32", marginLeft: "6px" }}>−{line.discount}%</span>
-                  )}
-                  {" "}— €{(line.price * (1 - line.discount / 100)).toFixed(2)}
+                <li key={idx} style={{ marginBottom: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+                    <span>{line.name}{line.discount > 0 && (
+                      <span style={{ color: "#2e7d32", marginLeft: "6px", fontSize: "0.8rem" }}>−{line.discount}%</span>
+                    )}</span>
+                    <span>€{(lineFullPrice(line) * (1 - line.discount / 100)).toFixed(2)}</span>
+                  </div>
+                  {line.modifiers.map((mod, mIdx) => (
+                    <div key={mIdx} style={{
+                      display: "flex", justifyContent: "space-between",
+                      paddingLeft: "1rem", fontSize: "0.8rem", color: "#555",
+                    }}>
+                      <span>↳ {mod.name}</span>
+                      {mod.price > 0 && (
+                        <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
+                      )}
+                    </div>
+                  ))}
                 </li>
               ))}
             </ul>
@@ -295,11 +327,11 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
                 Korting: −€{savings.toFixed(2)}
               </p>
             )}
-            <strong style={{ fontSize: "1.1rem" }}>Totaal: €{total.toFixed(2)}</strong>
+            <strong style={{ fontSize: "1.1rem", display: "block", marginBottom: "1rem" }}>
+              Totaal: €{total.toFixed(2)}
+            </strong>
 
-            <p style={{ marginTop: "1.25rem", marginBottom: "0.5rem", fontWeight: "bold" }}>
-              Betaalmethode:
-            </p>
+            <p style={{ marginBottom: "0.5rem", fontWeight: "bold" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
               <button onClick={() => handleMethodSelect("cash")} style={{
                 flex: 1, background: "#4CAF50", color: "white",

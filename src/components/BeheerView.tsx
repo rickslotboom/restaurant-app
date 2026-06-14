@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dish, Modifier } from "../types";
+import { Dish, Modifier, VatRate } from "../types";
 import { useMenuContext } from "../hooks/useMenu";
 import FloorPlanEditor from "./FloorPlanEditor";
 
@@ -29,6 +29,7 @@ export default function BeheerView({
     category: categories[0] ?? "",
     image: "",
     modifiers: [] as Modifier[],
+    vatRate: 9 as VatRate,
   });
   const [saving, setSaving] = useState(false);
   const [newModifier, setNewModifier] = useState({ name: "", price: "" });
@@ -60,8 +61,9 @@ export default function BeheerView({
         category: form.category || categories[0],
         image: form.image || "/images/placeholder.jpg",
         modifiers: form.modifiers ?? [],
+        vatRate: form.vatRate,
       } as any);
-      setForm({ name: "", price: "", category: categories[0] ?? "", image: "", modifiers: [] });
+      setForm({ name: "", price: "", category: categories[0] ?? "", image: "", modifiers: [], vatRate: 9 });
     } finally {
       setSaving(false);
     }
@@ -69,7 +71,7 @@ export default function BeheerView({
 
   const startEdit = (dish: Dish) => {
     setEditingId(dish.id);
-    setEditForm({ ...dish, modifiers: dish.modifiers ?? [] });
+    setEditForm({ ...dish, modifiers: dish.modifiers ?? [], vatRate: dish.vatRate ?? 9 });
     setEditNewModifier({ name: "", price: "" });
   };
 
@@ -81,6 +83,7 @@ export default function BeheerView({
       category: editForm.category,
       image: editForm.image,
       modifiers: editForm.modifiers ?? [],
+      vatRate: editForm.vatRate ?? 9,
     });
     setEditingId(null);
   };
@@ -174,6 +177,14 @@ export default function BeheerView({
                 </select>
               </div>
               <div>
+                <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>BTW</label>
+                <select style={inputStyle} value={form.vatRate}
+                  onChange={(e) => setForm((f) => ({ ...f, vatRate: parseInt(e.target.value) as VatRate }))}>
+                  <option value={9}>9% (eten)</option>
+                  <option value={21}>21% (dranken)</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Afbeelding URL</label>
                 <input style={inputStyle} placeholder="/images/..." value={form.image}
                   onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} />
@@ -203,6 +214,7 @@ export default function BeheerView({
             </button>
           </div>
 
+          {/* Category filter */}
           <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
             {["Alle", ...categories].map((c) => (
               <button key={c} onClick={() => setFilterCategory(c)} style={{
@@ -214,6 +226,7 @@ export default function BeheerView({
             ))}
           </div>
 
+          {/* Menu list */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {filteredMenu.map((dish) => {
               const blocked = (dish as any).blocked;
@@ -228,16 +241,36 @@ export default function BeheerView({
                   {editingId === dish.id ? (
                     <div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                        <input style={inputStyle} value={editForm.name || ""}
-                          onChange={(e) => setEditForm((f: any) => ({ ...f, name: e.target.value }))} />
-                        <input style={inputStyle} type="number" step="0.01" value={editForm.price || ""}
-                          onChange={(e) => setEditForm((f: any) => ({ ...f, price: e.target.value }))} />
-                        <select style={inputStyle} value={editForm.category}
-                          onChange={(e) => setEditForm((f: any) => ({ ...f, category: e.target.value }))}>
-                          {categories.map((c) => <option key={c}>{c}</option>)}
-                        </select>
-                        <input style={inputStyle} value={editForm.image || ""}
-                          onChange={(e) => setEditForm((f: any) => ({ ...f, image: e.target.value }))} />
+                        <div>
+                          <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Naam</label>
+                          <input style={inputStyle} value={editForm.name || ""}
+                            onChange={(e) => setEditForm((f: any) => ({ ...f, name: e.target.value }))} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Prijs</label>
+                          <input style={inputStyle} type="number" step="0.01" value={editForm.price || ""}
+                            onChange={(e) => setEditForm((f: any) => ({ ...f, price: e.target.value }))} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Categorie</label>
+                          <select style={inputStyle} value={editForm.category}
+                            onChange={(e) => setEditForm((f: any) => ({ ...f, category: e.target.value }))}>
+                            {categories.map((c) => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>BTW</label>
+                          <select style={inputStyle} value={editForm.vatRate ?? 9}
+                            onChange={(e) => setEditForm((f: any) => ({ ...f, vatRate: parseInt(e.target.value) as VatRate }))}>
+                            <option value={9}>9% (eten)</option>
+                            <option value={21}>21% (dranken)</option>
+                          </select>
+                        </div>
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Afbeelding URL</label>
+                          <input style={inputStyle} value={editForm.image || ""}
+                            onChange={(e) => setEditForm((f: any) => ({ ...f, image: e.target.value }))} />
+                        </div>
                       </div>
 
                       <div style={{ marginBottom: "0.5rem" }}>
@@ -292,7 +325,7 @@ export default function BeheerView({
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: "600", fontSize: "14px" }}>{dish.name}</div>
                         <div style={{ fontSize: "12px", color: "#888" }}>
-                          {dish.category} · €{dish.price.toFixed(2)}
+                          {dish.category} · €{dish.price.toFixed(2)} · BTW {dish.vatRate ?? 9}%
                           {(dish.modifiers ?? []).length > 0 && ` · ${dish.modifiers!.length} optie(s)`}
                         </div>
                       </div>
@@ -409,7 +442,6 @@ export default function BeheerView({
 
       {/* ───── VLOERPLAN TAB ───── */}
       {activeTab === "vloerplan" && <FloorPlanEditor />}
-
     </div>
   );
 }
