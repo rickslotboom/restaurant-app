@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Dish, Modifier } from "../types";
 import { useMenuContext } from "../hooks/useMenu";
+import FloorPlanEditor from "./FloorPlanEditor";
 
 type Props = {
   menu: Dish[];
@@ -8,8 +9,6 @@ type Props = {
   onUpdateDish: (id: string, dish: Partial<Omit<Dish, "id">>) => Promise<void>;
   onDeleteDish: (id: string) => Promise<void>;
 };
-
-
 
 const isFirestoreItem = (id: string) => /^[a-zA-Z0-9]{20}$/.test(id);
 
@@ -21,10 +20,9 @@ export default function BeheerView({
 }: Props) {
   const { categories, addCategory, updateCategory, deleteCategory } = useMenuContext();
 
-  const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
+  const [activeTab, setActiveTab] = useState<"menu" | "categories" | "vloerplan">("menu");
   const [filterCategory, setFilterCategory] = useState<string>("Alle");
 
-  // ── Add dish form ──
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -35,12 +33,10 @@ export default function BeheerView({
   const [saving, setSaving] = useState(false);
   const [newModifier, setNewModifier] = useState({ name: "", price: "" });
 
-  // ── Edit dish ──
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [editNewModifier, setEditNewModifier] = useState({ name: "", price: "" });
 
-  // ── Category edit ──
   const [newCategoryName, setNewCategoryName] = useState("");
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editCategoryValue, setEditCategoryValue] = useState("");
@@ -54,7 +50,6 @@ export default function BeheerView({
     ? menu
     : menu.filter((d) => d.category === filterCategory);
 
-  // ── Add dish ──
   const submitDish = async () => {
     if (!form.name.trim() || !form.price) return;
     setSaving(true);
@@ -72,7 +67,6 @@ export default function BeheerView({
     }
   };
 
-  // ── Edit dish ──
   const startEdit = (dish: Dish) => {
     setEditingId(dish.id);
     setEditForm({ ...dish, modifiers: dish.modifiers ?? [] });
@@ -91,12 +85,10 @@ export default function BeheerView({
     setEditingId(null);
   };
 
-  // ── Block ──
   const toggleDishBlock = async (dish: Dish) => {
     await onUpdateDish(dish.id, { blocked: !(dish as any).blocked } as any);
   };
 
-  // ── Delete ──
   const deleteDish = async (dish: Dish) => {
     if (!isFirestoreItem(dish.id)) {
       alert("Statische items kunnen niet verwijderd worden. Blokkeer ze in plaats daarvan.");
@@ -106,7 +98,6 @@ export default function BeheerView({
     await onDeleteDish(dish.id);
   };
 
-  // ── Modifiers ──
   const addModifierToForm = () => {
     if (!newModifier.name.trim()) return;
     setForm((f) => ({
@@ -144,14 +135,14 @@ export default function BeheerView({
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
-        {(["menu", "categories"] as const).map((t) => (
+        {(["menu", "categories", "vloerplan"] as const).map((t) => (
           <button key={t} onClick={() => setActiveTab(t)} style={{
             padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
             background: activeTab === t ? "#2196F3" : "#eee",
             color: activeTab === t ? "white" : "#333",
             fontWeight: "600", cursor: "pointer",
           }}>
-            {t === "menu" ? "Menu" : "Categorieën"}
+            {t === "menu" ? "Menu" : t === "categories" ? "Categorieën" : "Vloerplan"}
           </button>
         ))}
       </div>
@@ -159,7 +150,6 @@ export default function BeheerView({
       {/* ───── MENU TAB ───── */}
       {activeTab === "menu" && (
         <>
-          {/* Add form */}
           <div style={{
             background: "#f9f9f9", borderRadius: "10px",
             padding: "1.25rem", marginBottom: "2rem", border: "1px solid #e0e0e0",
@@ -213,7 +203,6 @@ export default function BeheerView({
             </button>
           </div>
 
-          {/* Category filter */}
           <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
             {["Alle", ...categories].map((c) => (
               <button key={c} onClick={() => setFilterCategory(c)} style={{
@@ -225,7 +214,6 @@ export default function BeheerView({
             ))}
           </div>
 
-          {/* Menu list */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {filteredMenu.map((dish) => {
               const blocked = (dish as any).blocked;
@@ -263,9 +251,29 @@ export default function BeheerView({
                         </div>
                         {(editForm.modifiers ?? []).map((m: any, idx: number) => (
                           <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
-                            <span style={{ fontSize: "13px", flex: 1 }}>{m.name} — €{Number(m.price).toFixed(2)}</span>
+                            <input
+                              style={{ ...inputStyle, flex: 1 }}
+                              value={m.name}
+                              onChange={(e) => setEditForm((f: any) => ({
+                                ...f,
+                                modifiers: f.modifiers.map((mod: any, i: number) =>
+                                  i === idx ? { ...mod, name: e.target.value } : mod
+                                ),
+                              }))}
+                            />
+                            <input
+                              style={{ ...inputStyle, width: "80px" }}
+                              type="number" step="0.01"
+                              value={m.price}
+                              onChange={(e) => setEditForm((f: any) => ({
+                                ...f,
+                                modifiers: f.modifiers.map((mod: any, i: number) =>
+                                  i === idx ? { ...mod, price: parseFloat(e.target.value) || 0 } : mod
+                                ),
+                              }))}
+                            />
                             <button style={btn("#d9534f", true)} onClick={() =>
-                              setEditForm((f: any) => ({ ...f, modifiers: f.modifiers.filter((_: any, i: number) => i !== idx) }))}>✕</button>
+                              setEditForm((f: any) => ({ ...f, modifiers: f.modifiers.filter((_: any, i: number) => i !== idx) }))}>🗑</button>
                           </div>
                         ))}
                       </div>
@@ -288,7 +296,6 @@ export default function BeheerView({
                           {(dish.modifiers ?? []).length > 0 && ` · ${dish.modifiers!.length} optie(s)`}
                         </div>
                       </div>
-
                       {!editable && (
                         <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>statisch</span>
                       )}
@@ -298,7 +305,6 @@ export default function BeheerView({
                           padding: "2px 6px", borderRadius: "4px",
                         }}>geblokkeerd</span>
                       )}
-
                       <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
                         {editable && (
                           <button style={btn("#2196F3", true)} onClick={() => startEdit(dish)}>✏️</button>
@@ -400,6 +406,10 @@ export default function BeheerView({
           </div>
         </div>
       )}
+
+      {/* ───── VLOERPLAN TAB ───── */}
+      {activeTab === "vloerplan" && <FloorPlanEditor />}
+
     </div>
   );
 }

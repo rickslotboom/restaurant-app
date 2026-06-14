@@ -5,6 +5,7 @@ import "./index.css";
 import { OrdersProvider } from "./hooks/useOrders";
 import { AuthProvider } from "./hooks/useAuth";
 import { MenuProvider } from "./hooks/useMenu";
+import { FloorPlanProvider } from "./hooks/useFloorPlan";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
@@ -13,7 +14,9 @@ root.render(
     <AuthProvider>
       <OrdersProvider>
         <MenuProvider>
-          <App />
+          <FloorPlanProvider>
+            <App />
+          </FloorPlanProvider>
         </MenuProvider>
       </OrdersProvider>
     </AuthProvider>
