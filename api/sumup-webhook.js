@@ -32,17 +32,15 @@ export default async function handler(req, res) {
     const body = req.body;
     console.log("[SumUp Webhook] Ontvangen:", JSON.stringify(body));
 
-    // SumUp stuurt een checkout-object met een status en een client_transaction_id
-    const { id, status, client_transaction_id } = body;
+    // Status en transaction ID zitten in body.payload
+    const { status, client_transaction_id } = body.payload;
 
-    // Alleen verwerken als de betaling geslaagd is
-    if (status !== "PAID" && status !== "paid") {
+    if (status !== "successful") {
       console.log(`[SumUp Webhook] Status is '${status}', geen actie vereist.`);
       return res.status(200).json({ received: true });
     }
 
-    // Zoek de order in Firestore op basis van de client_transaction_id
-    // die we bij het aanmaken van de betaling hebben opgeslagen
+    // Zoek de order in Firestore op basis van client_transaction_id
     const ordersRef = collection(db, "orders");
     const q = query(ordersRef, where("sumupTransactionId", "==", client_transaction_id));
     const snapshot = await getDocs(q);
@@ -56,7 +54,7 @@ export default async function handler(req, res) {
     const orderDoc = snapshot.docs[0];
     await updateDoc(doc(db, "orders", orderDoc.id), {
       status: "Betaald",
-      sumupCheckoutId: id,
+      sumupCheckoutId: body.id,
     });
 
     console.log(`[SumUp Webhook] Order ${orderDoc.id} op Betaald gezet.`);
