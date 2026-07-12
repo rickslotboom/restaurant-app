@@ -20,10 +20,11 @@ type SplitLine = {
 const DISC_OPTIONS = [0, 30, 50, 100];
 
 export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props) {
-  const [step, setStep] = useState<"select" | "discount" | "method" | "tip">("select");
+  const [step, setStep] = useState<"select" | "discount" | "method" | "tip" | "waiting">("select");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "pin" | null>(null);
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
+  const [pinError, setPinError] = useState<string | null>(null);
 
   const [lines, setLines] = useState<SplitLine[]>(() =>
     order.items.flatMap((item) =>
@@ -70,7 +71,6 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   const selectedLines = lines.filter((l) => l.selected);
   const anySelected = selectedLines.length > 0;
 
-  // Prijs per regel inclusief modifiers
   const lineFullPrice = (line: SplitLine) => {
     const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
     return line.price + modTotal;
@@ -85,13 +85,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   const origSubtotal = selectedLines.reduce((sum, l) => sum + lineFullPrice(l), 0);
   const savings = origSubtotal - total;
 
-  const handleMethodSelect = (method: "cash" | "pin") => {
-    setPaymentMethod(method);
-    setStep("tip");
-  };
-
-  const handleConfirm = () => {
-    if (!paymentMethod) return;
+  const handleCashConfirm = () => {
     const unselectedLines = lines.filter((l) => !l.selected);
     const remainingMap: Record<string, OrderItem> = {};
     unselectedLines.forEach((line) => {
@@ -107,7 +101,66 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
         };
       }
     });
-    onConfirm(Object.values(remainingMap), paymentMethod, tipAmount);
+    onConfirm(Object.values(remainingMap), "cash", tipAmount);
+  };
+
+  const handlePinClick = async () => {
+    setPinError(null);
+    setStep("waiting");
+
+    try {
+      const totalWithTip = total + tipAmount;
+
+      // Unieke transactie ID voor dit split-deel
+      const splitTransactionId = `${order.id}-split-${Date.now()}`;
+
+      const response = await fetch("/api/sumup-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: splitTransactionId,
+          amount: parseFloat(totalWithTip.toFixed(2)),
+          description: `Tafel ${order.table} (deel)`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Betaling aanmaken mislukt");
+      }
+
+      // Bij split-betaling slaan we de transactie ID niet op in de order
+      // want de order wordt pas volledig "Betaald" als alle delen betaald zijn
+      // De bediening bevestigt handmatig via onConfirm zodra de terminal betaald is
+      // (we luisteren hier niet naar de webhook, want het is maar een deel)
+
+      // Wachtstatus tonen — bediening klikt "Bevestigen" als klant heeft betaald
+    } catch (error: any) {
+      console.error("[SplitPaymentModal] Pin fout:", error.message);
+      setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
+      setStep("method");
+    }
+  };
+
+  const handlePinConfirm = () => {
+    // Bediening bevestigt handmatig dat de pin-betaling geslaagd is op de terminal
+    const unselectedLines = lines.filter((l) => !l.selected);
+    const remainingMap: Record<string, OrderItem> = {};
+    unselectedLines.forEach((line) => {
+      if (remainingMap[line.dishId]) {
+        remainingMap[line.dishId].qty += 1;
+      } else {
+        remainingMap[line.dishId] = {
+          dishId: line.dishId,
+          name: line.name,
+          price: line.price,
+          qty: 1,
+          modifiers: line.modifiers,
+        };
+      }
+    });
+    onConfirm(Object.values(remainingMap), "pin", tipAmount);
   };
 
   const discBtnStyle = (active: boolean): React.CSSProperties => ({
@@ -133,6 +186,31 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
         maxHeight: "90vh", overflowY: "auto",
       }}>
         <h3 style={{ marginTop: 0 }}>Splits rekening — Tafel {order.table}</h3>
+
+        {/* ── WACHTEN OP BETALING ── */}
+        {step === "waiting" && (
+          <div style={{ textAlign: "center", padding: "2rem 0" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💳</div>
+            <h3 style={{ marginBottom: "0.5rem" }}>Wachten op betaling...</h3>
+            <p style={{ color: "#555", marginBottom: "0.5rem" }}>
+              Bedrag op de terminal: <strong>€{(total + tipAmount).toFixed(2)}</strong>
+            </p>
+            <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+              Vraag de klant zijn pas of telefoon tegen de terminal te houden.
+            </p>
+            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+              <button onClick={handlePinConfirm} style={{
+                background: "#4CAF50", color: "white", border: "none",
+                padding: "0.75rem 1.5rem", borderRadius: "8px",
+                cursor: "pointer", fontWeight: "bold",
+              }}>✅ Betaling geslaagd</button>
+              <button onClick={onCancel} style={{
+                background: "#eee", border: "none",
+                padding: "0.75rem 1rem", borderRadius: "8px", cursor: "pointer",
+              }}>Annuleren</button>
+            </div>
+          </div>
+        )}
 
         {/* STAP 1: Selecteer items */}
         {step === "select" && (
@@ -162,9 +240,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
                         paddingLeft: "0.75rem", fontSize: "0.8rem", color: "#555", marginTop: "2px",
                       }}>
                         <span>↳ {mod.name}</span>
-                        {mod.price > 0 && (
-                          <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
-                        )}
+                        {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
                       </div>
                     ))}
                   </div>
@@ -224,9 +300,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
                       paddingLeft: "1rem", fontSize: "0.8rem", color: "#555", marginBottom: "2px",
                     }}>
                       <span>↳ {mod.name}</span>
-                      {mod.price > 0 && (
-                        <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
-                      )}
+                      {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
                     </div>
                   ))}
                   <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "0.4rem", marginBottom: "0.3rem" }}>
@@ -314,9 +388,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
                       paddingLeft: "1rem", fontSize: "0.8rem", color: "#555",
                     }}>
                       <span>↳ {mod.name}</span>
-                      {mod.price > 0 && (
-                        <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
-                      )}
+                      {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
                     </div>
                   ))}
                 </li>
@@ -331,14 +403,24 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
               Totaal: €{total.toFixed(2)}
             </strong>
 
+            {pinError && (
+              <div style={{
+                background: "#fff5f5", border: "1px solid #ffcccc",
+                borderRadius: "8px", padding: "0.75rem", marginBottom: "1rem",
+                color: "#d9534f", fontSize: "0.9rem",
+              }}>
+                ❌ {pinError}
+              </div>
+            )}
+
             <p style={{ marginBottom: "0.5rem", fontWeight: "bold" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-              <button onClick={() => handleMethodSelect("cash")} style={{
+              <button onClick={() => setStep("tip")} style={{
                 flex: 1, background: "#4CAF50", color: "white",
                 border: "none", padding: "0.75rem", borderRadius: "8px",
                 cursor: "pointer", fontSize: "1rem",
               }}>💵 Cash</button>
-              <button onClick={() => handleMethodSelect("pin")} style={{
+              <button onClick={handlePinClick} style={{
                 flex: 1, background: "#2196F3", color: "white",
                 border: "none", padding: "0.75rem", borderRadius: "8px",
                 cursor: "pointer", fontSize: "1rem",
@@ -355,7 +437,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
           </>
         )}
 
-        {/* STAP 4: Fooi */}
+        {/* STAP 4: Fooi (alleen bij cash) */}
         {step === "tip" && (
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Fooi toevoegen?</p>
@@ -381,7 +463,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
 
             <div style={{ background: "#f5f5f5", borderRadius: "8px", padding: "0.75rem", marginBottom: "1rem" }}>
               <p style={{ margin: 0, fontSize: "0.9rem", color: "#555" }}>
-                Betaalmethode: <strong>{paymentMethod === "cash" ? "💵 Cash" : "💳 Pin"}</strong>
+                Betaalmethode: <strong>💵 Cash</strong>
               </p>
               {savings > 0.001 && (
                 <p style={{ margin: "0.25rem 0 0", fontSize: "0.9rem", color: "#2e7d32" }}>
@@ -396,7 +478,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
               </p>
             </div>
 
-            <button onClick={handleConfirm} style={{
+            <button onClick={handleCashConfirm} style={{
               width: "100%", background: "#4CAF50", color: "white",
               border: "none", padding: "0.75rem", borderRadius: "8px",
               cursor: "pointer", fontSize: "1rem", fontWeight: "bold", marginBottom: "0.5rem",
