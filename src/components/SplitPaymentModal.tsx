@@ -21,7 +21,6 @@ const DISC_OPTIONS = [0, 30, 50, 100];
 
 export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props) {
   const [step, setStep] = useState<"select" | "discount" | "method" | "tip" | "waiting">("select");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "pin" | null>(null);
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
   const [pinError, setPinError] = useState<string | null>(null);

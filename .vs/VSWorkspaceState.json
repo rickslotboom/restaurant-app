@@ -1,15 +1,12 @@
 {
   "ExpandedNodes": [
     "",
-    "\\api",
     "\\public",
+    "\\public\\images",
     "\\src",
-    "\\src\\auth",
     "\\src\\components",
-    "\\src\\data",
-    "\\src\\hooks",
-    "\\src\\types"
+    "\\src\\hooks"
   ],
-  "SelectedNode": "\\src\\hooks\\useOrders.tsx",
+  "SelectedNode": "\\src\\components\\PaymentModal.tsx",
   "PreviewInSolutionExplorer": false
 }

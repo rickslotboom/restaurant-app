@@ -16,9 +16,8 @@ const itemFullPrice = (item: Order["items"][0]) => {
 };
 
 export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
-  const { updateOrderItems } = useOrdersContext();
+  
   const [paymentStep, setPaymentStep] = useState<"discount" | "method" | "tip" | "waiting">("discount");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "pin" | null>(null);
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
   const [pinError, setPinError] = useState<string | null>(null);
@@ -102,9 +101,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
     }
   };
 
-  const handleConfirmPayment = () => {
-    onConfirm(order.id, "cash", tipAmount);
-  };
+ 
 
   const inputStyle = {
     width: "80px", padding: "0.4rem", borderRadius: "6px",
