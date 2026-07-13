@@ -21,6 +21,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
   const [pinError, setPinError] = useState<string | null>(null);
+  const [setPaymentMethod] = useState<"cash" | "pin" | null>(null);
 
   const [itemDiscounts, setItemDiscounts] = useState<number[]>(order.items.map(() => 0));
   const [itemCustomDisc, setItemCustomDisc] = useState<string[]>(order.items.map(() => ""));
