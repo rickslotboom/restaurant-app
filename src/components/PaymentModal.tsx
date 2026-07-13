@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Order } from "../types";
-import { useOrdersContext } from "../hooks/useOrders";
 
 type Props = {
   order: Order;
@@ -21,8 +20,6 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
   const [pinError, setPinError] = useState<string | null>(null);
-  const [setPaymentMethod] = useState<"cash" | "pin" | null>(null);
-
   const [itemDiscounts, setItemDiscounts] = useState<number[]>(order.items.map(() => 0));
   const [itemCustomDisc, setItemCustomDisc] = useState<string[]>(order.items.map(() => ""));
   const [orderDiscount, setOrderDiscount] = useState<number>(0);
@@ -302,7 +299,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem" }}>
-              <button onClick={() => { setPaymentMethod("cash"); setPaymentStep("tip"); }} style={{
+              <button onClick={() => { setPaymentStep("tip"); }} style={{
                 flex: 1, background: "#4CAF50", color: "white",
                 border: "none", padding: "0.75rem", borderRadius: "8px",
                 cursor: "pointer", fontSize: "1rem",
