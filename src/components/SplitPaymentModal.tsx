@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Order, OrderItem } from "../types";
+import { db } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 type Props = {
   order: Order;
@@ -84,6 +86,35 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   const origSubtotal = selectedLines.reduce((sum, l) => sum + lineFullPrice(l), 0);
   const savings = origSubtotal - total;
 
+  // ── Luister naar Firestore order-status wijzigingen bij pin-betaling ──
+  useEffect(() => {
+    if (step !== "waiting") return;
+
+    const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
+      const data = snapshot.data();
+      if (data?.status === "Betaald") {
+        const unselectedLines = lines.filter((l) => !l.selected);
+        const remainingMap: Record<string, OrderItem> = {};
+        unselectedLines.forEach((line) => {
+          if (remainingMap[line.dishId]) {
+            remainingMap[line.dishId].qty += 1;
+          } else {
+            remainingMap[line.dishId] = {
+              dishId: line.dishId,
+              name: line.name,
+              price: line.price,
+              qty: 1,
+              modifiers: line.modifiers,
+            };
+          }
+        });
+        onConfirm(Object.values(remainingMap), "pin", tipAmount);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [step, order.id, tipAmount, lines, onConfirm]);
+
   const handleCashConfirm = () => {
     const unselectedLines = lines.filter((l) => !l.selected);
     const remainingMap: Record<string, OrderItem> = {};
@@ -109,8 +140,6 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
 
     try {
       const totalWithTip = total + tipAmount;
-
-      // Unieke transactie ID voor dit split-deel
       const splitTransactionId = `${order.id}-split-${Date.now()}`;
 
       const response = await fetch("/api/sumup-checkout", {
@@ -129,37 +158,11 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
         throw new Error(data.error || "Betaling aanmaken mislukt");
       }
 
-      // Bij split-betaling slaan we de transactie ID niet op in de order
-      // want de order wordt pas volledig "Betaald" als alle delen betaald zijn
-      // De bediening bevestigt handmatig via onConfirm zodra de terminal betaald is
-      // (we luisteren hier niet naar de webhook, want het is maar een deel)
-
-      // Wachtstatus tonen — bediening klikt "Bevestigen" als klant heeft betaald
     } catch (error: any) {
       console.error("[SplitPaymentModal] Pin fout:", error.message);
       setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
       setStep("method");
     }
-  };
-
-  const handlePinConfirm = () => {
-    // Bediening bevestigt handmatig dat de pin-betaling geslaagd is op de terminal
-    const unselectedLines = lines.filter((l) => !l.selected);
-    const remainingMap: Record<string, OrderItem> = {};
-    unselectedLines.forEach((line) => {
-      if (remainingMap[line.dishId]) {
-        remainingMap[line.dishId].qty += 1;
-      } else {
-        remainingMap[line.dishId] = {
-          dishId: line.dishId,
-          name: line.name,
-          price: line.price,
-          qty: 1,
-          modifiers: line.modifiers,
-        };
-      }
-    });
-    onConfirm(Object.values(remainingMap), "pin", tipAmount);
   };
 
   const discBtnStyle = (active: boolean): React.CSSProperties => ({
@@ -197,17 +200,10 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
             <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
               Vraag de klant zijn pas of telefoon tegen de terminal te houden.
             </p>
-            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
-              <button onClick={handlePinConfirm} style={{
-                background: "#4CAF50", color: "white", border: "none",
-                padding: "0.75rem 1.5rem", borderRadius: "8px",
-                cursor: "pointer", fontWeight: "bold",
-              }}>✅ Betaling geslaagd</button>
-              <button onClick={onCancel} style={{
-                background: "#eee", border: "none",
-                padding: "0.75rem 1rem", borderRadius: "8px", cursor: "pointer",
-              }}>Annuleren</button>
-            </div>
+            <button onClick={onCancel} style={{
+              background: "#eee", border: "none", padding: "0.5rem 1rem",
+              borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
+            }}>Annuleren</button>
           </div>
         )}
 

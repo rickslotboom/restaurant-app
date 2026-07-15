@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Order } from "../types";
+import { db } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 type Props = {
   order: Order;
@@ -15,17 +17,33 @@ const itemFullPrice = (item: Order["items"][0]) => {
 };
 
 export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
-  
   const [paymentStep, setPaymentStep] = useState<"discount" | "method" | "tip" | "waiting">("discount");
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>("");
   const [pinError, setPinError] = useState<string | null>(null);
+
   const [itemDiscounts, setItemDiscounts] = useState<number[]>(order.items.map(() => 0));
   const [itemCustomDisc, setItemCustomDisc] = useState<string[]>(order.items.map(() => ""));
   const [orderDiscount, setOrderDiscount] = useState<number>(0);
   const [orderCustomDisc, setOrderCustomDisc] = useState<string>("");
 
   const tipOptions = [0, 1, 2, 5];
+
+  // ── Luister naar Firestore order-status wijzigingen ──
+  // Zodra de webhook de order op "Betaald" zet, roepen we onConfirm aan
+  // zodat de modal automatisch sluit
+  useEffect(() => {
+    if (paymentStep !== "waiting") return;
+
+    const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
+      const data = snapshot.data();
+      if (data?.status === "Betaald") {
+        onConfirm(order.id, "pin", tipAmount);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [paymentStep, order.id, tipAmount, onConfirm]);
 
   const subtotal = order.items.reduce(
     (sum, item, i) => sum + itemFullPrice(item) * (1 - itemDiscounts[i] / 100),
@@ -60,8 +78,6 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
     try {
       const totalWithTip = total + tipAmount;
 
-      // Sla sumupTransactionId op in Firestore bij de order
-      // We gebruiken het order ID als client_transaction_id zodat de webhook hem kan vinden
       const response = await fetch("/api/sumup-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,19 +94,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
         throw new Error(data.error || "Betaling aanmaken mislukt");
       }
 
-      // Sla de transactie ID op in de order in Firestore
-      // zodat de webhook de juiste order kan vinden
-      await fetch("/api/update-order-transaction", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: order.id,
-          sumupTransactionId: data.clientTransactionId,
-        }),
-      });
-
-      // Modal blijft open met "Wachten op betaling..." totdat webhook de status bijwerkt
-      // De webhook zet de order op "Betaald" en de UI update automatisch via Firestore onSnapshot
+      // Wachtstatus — useEffect luistert naar Firestore en sluit de modal automatisch
 
     } catch (error: any) {
       console.error("[PaymentModal] Pin fout:", error.message);
@@ -98,8 +102,6 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
       setPaymentStep("method");
     }
   };
-
- 
 
   const inputStyle = {
     width: "80px", padding: "0.4rem", borderRadius: "6px",
@@ -299,7 +301,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem" }}>
-              <button onClick={() => { setPaymentStep("tip"); }} style={{
+              <button onClick={() => setPaymentStep("tip")} style={{
                 flex: 1, background: "#4CAF50", color: "white",
                 border: "none", padding: "0.75rem", borderRadius: "8px",
                 cursor: "pointer", fontSize: "1rem",
