@@ -1,20 +1,14 @@
 // api/sumup-checkout.js
-//
-// Deze route wordt aangeroepen vanuit PaymentModal wanneer de bediening op "Pin" klikt.
-// Hij stuurt een betaalopdracht naar de SumUp Solo terminal via de Cloud API.
-//
-// Request body (POST):
-// {
-//   orderId: string,        // Firestore order ID
-//   amount: number,         // bedrag in euro (bijv. 12.50)
-//   description: string,    // omschrijving op de terminal (bijv. "Tafel 5")
-// }
-//
-// Response:
-// {
-//   success: true,
-//   clientTransactionId: string   // sla dit op in Firestore bij de order
-// }
+
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+
+if (getApps().length === 0) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  initializeApp({ credential: cert(serviceAccount) });
+}
+
+const db = getFirestore();
 
 const SUMUP_API_KEY = process.env.SUMUP_API_KEY;
 const SUMUP_AFFILIATE_KEY = process.env.SUMUP_AFFILIATE_KEY;
@@ -34,7 +28,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "orderId en amount zijn verplicht" });
     }
 
-    // Bedrag naar centen omzetten (SumUp verwacht minor units)
     const amountInCents = Math.round(amount * 100);
 
     console.log(`[SumUp Checkout] Betaling aanmaken: €${amount} voor order ${orderId}`);
@@ -55,9 +48,7 @@ export default async function handler(req, res) {
             value: amountInCents,
           },
           description,
-          // client_transaction_id = orderId zodat webhook de juiste order kan vinden
           client_transaction_id: orderId,
-          // Webhook URL zodat SumUp ons notificeert na betaling
           return_url: WEBHOOK_URL,
         }),
       }
@@ -72,7 +63,12 @@ export default async function handler(req, res) {
 
     const clientTransactionId = data?.data?.client_transaction_id || orderId;
 
-    console.log(`[SumUp Checkout] ✅ Betaling aangemaakt, transactie ID: ${clientTransactionId}`);
+    // ── Sla sumupTransactionId op in Firestore zodat de webhook de order kan vinden ──
+    await db.collection("orders").doc(orderId).update({
+      sumupTransactionId: clientTransactionId,
+    });
+
+    console.log(`[SumUp Checkout] ✅ Betaling aangemaakt en opgeslagen, transactie ID: ${clientTransactionId}`);
 
     return res.status(200).json({
       success: true,
