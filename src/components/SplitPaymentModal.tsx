@@ -200,10 +200,21 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
             <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
               Vraag de klant zijn pas of telefoon tegen de terminal te houden.
             </p>
-            <button onClick={onCancel} style={{
-              background: "#eee", border: "none", padding: "0.5rem 1rem",
-              borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
-            }}>Annuleren</button>
+            <button onClick={async () => {
+  try {
+    await fetch("/api/sumup-cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: order.id }),
+    });
+  } catch (e) {
+    console.error("Annuleren mislukt:", e);
+  }
+  onCancel();
+}} style={{
+  background: "#eee", border: "none", padding: "0.5rem 1rem",
+  borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
+}}>Annuleren</button>
           </div>
         )}
 
