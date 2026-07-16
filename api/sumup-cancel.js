@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     console.log(`[SumUp Cancel] Terminate checkout op reader ${SUMUP_READER_ID}`);
 
     const response = await fetch(
-      `https://api.sumup.com/v0.1/merchants/${SUMUP_MERCHANT_CODE}/readers/${SUMUP_READER_ID}/checkout/terminate`,
+      `https://api.sumup.com/v0.1/merchants/${SUMUP_MERCHANT_CODE}/readers/${SUMUP_READER_ID}/terminate`,
       {
         method: "POST",
         headers: {
