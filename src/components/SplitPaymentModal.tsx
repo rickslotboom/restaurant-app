@@ -482,10 +482,19 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
               width: "100%", background: "#eee", border: "none",
               padding: "0.5rem", borderRadius: "8px", cursor: "pointer", marginBottom: "0.5rem",
             }}>← Terug</button>
-            <button onClick={onCancel} style={{
-              width: "100%", background: "#fff", border: "1px solid #ccc",
-              padding: "0.5rem", borderRadius: "8px", cursor: "pointer", color: "#d9534f",
-            }}>Annuleren</button>
+            <button onClick={async () => {
+  try {
+    await fetch("/api/sumup-cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: order.id }) });
+  } catch (e) {
+    console.error("Annuleren mislukt:", e);
+  }
+  onCancel();
+}} style={{
+  background: "#eee", border: "none", padding: "0.5rem 1rem",
+  borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
+}}>
+  Annuleren
+</button>
           </>
         )}
       </div>
