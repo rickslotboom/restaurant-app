@@ -1,12 +1,4 @@
 // api/sumup-cancel.js
-//
-// Annuleert een actieve checkout op de SumUp terminal.
-// Wordt aangeroepen vanuit PaymentModal als de bediening op "Annuleren" klikt.
-//
-// Request body (POST):
-// {
-//   orderId: string,  // wordt gebruikt als client_transaction_id / reader identificatie
-// }
 
 const SUMUP_API_KEY = process.env.SUMUP_API_KEY;
 const SUMUP_AFFILIATE_KEY = process.env.SUMUP_AFFILIATE_KEY;
@@ -19,27 +11,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log(`[SumUp Cancel] Annuleren checkout op reader ${SUMUP_READER_ID}`);
+    console.log(`[SumUp Cancel] Terminate checkout op reader ${SUMUP_READER_ID}`);
 
     const response = await fetch(
-      `https://api.sumup.com/v0.1/merchants/${SUMUP_MERCHANT_CODE}/readers/${SUMUP_READER_ID}/checkout`,
+      `https://api.sumup.com/v0.1/merchants/${SUMUP_MERCHANT_CODE}/readers/${SUMUP_READER_ID}/checkout/terminate`,
       {
-        method: "DELETE",
+        method: "POST",
         headers: {
           "Authorization": `Bearer ${SUMUP_API_KEY}`,
           "Affiliate-Key": SUMUP_AFFILIATE_KEY,
+          "Content-Type": "application/json",
         },
       }
     );
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      console.error("[SumUp Cancel] Fout:", JSON.stringify(data));
-      return res.status(500).json({ error: "Annuleren mislukt", details: data });
+    // 204 No Content = succesvol, geen body
+    if (response.status === 204 || response.ok) {
+      console.log("[SumUp Cancel] ✅ Checkout getermineerd op terminal");
+      return res.status(200).json({ success: true });
     }
 
-    console.log("[SumUp Cancel] ✅ Checkout geannuleerd op terminal");
-    return res.status(200).json({ success: true });
+    const data = await response.json().catch(() => ({}));
+    console.error("[SumUp Cancel] Fout:", JSON.stringify(data));
+    return res.status(500).json({ error: "Annuleren mislukt", details: data });
 
   } catch (error) {
     console.error("[SumUp Cancel] Fout:", error.message);
