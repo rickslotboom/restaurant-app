@@ -88,32 +88,35 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
 
   // ── Luister naar Firestore order-status wijzigingen bij pin-betaling ──
   useEffect(() => {
-    if (step !== "waiting") return;
+  if (step !== "waiting") return;
 
-    const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
-      const data = snapshot.data();
-      if (data?.status === "Betaald") {
-        const unselectedLines = lines.filter((l) => !l.selected);
-        const remainingMap: Record<string, OrderItem> = {};
-        unselectedLines.forEach((line) => {
-          if (remainingMap[line.dishId]) {
-            remainingMap[line.dishId].qty += 1;
-          } else {
-            remainingMap[line.dishId] = {
-              dishId: line.dishId,
-              name: line.name,
-              price: line.price,
-              qty: 1,
-              modifiers: line.modifiers,
-            };
-          }
-        });
-        onConfirm(Object.values(remainingMap), "pin", tipAmount);
-      }
-    });
+  const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
+    const data = snapshot.data();
+    if (data?.status === "Betaald") {
+      const unselectedLines = lines.filter((l) => !l.selected);
+      const remainingMap: Record<string, OrderItem> = {};
+      unselectedLines.forEach((line) => {
+        if (remainingMap[line.dishId]) {
+          remainingMap[line.dishId].qty += 1;
+        } else {
+          remainingMap[line.dishId] = {
+            dishId: line.dishId,
+            name: line.name,
+            price: line.price,
+            qty: 1,
+            modifiers: line.modifiers,
+          };
+        }
+      });
+      onConfirm(Object.values(remainingMap), "pin", tipAmount);
+    } else if (data?.sumupStatus === "failed" || data?.sumupStatus === "cancelled") {
+      setPinError("Betaling mislukt of geweigerd. Probeer opnieuw.");
+      setStep("method");
+    }
+  });
 
-    return () => unsubscribe();
-  }, [step, order.id, tipAmount, lines, onConfirm]);
+  return () => unsubscribe();
+}, [step, order.id, tipAmount, lines, onConfirm]);
 
   const handleCashConfirm = () => {
     const unselectedLines = lines.filter((l) => !l.selected);

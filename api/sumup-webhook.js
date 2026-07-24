@@ -22,7 +22,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Body kan als string binnenkomen in sommige Vercel configuraties
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     console.log("[SumUp Webhook] Ontvangen:", JSON.stringify(body));
     console.log("[SumUp Webhook] Payload:", JSON.stringify(body.payload));
@@ -31,11 +30,6 @@ export default async function handler(req, res) {
 
     if (!status) {
       console.warn("[SumUp Webhook] Geen status gevonden in payload.");
-      return res.status(200).json({ received: true });
-    }
-
-    if (status !== "successful") {
-      console.log(`[SumUp Webhook] Status is '${status}', geen actie vereist.`);
       return res.status(200).json({ received: true });
     }
 
@@ -50,14 +44,29 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true });
     }
 
-    // Order op "Betaald" zetten
     const orderDoc = snapshot.docs[0];
-    await db.collection("orders").doc(orderDoc.id).update({
-      status: "Betaald",
-      sumupCheckoutId: body.id,
-    });
 
-    console.log(`[SumUp Webhook] Order ${orderDoc.id} op Betaald gezet.`);
+    if (status === "successful") {
+      // Order op "Betaald" zetten
+      await db.collection("orders").doc(orderDoc.id).update({
+        status: "Betaald",
+        sumupCheckoutId: body.id,
+        sumupStatus: "successful",
+      });
+      console.log(`[SumUp Webhook] Order ${orderDoc.id} op Betaald gezet.`);
+
+    } else if (status === "failed" || status === "cancelled") {
+      // Betaling mislukt — order blijft Open maar sumupStatus wordt bijgewerkt
+      // zodat de PaymentModal de foutmelding kan tonen
+      await db.collection("orders").doc(orderDoc.id).update({
+        sumupStatus: status,
+      });
+      console.log(`[SumUp Webhook] Betaling mislukt (${status}) voor order ${orderDoc.id}.`);
+
+    } else {
+      console.log(`[SumUp Webhook] Status is '${status}', geen actie vereist.`);
+    }
+
     return res.status(200).json({ received: true });
 
   } catch (error) {

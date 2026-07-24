@@ -33,17 +33,20 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   // Zodra de webhook de order op "Betaald" zet, roepen we onConfirm aan
   // zodat de modal automatisch sluit
   useEffect(() => {
-    if (paymentStep !== "waiting") return;
+  if (paymentStep !== "waiting") return;
 
-    const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
-      const data = snapshot.data();
-      if (data?.status === "Betaald") {
-        onConfirm(order.id, "pin", tipAmount);
-      }
-    });
+  const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
+    const data = snapshot.data();
+    if (data?.status === "Betaald") {
+      onConfirm(order.id, "pin", tipAmount);
+    } else if (data?.sumupStatus === "failed" || data?.sumupStatus === "cancelled") {
+      setPinError("Betaling mislukt of geweigerd. Probeer opnieuw.");
+      setPaymentStep("method");
+    }
+  });
 
-    return () => unsubscribe();
-  }, [paymentStep, order.id, tipAmount, onConfirm]);
+  return () => unsubscribe();
+}, [paymentStep, order.id, tipAmount, onConfirm]);
 
   const subtotal = order.items.reduce(
     (sum, item, i) => sum + itemFullPrice(item) * (1 - itemDiscounts[i] / 100),
