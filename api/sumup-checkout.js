@@ -30,6 +30,12 @@ export default async function handler(req, res) {
 
     const amountInCents = Math.round(amount * 100);
 
+    // ── Debug: log de gebruikte waarden ──
+    console.log("[SumUp Debug] MERCHANT:", SUMUP_MERCHANT_CODE);
+    console.log("[SumUp Debug] READER:", SUMUP_READER_ID);
+    console.log("[SumUp Debug] API_KEY:", SUMUP_API_KEY?.substring(0, 15));
+    console.log("[SumUp Debug] AFFILIATE:", SUMUP_AFFILIATE_KEY?.substring(0, 15));
+
     console.log(`[SumUp Checkout] Betaling aanmaken: €${amount} voor order ${orderId}`);
 
     const response = await fetch(
@@ -63,7 +69,6 @@ export default async function handler(req, res) {
 
     const clientTransactionId = data?.data?.client_transaction_id || orderId;
 
-    // ── Sla sumupTransactionId op in Firestore zodat de webhook de order kan vinden ──
     await db.collection("orders").doc(orderId).update({
       sumupTransactionId: clientTransactionId,
     });
