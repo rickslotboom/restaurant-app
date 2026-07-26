@@ -90,20 +90,6 @@ function OrderItemsList({
   );
 }
 
-const handleRemoveItem = async (dishId: string) => {
-  if (!openOrder) return;
-  if (!window.confirm("Item verwijderen uit de bestelling?")) return;
-
-  const updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
-
-  if (updatedItems.length === 0) {
-    // Als er geen items meer zijn, verwijder de hele order
-    await deleteOrder(openOrder.id);
-  } else {
-    await updateOrderItems(openOrder.id, updatedItems);
-  }
-};
-
 function ModifierModal({
   dish,
   onConfirm,
@@ -192,6 +178,20 @@ export default function Menu({
     : [];
 
   const openOrder = orders.find((o) => o.table === table && o.status !== "Betaald");
+
+  const handleRemoveItem = async (dishId: string) => {
+  if (!openOrder) return;
+  if (!window.confirm("Item verwijderen uit de bestelling?")) return;
+
+  const updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
+
+  if (updatedItems.length === 0) {
+    // Als er geen items meer zijn, verwijder de hele order
+    await deleteOrder(openOrder.id);
+  } else {
+    await updateOrderItems(openOrder.id, updatedItems);
+  }
+};
 
   const existingTotal = openOrder
     ? openOrder.items.reduce((sum, item) => sum + item.price * item.qty, 0)
