@@ -30,13 +30,6 @@ export default async function handler(req, res) {
 
     const amountInCents = Math.round(amount * 100);
 
-    // ── Debug: log de gebruikte waarden ──
-    console.log("[SumUp Debug] MERCHANT:", SUMUP_MERCHANT_CODE);
-    console.log("[SumUp Debug] READER:", SUMUP_READER_ID);
-    console.log("[SumUp Debug] API_KEY:", SUMUP_API_KEY?.substring(0, 15));
-    console.log("[SumUp Debug] AFFILIATE:", SUMUP_AFFILIATE_KEY?.substring(0, 15));
-
-    console.log(`[SumUp Checkout] Betaling aanmaken: €${amount} voor order ${orderId}`);
 
     const response = await fetch(
       `https://api.sumup.com/v0.1/merchants/${SUMUP_MERCHANT_CODE}/readers/${SUMUP_READER_ID}/checkout`,
@@ -73,7 +66,6 @@ export default async function handler(req, res) {
       sumupTransactionId: clientTransactionId,
     });
 
-    console.log(`[SumUp Checkout] ✅ Betaling aangemaakt en opgeslagen, transactie ID: ${clientTransactionId}`);
 
     return res.status(200).json({
       success: true,
