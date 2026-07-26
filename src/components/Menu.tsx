@@ -29,7 +29,13 @@ function makeLineId(dishId: string, modifierIds: string[]): string {
   return [dishId, ...[...modifierIds].sort()].join("|");
 }
 
-function OrderItemsList({ items }: { items: OrderItem[] }) {
+function OrderItemsList({
+  items,
+  onRemoveItem,
+}: {
+  items: OrderItem[];
+  onRemoveItem?: (dishId: string) => void;
+}) {
   return (
     <ul style={{ margin: "0.25rem 0", padding: 0, listStyle: "none" }}>
       {items.map((item, i) => {
@@ -38,9 +44,23 @@ function OrderItemsList({ items }: { items: OrderItem[] }) {
         const lineTotal = item.price * item.qty;
         return (
           <li key={i} style={{ marginBottom: "0.4rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", alignItems: "center" }}>
               <span>{item.qty}× {item.name}</span>
-              <span>€{(basePrice * item.qty).toFixed(2)}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span>€{lineTotal.toFixed(2)}</span>
+                {onRemoveItem && (
+                  <button
+                    onClick={() => onRemoveItem(item.dishId)}
+                    style={{
+                      background: "none", border: "none", color: "#d9534f",
+                      cursor: "pointer", fontSize: "0.85rem", padding: "0 0.25rem",
+                    }}
+                    title="Verwijder item"
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
             </div>
             {(item.modifiers ?? []).map((mod, mIdx) => (
               <div key={mIdx} style={{
@@ -69,6 +89,20 @@ function OrderItemsList({ items }: { items: OrderItem[] }) {
     </ul>
   );
 }
+
+const handleRemoveItem = async (dishId: string) => {
+  if (!openOrder) return;
+  if (!window.confirm("Item verwijderen uit de bestelling?")) return;
+
+  const updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
+
+  if (updatedItems.length === 0) {
+    // Als er geen items meer zijn, verwijder de hele order
+    await deleteOrder(openOrder.id);
+  } else {
+    await updateOrderItems(openOrder.id, updatedItems);
+  }
+};
 
 function ModifierModal({
   dish,
@@ -142,7 +176,7 @@ function ModifierModal({
 export default function Menu({
   menu, selected, table, onBack, onAdd, onRemove, onClearCart, orders, onUpdateStatus,
 }: Props) {
-  const { addOrder, updateOrderItems } = useOrdersContext();
+  const { addOrder, deleteOrder, updateOrderItems } = useOrdersContext();
   const { user } = useAuthContext();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -387,7 +421,7 @@ export default function Menu({
             padding: "1rem", backgroundColor: "#eef6ff",
           }}>
             <h2 style={{ marginTop: 0 }}>📋 Reeds besteld</h2>
-            <OrderItemsList items={openOrder.items} />
+            <OrderItemsList items={openOrder.items} onRemoveItem={handleRemoveItem} />
             <hr style={{ margin: "1rem 0" }} />
             <h3 style={{ margin: 0 }}>Geplaatst: €{existingTotal.toFixed(2)}</h3>
           </div>
