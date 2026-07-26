@@ -40,13 +40,14 @@ function OrderItemsList({
     <ul style={{ margin: "0.25rem 0", padding: 0, listStyle: "none" }}>
       {items.map((item, i) => {
         const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
+        const basePrice = item.price - modTotal;
         const lineTotal = item.price * item.qty;
         return (
           <li key={i} style={{ marginBottom: "0.4rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", alignItems: "center" }}>
               <span>{item.qty}× {item.name}</span>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span>€{lineTotal.toFixed(2)}</span>
+                <span>€{(basePrice * item.qty).toFixed(2)}</span>
                 {onRemoveItem && (
                   <button
                     onClick={() => onRemoveItem(item.dishId)}

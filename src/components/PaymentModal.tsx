@@ -49,13 +49,13 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 }, [paymentStep, order.id, tipAmount, onConfirm]);
 
   const subtotal = order.items.reduce(
-    (sum, item, i) => sum + itemFullPrice(item) * (1 - itemDiscounts[i] / 100),
-    0
-  );
-  const orderDiscAmt = subtotal * orderDiscount / 100;
-  const total = subtotal - orderDiscAmt;
-  const origTotal = order.items.reduce((sum, item) => sum + itemFullPrice(item), 0);
-  const savings = origTotal - total;
+  (sum, item, i) => sum + item.price * item.qty * (1 - itemDiscounts[i] / 100),
+  0
+);
+const orderDiscAmt = subtotal * orderDiscount / 100;
+const total = subtotal - orderDiscAmt;
+const origTotal = order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+const savings = origTotal - total;
 
   const setItemDisc = (i: number, pct: number) => {
     const d = [...itemDiscounts]; d[i] = pct;
@@ -119,39 +119,50 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   });
 
   const ItemOverview = ({ showDiscount = false }: { showDiscount?: boolean }) => (
-    <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
-      {order.items.map((item, i) => {
-        const disc = itemDiscounts[i];
-        const orig = itemFullPrice(item);
-        const final = orig * (1 - disc / 100);
-        return (
-          <li key={i} style={{ marginBottom: "0.5rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
-              <span style={{ fontWeight: "500" }}>{item.qty}× {item.name}</span>
-              <span>
-                {showDiscount && disc > 0 && (
-                  <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px", fontSize: "0.8rem" }}>
-                    €{orig.toFixed(2)}
-                  </span>
-                )}
-                €{final.toFixed(2)}
-              </span>
+  <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
+    {order.items.map((item, i) => {
+      const disc = itemDiscounts[i];
+      const orig = item.price * item.qty; // item.price bevat al modifiers
+      const final = orig * (1 - disc / 100);
+      const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
+      const basePrice = item.price - modTotal;
+      return (
+        <li key={i} style={{ marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+            <span style={{ fontWeight: "500" }}>{item.qty}× {item.name}</span>
+            <span>
+              {showDiscount && disc > 0 && (
+                <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px", fontSize: "0.8rem" }}>
+                  €{orig.toFixed(2)}
+                </span>
+              )}
+              €{(basePrice * item.qty * (1 - disc / 100)).toFixed(2)}
+            </span>
+          </div>
+          {(item.modifiers ?? []).map((mod, mIdx) => (
+            <div key={mIdx} style={{
+              display: "flex", justifyContent: "space-between",
+              paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#555", marginBottom: "2px",
+            }}>
+              <span>↳ {mod.name}</span>
+              {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
             </div>
-            {(item.modifiers ?? []).map((mod, mIdx) => (
-              <div key={mIdx} style={{
-                display: "flex", justifyContent: "space-between",
-                paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#555", marginBottom: "2px",
-              }}>
-                <span>↳ {mod.name}</span>
-                {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
-              </div>
-            ))}
-          </li>
-        );
-      })}
-    </ul>
-  );
-
+          ))}
+          {modTotal > 0 && (
+            <div style={{
+              display: "flex", justifyContent: "space-between",
+              paddingLeft: "1.25rem", fontSize: "0.85rem", fontWeight: "bold",
+              borderTop: "1px solid #eee", marginTop: "2px", paddingTop: "2px",
+            }}>
+              <span>Totaal</span>
+              <span>€{final.toFixed(2)}</span>
+            </div>
+          )}
+        </li>
+      );
+    })}
+  </ul>
+);
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
