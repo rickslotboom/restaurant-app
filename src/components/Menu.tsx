@@ -40,7 +40,6 @@ function OrderItemsList({
     <ul style={{ margin: "0.25rem 0", padding: 0, listStyle: "none" }}>
       {items.map((item, i) => {
         const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
-        const basePrice = item.price - modTotal;
         const lineTotal = item.price * item.qty;
         return (
           <li key={i} style={{ marginBottom: "0.4rem" }}>
