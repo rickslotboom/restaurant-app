@@ -424,6 +424,21 @@ export default function Menu({
             <OrderItemsList items={openOrder.items} onRemoveItem={handleRemoveItem} />
             <hr style={{ margin: "1rem 0" }} />
             <h3 style={{ margin: 0 }}>Geplaatst: €{existingTotal.toFixed(2)}</h3>
+            <button
+  onClick={async () => {
+    if (!openOrder) return;
+    if (!window.confirm("Hele order verwijderen?")) return;
+    await deleteOrder(openOrder.id);
+    onBack();
+  }}
+  style={{
+    marginTop: "0.5rem", width: "100%", background: "#d9534f",
+    color: "white", border: "none", padding: "0.5rem",
+    borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem",
+  }}
+>
+  🗑️ Verwijder hele order
+</button>
           </div>
         )}
 
