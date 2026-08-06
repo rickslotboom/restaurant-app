@@ -6,7 +6,7 @@ import React, {
   useMemo,
   ReactNode,
 } from "react";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
   collection,
   addDoc,
@@ -17,6 +17,7 @@ import {
   serverTimestamp,
   runTransaction,
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { Order, OrderItem, OrderStatus } from "../types";
 
 type OrdersContextValue = {
@@ -34,41 +35,70 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    console.log("[FIRESTORE] Listening to orders…");
+    // Pas een Firestore-listener opzetten zodra Firebase Auth een geldig
+    // ingelogde gebruiker heeft — anders faalt de listener stil met
+    // permission-denied vóórdat iemand ooit heeft ingelogd, en hij herstelt
+    // zichzelf niet automatisch daarna.
+    let unsubSnapshot: (() => void) | null = null;
 
-    const unsub = onSnapshot(collection(db, "orders"), (snapshot) => {
-      const formatted = snapshot.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          table: data.table ?? "",
-          status: (
-            data.status === "Afgehandeld" ? "Afgehandeld" :
-            data.status === "Betaald" ? "Betaald" : "Open"
-          ) as OrderStatus,
-          createdAt: data.createdAt ?? null,
-          timestamp: data.timestamp ?? null,
-          orderNumber: data.orderNumber ?? undefined,
-          waiter: data.waiter ?? "Onbekend",
-          items: (data.items || []).map((i: any) => ({
-            dishId: i.dishId ?? "",
-            name: i.name ?? "Onbekend",
-            price: i.price ?? 0,
-            qty: i.qty ?? 0,
-            modifiers: (i.modifiers ?? []).map((m: any) => ({
-              id: m.id ?? "",
-              name: m.name ?? "",
-              price: m.price ?? 0,
-            })),
-          })),
-        } as Order;
-      });
+    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      // Ruim een eventuele oude listener op bij elke auth-wijziging
+      if (unsubSnapshot) {
+        unsubSnapshot();
+        unsubSnapshot = null;
+      }
 
-      console.log("[FIRESTORE] Orders mapped:", formatted);
-      setOrders(formatted);
+      if (!firebaseUser) {
+        setOrders([]);
+        return;
+      }
+
+      console.log("[FIRESTORE] Listening to orders…");
+
+      unsubSnapshot = onSnapshot(
+        collection(db, "orders"),
+        (snapshot) => {
+          const formatted = snapshot.docs.map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              table: data.table ?? "",
+              status: (
+                data.status === "Afgehandeld" ? "Afgehandeld" :
+                data.status === "Betaald" ? "Betaald" : "Open"
+              ) as OrderStatus,
+              createdAt: data.createdAt ?? null,
+              timestamp: data.timestamp ?? null,
+              orderNumber: data.orderNumber ?? undefined,
+              waiter: data.waiter ?? "Onbekend",
+              items: (data.items || []).map((i: any) => ({
+                dishId: i.dishId ?? "",
+                name: i.name ?? "Onbekend",
+                price: i.price ?? 0,
+                qty: i.qty ?? 0,
+                modifiers: (i.modifiers ?? []).map((m: any) => ({
+                  id: m.id ?? "",
+                  name: m.name ?? "",
+                  price: m.price ?? 0,
+                })),
+              })),
+            } as Order;
+          });
+
+          console.log("[FIRESTORE] Orders mapped:", formatted);
+          setOrders(formatted);
+        },
+        (error) => {
+          // Nu wel expliciet afgevangen in plaats van stil te crashen
+          console.error("[FIRESTORE] orders listener error:", error);
+        }
+      );
     });
 
-    return () => unsub();
+    return () => {
+      unsubAuth();
+      if (unsubSnapshot) unsubSnapshot();
+    };
   }, []);
 
   const addOrder = async (order: Omit<Order, "id">) => {

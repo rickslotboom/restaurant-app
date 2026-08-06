@@ -2,8 +2,6 @@
   "ExpandedNodes": [
     "",
     "\\api",
-    "\\public\\helpers",
-    "\\public\\images",
     "\\src",
     "\\src\\auth",
     "\\src\\components",
@@ -11,6 +9,6 @@
     "\\src\\hooks",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\auth\\loginUser.ts",
+  "SelectedNode": "\\src\\hooks\\useFloorPlan.tsx",
   "PreviewInSolutionExplorer": false
 }

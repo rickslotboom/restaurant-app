@@ -7,7 +7,7 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
   collection,
   onSnapshot,
@@ -15,11 +15,12 @@ import {
   setDoc,
   deleteDoc,
 } from "firebase/firestore";
-
+import { onAuthStateChanged } from "firebase/auth";
+ 
 export type TableSize = "small" | "medium" | "large" | "wide";
 export type TableShape = "square" | "round" | "bar";
 export type FloorType = "binnen" | "buiten";
-
+ 
 export type TableDef = {
   id: string;
   name: string;
@@ -29,16 +30,16 @@ export type TableDef = {
   x: number;
   y: number;
 };
-
+ 
 type FloorPlanContextValue = {
   tables: TableDef[];
   addTable: (table: Omit<TableDef, "id">) => Promise<void>;
   updateTable: (id: string, data: Partial<Omit<TableDef, "id">>) => Promise<void>;
   deleteTable: (id: string) => Promise<void>;
 };
-
+ 
 const FloorPlanContext = createContext<FloorPlanContextValue | undefined>(undefined);
-
+ 
 // Seed data — exact zoals de huidige hardcoded layout
 const SEED_TABLES: Omit<TableDef, "id">[] = [
   // Binnen — bovenste rij
@@ -46,19 +47,15 @@ const SEED_TABLES: Omit<TableDef, "id">[] = [
     name, shape: "square" as TableShape, size: "medium" as TableSize,
     floor: "binnen" as FloorType, x: i * 88, y: 0,
   })),
-  // Binnen — BAR
   { name: "BAR", shape: "bar" as TableShape, size: "wide" as TableSize, floor: "binnen" as FloorType, x: 120, y: 180 },
-  // Binnen — ronde tafels
   ...["E","C","A","F","D","B"].map((name, i) => ({
     name, shape: "round" as TableShape, size: "medium" as TableSize,
     floor: "binnen" as FloorType,
     x: 500 + (i % 3) * 88,
     y: 180 + Math.floor(i / 3) * 88,
   })),
-  // Binnen — vr tafels
   { name: "vr1", shape: "round" as TableShape, size: "medium" as TableSize, floor: "binnen" as FloorType, x: 780, y: 180 },
   { name: "vr2", shape: "round" as TableShape, size: "medium" as TableSize, floor: "binnen" as FloorType, x: 780, y: 268 },
-  // Buiten
   { name: "25", shape: "square" as TableShape, size: "medium" as TableSize, floor: "buiten" as FloorType, x: 260, y: 0 },
   { name: "26", shape: "square" as TableShape, size: "medium" as TableSize, floor: "buiten" as FloorType, x: 380, y: 0 },
   { name: "27", shape: "square" as TableShape, size: "medium" as TableSize, floor: "buiten" as FloorType, x: 500, y: 0 },
@@ -69,49 +66,72 @@ const SEED_TABLES: Omit<TableDef, "id">[] = [
   { name: "23", shape: "square" as TableShape, size: "medium" as TableSize, floor: "buiten" as FloorType, x: 460, y: 240 },
   { name: "24", shape: "square" as TableShape, size: "medium" as TableSize, floor: "buiten" as FloorType, x: 580, y: 240 },
 ];
-
+ 
 export const FloorPlanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tables, setTables] = useState<TableDef[]>([]);
-
+ 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "floorplan"), (snapshot) => {
-      if (snapshot.empty) {
-        // Seed de database met de huidige layout
-        SEED_TABLES.forEach(async (t, i) => {
-          await setDoc(doc(db, "floorplan", `table_${i}`), t);
-        });
+    let unsubSnapshot: (() => void) | null = null;
+ 
+    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (unsubSnapshot) {
+        unsubSnapshot();
+        unsubSnapshot = null;
+      }
+ 
+      if (!firebaseUser) {
+        setTables([]);
         return;
       }
-      const loaded = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as TableDef[];
-      setTables(loaded);
+ 
+      unsubSnapshot = onSnapshot(
+        collection(db, "floorplan"),
+        (snapshot) => {
+          if (snapshot.empty) {
+            SEED_TABLES.forEach(async (t, i) => {
+              await setDoc(doc(db, "floorplan", `table_${i}`), t);
+            });
+            return;
+          }
+          const loaded = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          })) as TableDef[];
+          setTables(loaded);
+        },
+        (error) => {
+          console.error("[FIRESTORE] floorplan listener error:", error);
+        }
+      );
     });
-    return () => unsub();
+ 
+    return () => {
+      unsubAuth();
+      if (unsubSnapshot) unsubSnapshot();
+    };
   }, []);
-
+ 
   const addTable = useCallback(async (table: Omit<TableDef, "id">) => {
     const id = `table_${Date.now()}`;
     await setDoc(doc(db, "floorplan", id), table);
   }, []);
-
+ 
   const updateTable = useCallback(async (id: string, data: Partial<Omit<TableDef, "id">>) => {
     await setDoc(doc(db, "floorplan", id), data, { merge: true });
   }, []);
-
+ 
   const deleteTable = useCallback(async (id: string) => {
     await deleteDoc(doc(db, "floorplan", id));
   }, []);
-
+ 
   const value = useMemo(
     () => ({ tables, addTable, updateTable, deleteTable }),
     [tables, addTable, updateTable, deleteTable]
   );
-
+ 
   return <FloorPlanContext.Provider value={value}>{children}</FloorPlanContext.Provider>;
 };
-
+ 
 export function useFloorPlanContext() {
   const ctx = useContext(FloorPlanContext);
   if (!ctx) throw new Error("useFloorPlanContext must be used within FloorPlanProvider");

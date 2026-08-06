@@ -10,8 +10,6 @@ import Login from "./components/Login";
 import SplitPaymentModal from "./components/SplitPaymentModal";
 import { useOrdersContext } from "./hooks/useOrders";
 import { useMenuContext } from "./hooks/useMenu";
-import { signInAnonymously } from "firebase/auth";
-import { auth } from "./firebase";
 import styles from "./App.module.css";
 import { useAuthContext } from "./hooks/useAuth";
 import { OrderItem } from "./types";
@@ -44,11 +42,11 @@ export default function App() {
     else setView("floorplan");
   }, [user]);
 
-  useEffect(() => {
-    signInAnonymously(auth).catch((err) =>
-      console.error("Anonieme login fout:", err)
-    );
-  }, []);
+  // ❌ De automatische signInAnonymously()-aanroep die hier stond is verwijderd:
+  // Anonymous sign-in staat uit in Firebase sinds de beveiligingsfix van 5 aug,
+  // dus deze aanroep faalde altijd en produceerde alleen nutteloze foutmeldingen
+  // (auth/admin-restricted-operation) bij elke pagina-load, voor iedereen —
+  // ook los van de vraag of iemand al was ingelogd.
 
   const handleAdd = (id: string) =>
     setSelected((s) => ({ ...s, [id]: (s[id] || 0) + 1 }));
