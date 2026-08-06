@@ -1,5 +1,6 @@
 // src/firebase.ts
 import { initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check"; // ✅ Nieuw toegevoegd
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // ✅ Nieuw toegevoegd
 
@@ -17,6 +18,13 @@ const firebaseConfig = {
 
 // ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// ✅ App Check — moet direct na initializeApp() en vóór het gebruik van
+// Firestore/Auth geïnitialiseerd worden.
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY!),
+  isTokenAutoRefreshEnabled: true,
+});
 
 // ✅ Firestore database
 export const db = getFirestore(app);
