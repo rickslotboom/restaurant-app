@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\auth\\loginUser.ts||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\auth\\loginUser.ts||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useFloorPlan.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\hooks\\useFloorPlan.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
@@ -21,10 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Login.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Login.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\auth\\loginUser.ts||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\auth\\loginUser.ts||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\helpers\\auth.ts||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -110,7 +110,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
@@ -127,7 +127,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "useFloorPlan.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useFloorPlan.tsx",
               "RelativeDocumentMoniker": "src\\hooks\\useFloorPlan.tsx",
@@ -140,7 +140,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "useAuth.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useAuth.tsx",
               "RelativeDocumentMoniker": "src\\hooks\\useAuth.tsx",
@@ -148,12 +148,11 @@
               "RelativeToolTip": "src\\hooks\\useAuth.tsx",
               "ViewState": "AgIAABYAAAAAAAAAAAAUwDEAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:51:57.335Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-06T19:51:57.335Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "Login.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Login.tsx",
               "RelativeDocumentMoniker": "src\\components\\Login.tsx",
@@ -161,18 +160,17 @@
               "RelativeToolTip": "src\\components\\Login.tsx",
               "ViewState": "AgIAACMAAAAAAAAAAAAUwD4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:48:19.665Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-06T19:48:19.665Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 0,
               "Title": "loginUser.ts",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\auth\\loginUser.ts",
               "RelativeDocumentMoniker": "src\\auth\\loginUser.ts",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\auth\\loginUser.ts",
               "RelativeToolTip": "src\\auth\\loginUser.ts",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAUwCAAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAACYAAAAAAAAAAAAUwEEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-08-06T19:38:42.649Z",
               "EditorCaption": ""
@@ -187,8 +185,7 @@
               "RelativeToolTip": "public\\helpers\\auth.ts",
               "ViewState": "AgIAAAIAAAAAAAAAAAAUwB0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:38:07.65Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-06T19:38:07.65Z"
             },
             {
               "$type": "Document",
@@ -204,7 +201,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "App.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeDocumentMoniker": "src\\App.tsx",
@@ -212,12 +209,11 @@
               "RelativeToolTip": "src\\App.tsx",
               "ViewState": "AgIAALwAAAAAAAAAAAAYwNcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-07-31T16:49:44.784Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T16:49:44.784Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "useOrders.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx",
               "RelativeDocumentMoniker": "src\\hooks\\useOrders.tsx",
@@ -225,8 +221,7 @@
               "RelativeToolTip": "src\\hooks\\useOrders.tsx",
               "ViewState": "AgIAAIcAAAAAAAAAAAAUwKIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T13:14:55.115Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T13:14:55.115Z"
             },
             {
               "$type": "Document",
