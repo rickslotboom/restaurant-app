@@ -21,6 +21,7 @@ type CartLine = {
   dishId: string;
   name: string;
   basePrice: number;
+  vatRate: VatRate;
   modifiers: { id: string; name: string; price: number }[];
   qty: number;
 };
@@ -211,14 +212,22 @@ export default function Menu({
     }
   };
 
-  const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; price: number }[]) => {
-    const lineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
-    setCart((prev) => {
-      const existing = prev.find((l) => l.lineId === lineId);
-      if (existing) return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l);
-      return [...prev, { lineId, dishId: dish.id, name: dish.name, basePrice: dish.price, modifiers: chosenModifiers, qty: 1 }];
-    });
-  };
+const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; price: number }[]) => {
+  const lineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
+  setCart((prev) => {
+    const existing = prev.find((l) => l.lineId === lineId);
+    if (existing) return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l);
+    return [...prev, {
+      lineId,
+      dishId: dish.id,
+      name: dish.name,
+      basePrice: dish.price,
+      vatRate: dish.vatRate ?? 9,
+      modifiers: chosenModifiers,
+      qty: 1,
+    }];
+  });
+};
 
   const removeFromCart = (lineId: string) => {
     setCart((prev) => {
@@ -234,18 +243,18 @@ export default function Menu({
     setDeleteConfirmLineId(null);
   };
 
-  // Sla gecombineerde prijs op (basisprijs + modifiers) zodat item.price altijd het totaal per stuk is
-  const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
-    lines.map((line) => {
-      const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
-      return {
-        dishId: line.lineId,
-        name: line.name,
-        price: line.basePrice + modTotal,
-        qty: line.qty,
-        modifiers: line.modifiers,
-      };
-    });
+ const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
+  lines.map((line) => {
+    const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
+    return {
+      dishId: line.lineId,
+      name: line.name,
+      price: line.basePrice + modTotal,
+      qty: line.qty,
+      vatRate: line.vatRate,
+      modifiers: line.modifiers,
+    };
+  });
 
   const handleConfirm = async () => {
     if (cart.length === 0) {

@@ -2,6 +2,7 @@
   "ExpandedNodes": [
     "",
     "\\api",
+    "\\public",
     "\\src",
     "\\src\\auth",
     "\\src\\components",
@@ -9,5 +10,6 @@
     "\\src\\hooks",
     "\\src\\types"
   ],
+  "SelectedNode": "\\src\\components\\Menu.tsx",
   "PreviewInSolutionExplorer": false
 }
