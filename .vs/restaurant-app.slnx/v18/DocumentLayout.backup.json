@@ -3,6 +3,38 @@
   "WorkspaceRootPath": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\types\\index.ts||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\types\\index.ts||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BeheerView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\BeheerView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\BillingView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\FloorPlan.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\FloorPlan.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:api\\sumup-webhook.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-checkout.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:api\\sumup-checkout.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\auth\\loginUser.ts||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\auth\\loginUser.ts||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
@@ -71,28 +103,8 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Header.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\types\\index.ts||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\types\\index.ts||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-checkout.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:api\\sumup-checkout.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\SplitPaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\SplitPaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:api\\sumup-webhook.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-cancel.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -105,10 +117,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\KitchenView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\KitchenView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\BillingView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     }
   ],
   "DocumentGroupContainers": [
@@ -118,11 +126,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 10,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 27,
               "Title": "BarView.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BarView.tsx",
               "RelativeDocumentMoniker": "src\\components\\BarView.tsx",
@@ -135,68 +143,72 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "service-worker.js",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\service-worker.js",
-              "RelativeDocumentMoniker": "public\\service-worker.js",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\service-worker.js",
-              "RelativeToolTip": "public\\service-worker.js",
-              "ViewState": "AgIAADIAAAAAAAAAAAAUwE0AAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-08-07T11:23:39.363Z",
+              "DocumentIndex": 2,
+              "Title": "BeheerView.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BeheerView.tsx",
+              "RelativeDocumentMoniker": "src\\components\\BeheerView.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BeheerView.tsx",
+              "RelativeToolTip": "src\\components\\BeheerView.tsx",
+              "ViewState": "AgIAAJYBAAAAAAAAAAAiwL4BAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-08-14T07:53:26.818Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "serviceWorkerRegistration.js",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\serviceWorkerRegistration.js",
-              "RelativeDocumentMoniker": "src\\serviceWorkerRegistration.js",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\serviceWorkerRegistration.js",
-              "RelativeToolTip": "src\\serviceWorkerRegistration.js",
-              "ViewState": "AgIAABEAAAAAAAAAAAAUwCwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-08-07T11:23:13.822Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "useFloorPlan.tsx",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useFloorPlan.tsx",
-              "RelativeDocumentMoniker": "src\\hooks\\useFloorPlan.tsx",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useFloorPlan.tsx",
-              "RelativeToolTip": "src\\hooks\\useFloorPlan.tsx",
-              "ViewState": "AgIAAG8AAAAAAAAAAAAUwIoAAAABAAAAAAAAAA==",
+              "DocumentIndex": 4,
+              "Title": "FloorPlan.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\FloorPlan.tsx",
+              "RelativeDocumentMoniker": "src\\components\\FloorPlan.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\FloorPlan.tsx",
+              "RelativeToolTip": "src\\components\\FloorPlan.tsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:54:37.742Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "useAuth.tsx",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useAuth.tsx",
-              "RelativeDocumentMoniker": "src\\hooks\\useAuth.tsx",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useAuth.tsx",
-              "RelativeToolTip": "src\\hooks\\useAuth.tsx",
-              "ViewState": "AgIAABYAAAAAAAAAAAAUwDEAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:51:57.335Z"
+              "WhenOpened": "2026-08-13T07:24:57.46Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 7,
-              "Title": "Login.tsx",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Login.tsx",
-              "RelativeDocumentMoniker": "src\\components\\Login.tsx",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Login.tsx",
-              "RelativeToolTip": "src\\components\\Login.tsx",
-              "ViewState": "AgIAACMAAAAAAAAAAAAUwD4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:48:19.665Z"
+              "Title": "sumup-checkout.js",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-checkout.js",
+              "RelativeDocumentMoniker": "api\\sumup-checkout.js",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-checkout.js",
+              "RelativeToolTip": "api\\sumup-checkout.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-07-11T15:55:53.78Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 6,
+              "Title": "sumup-webhook.js",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js",
+              "RelativeDocumentMoniker": "api\\sumup-webhook.js",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js",
+              "RelativeToolTip": "api\\sumup-webhook.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-07-10T12:49:33.847Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "BillingView.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
+              "RelativeDocumentMoniker": "src\\components\\BillingView.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
+              "RelativeToolTip": "src\\components\\BillingView.tsx",
+              "ViewState": "AgIAAG4BAAAAAAAAAAAcwH8BAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-06-14T12:45:58.885Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "loginUser.ts",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\auth\\loginUser.ts",
               "RelativeDocumentMoniker": "src\\auth\\loginUser.ts",
@@ -209,7 +221,58 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 5,
+              "Title": "PaymentModal.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
+              "RelativeDocumentMoniker": "src\\components\\PaymentModal.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
+              "RelativeToolTip": "src\\components\\PaymentModal.tsx",
+              "ViewState": "AgIAAIYBAAAAAAAAAAAUwKEBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-06-14T12:52:03Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Login.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Login.tsx",
+              "RelativeDocumentMoniker": "src\\components\\Login.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Login.tsx",
+              "RelativeToolTip": "src\\components\\Login.tsx",
+              "ViewState": "AgIAACMAAAAAAAAAAAAUwD4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-08-06T19:48:19.665Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "index.ts",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\types\\index.ts",
+              "RelativeDocumentMoniker": "src\\types\\index.ts",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\types\\index.ts",
+              "RelativeToolTip": "src\\types\\index.ts",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAiwC4AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-07-31T16:51:06.256Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Menu.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
+              "RelativeDocumentMoniker": "src\\components\\Menu.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
+              "RelativeToolTip": "src\\components\\Menu.tsx",
+              "ViewState": "AgIAAOIAAAAAAAAAAAASwAEBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-06-14T12:46:10.703Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
               "Title": "auth.ts",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\helpers\\auth.ts",
               "RelativeDocumentMoniker": "public\\helpers\\auth.ts",
@@ -221,7 +284,55 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 13,
+              "Title": "useAuth.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useAuth.tsx",
+              "RelativeDocumentMoniker": "src\\hooks\\useAuth.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useAuth.tsx",
+              "RelativeToolTip": "src\\hooks\\useAuth.tsx",
+              "ViewState": "AgIAABYAAAAAAAAAAAAUwDEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-08-06T19:51:57.335Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "useFloorPlan.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useFloorPlan.tsx",
+              "RelativeDocumentMoniker": "src\\hooks\\useFloorPlan.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useFloorPlan.tsx",
+              "RelativeToolTip": "src\\hooks\\useFloorPlan.tsx",
+              "ViewState": "AgIAAG8AAAAAAAAAAAAUwIoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-08-06T19:54:37.742Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "serviceWorkerRegistration.js",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\serviceWorkerRegistration.js",
+              "RelativeDocumentMoniker": "src\\serviceWorkerRegistration.js",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\serviceWorkerRegistration.js",
+              "RelativeToolTip": "src\\serviceWorkerRegistration.js",
+              "ViewState": "AgIAABEAAAAAAAAAAAAUwCwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-08-07T11:23:13.822Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "service-worker.js",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\service-worker.js",
+              "RelativeDocumentMoniker": "public\\service-worker.js",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\service-worker.js",
+              "RelativeToolTip": "public\\service-worker.js",
+              "ViewState": "AgIAADIAAAAAAAAAAAAUwE0AAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-08-07T11:23:39.363Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
               "Title": "Header.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Header.tsx",
               "RelativeDocumentMoniker": "src\\components\\Header.tsx",
@@ -233,7 +344,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 14,
               "Title": "App.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeDocumentMoniker": "src\\App.tsx",
@@ -245,7 +356,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 12,
               "Title": "useOrders.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx",
               "RelativeDocumentMoniker": "src\\hooks\\useOrders.tsx",
@@ -257,7 +368,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 19,
               "Title": "react-app-env.d.ts",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\react-app-env.d.ts",
               "RelativeDocumentMoniker": "src\\react-app-env.d.ts",
@@ -269,7 +380,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 18,
               "Title": "tsconfig.json",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\tsconfig.json",
               "RelativeDocumentMoniker": "tsconfig.json",
@@ -281,7 +392,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 17,
               "Title": ".env.local",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\.env.local",
               "RelativeDocumentMoniker": ".env.local",
@@ -293,19 +404,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "index.ts",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\types\\index.ts",
-              "RelativeDocumentMoniker": "src\\types\\index.ts",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\types\\index.ts",
-              "RelativeToolTip": "src\\types\\index.ts",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-07-31T16:51:06.256Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 23,
               "Title": "index.css",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\index.css",
               "RelativeDocumentMoniker": "src\\index.css",
@@ -317,7 +416,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 21,
               "Title": "index.html",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\public\\index.html",
               "RelativeDocumentMoniker": "public\\index.html",
@@ -329,7 +428,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 22,
               "Title": "index.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\index.tsx",
               "RelativeDocumentMoniker": "src\\index.tsx",
@@ -342,18 +441,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 20,
-              "Title": "sumup-checkout.js",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-checkout.js",
-              "RelativeDocumentMoniker": "api\\sumup-checkout.js",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-checkout.js",
-              "RelativeToolTip": "api\\sumup-checkout.js",
-              "ViewState": "AgIAAD4AAAAAAAAAAAAmwEMAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-07-11T15:55:53.78Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
               "Title": "firebase.ts",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\firebase.ts",
               "RelativeDocumentMoniker": "src\\firebase.ts",
@@ -365,7 +452,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 25,
               "Title": "SplitPaymentModal.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\SplitPaymentModal.tsx",
               "RelativeDocumentMoniker": "src\\components\\SplitPaymentModal.tsx",
@@ -377,43 +464,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "PaymentModal.tsx",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
-              "RelativeDocumentMoniker": "src\\components\\PaymentModal.tsx",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
-              "RelativeToolTip": "src\\components\\PaymentModal.tsx",
-              "ViewState": "AgIAACQAAAAAAAAAAAAmwDUAAAACAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:03Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "Menu.tsx",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
-              "RelativeDocumentMoniker": "src\\components\\Menu.tsx",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
-              "RelativeToolTip": "src\\components\\Menu.tsx",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAALgBAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:46:10.703Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 22,
-              "Title": "sumup-webhook.js",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js",
-              "RelativeDocumentMoniker": "api\\sumup-webhook.js",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js",
-              "RelativeToolTip": "api\\sumup-webhook.js",
-              "ViewState": "AgIAADsAAAAAAAAAAAAAAEsAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-07-10T12:49:33.847Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 26,
               "Title": "sumup-cancel.js",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-cancel.js",
               "RelativeDocumentMoniker": "api\\sumup-cancel.js",
@@ -425,19 +476,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
-              "Title": "BillingView.tsx",
-              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
-              "RelativeDocumentMoniker": "src\\components\\BillingView.tsx",
-              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
-              "RelativeToolTip": "src\\components\\BillingView.tsx",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAACAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:45:58.885Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 28,
               "Title": "KitchenView.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\KitchenView.tsx",
               "RelativeDocumentMoniker": "src\\components\\KitchenView.tsx",

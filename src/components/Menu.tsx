@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dish, Order, OrderItem, OrderStatus } from "../types";
+import { Dish, Order, OrderItem, OrderStatus, VatRate } from "../types";
 import { useOrdersContext } from "../hooks/useOrders";
 import { useAuthContext } from "../hooks/useAuth";
 import PaymentModal from "./PaymentModal";

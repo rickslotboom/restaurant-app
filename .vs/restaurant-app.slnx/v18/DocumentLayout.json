@@ -151,8 +151,7 @@
               "RelativeToolTip": "src\\components\\BeheerView.tsx",
               "ViewState": "AgIAAJYBAAAAAAAAAAAiwL4BAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-14T07:53:26.818Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-14T07:53:26.818Z"
             },
             {
               "$type": "Document",
@@ -164,8 +163,7 @@
               "RelativeToolTip": "src\\components\\FloorPlan.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-13T07:24:57.46Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-13T07:24:57.46Z"
             },
             {
               "$type": "Document",
@@ -177,8 +175,7 @@
               "RelativeToolTip": "api\\sumup-checkout.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-07-11T15:55:53.78Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-11T15:55:53.78Z"
             },
             {
               "$type": "Document",
@@ -190,8 +187,7 @@
               "RelativeToolTip": "api\\sumup-webhook.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-07-10T12:49:33.847Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-10T12:49:33.847Z"
             },
             {
               "$type": "Document",
@@ -203,8 +199,7 @@
               "RelativeToolTip": "src\\components\\BillingView.tsx",
               "ViewState": "AgIAAG4BAAAAAAAAAAAcwH8BAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:45:58.885Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:45:58.885Z"
             },
             {
               "$type": "Document",
@@ -216,8 +211,7 @@
               "RelativeToolTip": "src\\auth\\loginUser.ts",
               "ViewState": "AgIAACYAAAAAAAAAAAAUwEEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-06T19:38:42.649Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-06T19:38:42.649Z"
             },
             {
               "$type": "Document",
@@ -229,8 +223,7 @@
               "RelativeToolTip": "src\\components\\PaymentModal.tsx",
               "ViewState": "AgIAAIYBAAAAAAAAAAAUwKEBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:03Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:52:03Z"
             },
             {
               "$type": "Document",
@@ -254,8 +247,7 @@
               "RelativeToolTip": "src\\types\\index.ts",
               "ViewState": "AgIAAAYAAAAAAAAAAAAiwC4AAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-07-31T16:51:06.256Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T16:51:06.256Z"
             },
             {
               "$type": "Document",
@@ -265,7 +257,7 @@
               "RelativeDocumentMoniker": "src\\components\\Menu.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
               "RelativeToolTip": "src\\components\\Menu.tsx",
-              "ViewState": "AgIAAOIAAAAAAAAAAAASwAEBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:46:10.703Z",
               "EditorCaption": ""
