@@ -163,7 +163,7 @@ function ModifierModal({
 export default function Menu({
   menu, selected, table, onBack, onAdd, onRemove, onClearCart, orders, onUpdateStatus,
 }: Props) {
-  const { addOrder, deleteOrder, updateOrderItems } = useOrdersContext();
+  const { addOrder, deleteOrder, updateOrderItems, markOrderPaid } = useOrdersContext();
   const { user } = useAuthContext();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -291,11 +291,17 @@ const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; pric
     }
   };
 
-  const handlePaymentConfirm = (orderId: string, method: "cash" | "pin", tip: number) => {
-    onUpdateStatus(orderId, "Betaald");
-    setShowPayment(false);
-    setCart([]); onClearCart(); onBack();
-  };
+ const handlePaymentConfirm = (
+  orderId: string,
+  method: "cash" | "pin",
+  tip: number,
+  paidTotal: number,
+  discountAmount: number
+) => {
+  markOrderPaid(orderId, method, tip, paidTotal, discountAmount);
+  setShowPayment(false);
+  setCart([]); onClearCart(); onBack();
+};
 
   const categoryIcons: Record<string, string> = {
     Ontbijt: "🍳", Dranken: "🍹", "Snelle hap": "🍔",

@@ -5,7 +5,13 @@ import { doc, onSnapshot } from "firebase/firestore";
 
 type Props = {
   order: Order;
-  onConfirm: (orderId: string, method: "cash" | "pin", tip: number) => void;
+  onConfirm: (
+    orderId: string,
+    method: "cash" | "pin",
+    tip: number,
+    paidTotal: number,
+    discountAmount: number
+  ) => void;
   onCancel: () => void;
 };
 
@@ -29,33 +35,36 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
   const tipOptions = [0, 1, 2, 5];
 
+  const subtotal = order.items.reduce(
+    (sum, item, i) => sum + item.price * item.qty * (1 - itemDiscounts[i] / 100),
+    0
+  );
+  const orderDiscAmt = subtotal * orderDiscount / 100;
+  const total = subtotal - orderDiscAmt;
+  const origTotal = order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const savings = origTotal - total;
+  // Totale korting = besparing op regelniveau + besparing op orderniveau,
+  // dat is precies wat "savings" hierboven al berekent (origTotal - total).
+  const totalDiscountAmount = savings;
+
   // ── Luister naar Firestore order-status wijzigingen ──
   // Zodra de webhook de order op "Betaald" zet, roepen we onConfirm aan
   // zodat de modal automatisch sluit
   useEffect(() => {
-  if (paymentStep !== "waiting") return;
+    if (paymentStep !== "waiting") return;
 
-  const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
-    const data = snapshot.data();
-    if (data?.status === "Betaald") {
-      onConfirm(order.id, "pin", tipAmount);
-    } else if (data?.sumupStatus === "failed" || data?.sumupStatus === "cancelled") {
-      setPinError("Betaling mislukt of geweigerd. Probeer opnieuw.");
-      setPaymentStep("method");
-    }
-  });
+    const unsubscribe = onSnapshot(doc(db, "orders", order.id), (snapshot) => {
+      const data = snapshot.data();
+      if (data?.status === "Betaald") {
+        onConfirm(order.id, "pin", tipAmount, total, totalDiscountAmount);
+      } else if (data?.sumupStatus === "failed" || data?.sumupStatus === "cancelled") {
+        setPinError("Betaling mislukt of geweigerd. Probeer opnieuw.");
+        setPaymentStep("method");
+      }
+    });
 
-  return () => unsubscribe();
-}, [paymentStep, order.id, tipAmount, onConfirm]);
-
-  const subtotal = order.items.reduce(
-  (sum, item, i) => sum + item.price * item.qty * (1 - itemDiscounts[i] / 100),
-  0
-);
-const orderDiscAmt = subtotal * orderDiscount / 100;
-const total = subtotal - orderDiscAmt;
-const origTotal = order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
-const savings = origTotal - total;
+    return () => unsubscribe();
+  }, [paymentStep, order.id, tipAmount, total, totalDiscountAmount, onConfirm]);
 
   const setItemDisc = (i: number, pct: number) => {
     const d = [...itemDiscounts]; d[i] = pct;
@@ -71,7 +80,7 @@ const savings = origTotal - total;
   };
 
   const handleCashConfirm = () => {
-    onConfirm(order.id, "cash", tipAmount);
+    onConfirm(order.id, "cash", tipAmount, total, totalDiscountAmount);
   };
 
   const handlePinClick = async () => {
@@ -119,50 +128,50 @@ const savings = origTotal - total;
   });
 
   const ItemOverview = ({ showDiscount = false }: { showDiscount?: boolean }) => (
-  <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
-    {order.items.map((item, i) => {
-      const disc = itemDiscounts[i];
-      const orig = item.price * item.qty; // item.price bevat al modifiers
-      const final = orig * (1 - disc / 100);
-      const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
-      const basePrice = item.price - modTotal;
-      return (
-        <li key={i} style={{ marginBottom: "0.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
-            <span style={{ fontWeight: "500" }}>{item.qty}× {item.name}</span>
-            <span>
-              {showDiscount && disc > 0 && (
-                <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px", fontSize: "0.8rem" }}>
-                  €{orig.toFixed(2)}
-                </span>
-              )}
-              €{(basePrice * item.qty * (1 - disc / 100)).toFixed(2)}
-            </span>
-          </div>
-          {(item.modifiers ?? []).map((mod, mIdx) => (
-            <div key={mIdx} style={{
-              display: "flex", justifyContent: "space-between",
-              paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#555", marginBottom: "2px",
-            }}>
-              <span>↳ {mod.name}</span>
-              {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
+    <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
+      {order.items.map((item, i) => {
+        const disc = itemDiscounts[i];
+        const orig = item.price * item.qty; // item.price bevat al modifiers
+        const final = orig * (1 - disc / 100);
+        const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
+        const basePrice = item.price - modTotal;
+        return (
+          <li key={i} style={{ marginBottom: "0.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+              <span style={{ fontWeight: "500" }}>{item.qty}× {item.name}</span>
+              <span>
+                {showDiscount && disc > 0 && (
+                  <span style={{ textDecoration: "line-through", color: "#999", marginRight: "6px", fontSize: "0.8rem" }}>
+                    €{orig.toFixed(2)}
+                  </span>
+                )}
+                €{(basePrice * item.qty * (1 - disc / 100)).toFixed(2)}
+              </span>
             </div>
-          ))}
-          {modTotal > 0 && (
-            <div style={{
-              display: "flex", justifyContent: "space-between",
-              paddingLeft: "1.25rem", fontSize: "0.85rem", fontWeight: "bold",
-              borderTop: "1px solid #eee", marginTop: "2px", paddingTop: "2px",
-            }}>
-              <span>Totaal</span>
-              <span>€{final.toFixed(2)}</span>
-            </div>
-          )}
-        </li>
-      );
-    })}
-  </ul>
-);
+            {(item.modifiers ?? []).map((mod, mIdx) => (
+              <div key={mIdx} style={{
+                display: "flex", justifyContent: "space-between",
+                paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#555", marginBottom: "2px",
+              }}>
+                <span>↳ {mod.name}</span>
+                {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
+              </div>
+            ))}
+            {modTotal > 0 && (
+              <div style={{
+                display: "flex", justifyContent: "space-between",
+                paddingLeft: "1.25rem", fontSize: "0.85rem", fontWeight: "bold",
+                borderTop: "1px solid #eee", marginTop: "2px", paddingTop: "2px",
+              }}>
+                <span>Totaal</span>
+                <span>€{final.toFixed(2)}</span>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
@@ -177,35 +186,35 @@ const savings = origTotal - total;
 
         {/* ── WACHTEN OP BETALING ── */}
         {paymentStep === "waiting" && (
-  <div style={{ textAlign: "center", padding: "2rem 0" }}>
-    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💳</div>
-    <h3 style={{ marginBottom: "0.5rem" }}>Wachten op betaling...</h3>
-    <p style={{ color: "#555", marginBottom: "0.5rem" }}>
-      Bedrag op de terminal: <strong>€{(total + tipAmount).toFixed(2)}</strong>
-    </p>
-    <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
-      Vraag de klant zijn pas of telefoon tegen de terminal te houden.
-      De bon wordt automatisch verwerkt zodra de betaling geslaagd is.
-    </p>
-    <button onClick={async () => {
-      try {
-        await fetch("/api/sumup-cancel", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: order.id }),
-        });
-      } catch (e) {
-        console.error("Annuleren mislukt:", e);
-      }
-      onCancel();
-    }} style={{
-      background: "#eee", border: "none", padding: "0.5rem 1rem",
-      borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
-    }}>
-      Annuleren
-    </button>
-  </div>
-)}
+          <div style={{ textAlign: "center", padding: "2rem 0" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💳</div>
+            <h3 style={{ marginBottom: "0.5rem" }}>Wachten op betaling...</h3>
+            <p style={{ color: "#555", marginBottom: "0.5rem" }}>
+              Bedrag op de terminal: <strong>€{(total + tipAmount).toFixed(2)}</strong>
+            </p>
+            <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+              Vraag de klant zijn pas of telefoon tegen de terminal te houden.
+              De bon wordt automatisch verwerkt zodra de betaling geslaagd is.
+            </p>
+            <button onClick={async () => {
+              try {
+                await fetch("/api/sumup-cancel", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ orderId: order.id }),
+                });
+              } catch (e) {
+                console.error("Annuleren mislukt:", e);
+              }
+              onCancel();
+            }} style={{
+              background: "#eee", border: "none", padding: "0.5rem 1rem",
+              borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
+            }}>
+              Annuleren
+            </button>
+          </div>
+        )}
 
         {/* ── STAP 1: KORTING ── */}
         {paymentStep === "discount" && (
@@ -398,18 +407,18 @@ const savings = origTotal - total;
               border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer",
             }}>← Terug</button>
             <button onClick={async () => {
-  try {
-    await fetch("/api/sumup-cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: order.id }) });
-  } catch (e) {
-    console.error("Annuleren mislukt:", e);
-  }
-  onCancel();
-}} style={{
-  background: "#eee", border: "none", padding: "0.5rem 1rem",
-  borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
-}}>
-  Annuleren
-</button>
+              try {
+                await fetch("/api/sumup-cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: order.id }) });
+              } catch (e) {
+                console.error("Annuleren mislukt:", e);
+              }
+              onCancel();
+            }} style={{
+              background: "#eee", border: "none", padding: "0.5rem 1rem",
+              borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
+            }}>
+              Annuleren
+            </button>
           </>
         )}
       </div>

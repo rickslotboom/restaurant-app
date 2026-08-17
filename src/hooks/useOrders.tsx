@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { Order, OrderItem, OrderStatus } from "../types";
-
+ 
 type OrdersContextValue = {
   orders: Order[];
   addOrder: (order: Omit<Order, "id">) => Promise<void>;
@@ -27,34 +27,41 @@ type OrdersContextValue = {
   updateOrderItems: (id: string, items: OrderItem[]) => Promise<void>;
   updateOrderTable: (id: string, table: string) => Promise<void>;
   deleteOrder: (id: string) => Promise<void>;
+  markOrderPaid: (
+    id: string,
+    method: "cash" | "pin",
+    tip: number,
+    paidTotal: number,
+    discountAmount: number
+  ) => Promise<void>;
 };
-
+ 
 const OrdersContext = createContext<OrdersContextValue | undefined>(undefined);
-
+ 
 export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-
+ 
   useEffect(() => {
     // Pas een Firestore-listener opzetten zodra Firebase Auth een geldig
     // ingelogde gebruiker heeft — anders faalt de listener stil met
     // permission-denied vóórdat iemand ooit heeft ingelogd, en hij herstelt
     // zichzelf niet automatisch daarna.
     let unsubSnapshot: (() => void) | null = null;
-
+ 
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       // Ruim een eventuele oude listener op bij elke auth-wijziging
       if (unsubSnapshot) {
         unsubSnapshot();
         unsubSnapshot = null;
       }
-
+ 
       if (!firebaseUser) {
         setOrders([]);
         return;
       }
-
+ 
       console.log("[FIRESTORE] Listening to orders…");
-
+ 
       unsubSnapshot = onSnapshot(
         collection(db, "orders"),
         (snapshot) => {
@@ -71,11 +78,16 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
               timestamp: data.timestamp ?? null,
               orderNumber: data.orderNumber ?? undefined,
               waiter: data.waiter ?? "Onbekend",
+              paymentMethod: data.paymentMethod ?? undefined,
+              tip: data.tip ?? undefined,
+              paidTotal: data.paidTotal ?? undefined,
+              discountAmount: data.discountAmount ?? undefined,
               items: (data.items || []).map((i: any) => ({
                 dishId: i.dishId ?? "",
                 name: i.name ?? "Onbekend",
                 price: i.price ?? 0,
                 qty: i.qty ?? 0,
+                vatRate: i.vatRate ?? 9,
                 modifiers: (i.modifiers ?? []).map((m: any) => ({
                   id: m.id ?? "",
                   name: m.name ?? "",
@@ -84,7 +96,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
               })),
             } as Order;
           });
-
+ 
           console.log("[FIRESTORE] Orders mapped:", formatted);
           setOrders(formatted);
         },
@@ -94,19 +106,19 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
       );
     });
-
+ 
     return () => {
       unsubAuth();
       if (unsubSnapshot) unsubSnapshot();
     };
   }, []);
-
+ 
   const addOrder = async (order: Omit<Order, "id">) => {
     console.log("[FIRESTORE] addOrder =", order);
     const now = new Date();
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
     const counterRef = doc(db, "orderCounters", yearMonth);
-
+ 
     const orderNumber = await runTransaction(db, async (tx) => {
       const snap = await tx.get(counterRef);
       let newCount = 1;
@@ -118,7 +130,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
       return `${yearMonth}-${String(newCount).padStart(5, "0")}`;
     });
-
+ 
     await addDoc(collection(db, "orders"), {
       ...order,
       orderNumber,
@@ -126,35 +138,55 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       timestamp: Date.now(),
     });
   };
-
+ 
   const updateOrderStatus = async (id: string, status: OrderStatus) => {
     console.log("[FIRESTORE] updateOrderStatus", id, status);
     await updateDoc(doc(db, "orders", id), { status });
   };
-
+ 
   const updateOrderItems = async (id: string, items: OrderItem[]) => {
     console.log("[FIRESTORE] updateOrderItems", id, items);
     await updateDoc(doc(db, "orders", id), { items });
   };
-
+ 
   const updateOrderTable = async (id: string, table: string) => {
     console.log("[FIRESTORE] updateOrderTable", id, table);
     await updateDoc(doc(db, "orders", id), { table });
   };
-
+ 
   const deleteOrder = async (id: string) => {
     console.log("[FIRESTORE] deleteOrder", id);
     await deleteDoc(doc(db, "orders", id));
   };
-
+ 
+  const markOrderPaid = async (
+    id: string,
+    method: "cash" | "pin",
+    tip: number,
+    paidTotal: number,
+    discountAmount: number
+  ) => {
+    console.log("[FIRESTORE] markOrderPaid", id, method, tip, paidTotal, discountAmount);
+    await updateDoc(doc(db, "orders", id), {
+      status: "Betaald",
+      paymentMethod: method,
+      tip,
+      paidTotal,
+      discountAmount,
+    });
+  };
+ 
   const value = useMemo(
-    () => ({ orders, addOrder, updateOrderStatus, updateOrderItems, updateOrderTable, deleteOrder }),
+    () => ({
+      orders, addOrder, updateOrderStatus, updateOrderItems,
+      updateOrderTable, deleteOrder, markOrderPaid,
+    }),
     [orders]
   );
-
+ 
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 };
-
+ 
 export function useOrdersContext() {
   const ctx = useContext(OrdersContext);
   if (!ctx) throw new Error("useOrdersContext must be used within OrdersProvider");

@@ -53,7 +53,7 @@ function OrderItemsList({ items }: { items: OrderItem[] }) {
 }
 
 export default function BillingView({ orders, onUpdateStatus }: Props) {
-  const { deleteOrder, updateOrderStatus, updateOrderTable } = useOrdersContext();
+  const { deleteOrder, updateOrderStatus, updateOrderTable, markOrderPaid } = useOrdersContext();
 
   const [tab, setTab] = useState<"open" | "paid">("open");
   const [range, setRange] = useState<RangeType>("today");
@@ -138,9 +138,36 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
     items: confirmTableOrders.flatMap((o) => o.items),
   } : null;
 
-  const handlePaymentConfirm = (_orderId: string, method: "cash" | "pin", tip: number) => {
+  const handlePaymentConfirm = (
+    _orderId: string,
+    method: "cash" | "pin",
+    tip: number,
+    paidTotal: number,
+    discountAmount: number
+  ) => {
     if (!confirmTable || !openByTable[confirmTable]) return;
-    openByTable[confirmTable].forEach((o) => onUpdateStatus(o.id, "Betaald"));
+    const tableOrders = openByTable[confirmTable];
+
+    // Verdeel het betaalde bedrag, de fooi en de korting proportioneel over
+    // alle samengevoegde bonnen van deze tafel, zodat de som van de losse
+    // bonnen weer klopt met het totaal (belangrijk voor de rapportagepagina).
+    const combinedSubtotal = tableOrders.reduce(
+      (sum, o) => sum + o.items.reduce((s, i) => s + i.price * i.qty, 0), 0
+    );
+
+    tableOrders.forEach((o) => {
+      const orderSubtotal = o.items.reduce((s, i) => s + i.price * i.qty, 0);
+      const share = combinedSubtotal > 0 ? orderSubtotal / combinedSubtotal : 1 / tableOrders.length;
+
+      markOrderPaid(
+        o.id,
+        method,
+        tip * share,
+        paidTotal * share,
+        discountAmount * share
+      );
+    });
+
     setConfirmTable(null);
   };
 

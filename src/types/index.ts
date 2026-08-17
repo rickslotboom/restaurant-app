@@ -44,4 +44,8 @@ export type Order = {
   createdAt?: any;
   orderNumber?: string;
   discount?: DiscountPercentage;
+  paymentMethod?: "cash" | "pin";
+  tip?: number;
+  paidTotal?: number;
+  discountAmount?: number;
 };
