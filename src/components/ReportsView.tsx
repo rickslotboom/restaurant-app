@@ -1,9 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Order } from "../types";
 
 type Props = {
   orders: Order[];
 };
+
+type RangeMode = "today" | "day";
 
 const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -11,16 +13,28 @@ const startOfDay = (date: Date) =>
 const endOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999).getTime();
 
+const formatDateInput = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 export default function ReportsView({ orders }: Props) {
   const today = new Date();
-  const fromTs = startOfDay(today);
-  const toTs = endOfDay(today);
+
+  const [mode, setMode] = useState<RangeMode>("today");
+  const [selectedDay, setSelectedDay] = useState<string>(formatDateInput(today));
+
+  const targetDate = mode === "today" ? today : new Date(selectedDay);
+  const fromTs = startOfDay(targetDate);
+  const toTs = endOfDay(targetDate);
 
   const stats = useMemo(() => {
     // Alleen betaalde orders, gefilterd op het moment van BETALEN (paidAt),
     // niet op het moment van aanmaken (timestamp) — met een fallback naar
     // timestamp voor orders die zijn afgerekend vóórdat paidAt bestond.
-    const paidToday = orders.filter((o) => {
+    const paidInRange = orders.filter((o) => {
       if (o.status !== "Betaald") return false;
       const relevantTs = o.paidAt ?? o.timestamp;
       if (relevantTs === undefined) return false;
@@ -35,10 +49,7 @@ export default function ReportsView({ orders }: Props) {
     let vat9Total = 0;
     let vat21Total = 0;
 
-    paidToday.forEach((o) => {
-      // paidTotal is het bedrag na korting, exclusief fooi — dat is precies
-      // de brutoomzet die je wil optellen. Voor oudere orders (van vóór
-      // Dag 2) die dit veld nog niet hebben, val terug op de itemsom.
+    paidInRange.forEach((o) => {
       const itemsSubtotal = o.items.reduce((s, i) => s + i.price * i.qty, 0);
       const orderPaidTotal = o.paidTotal ?? itemsSubtotal;
 
@@ -49,9 +60,6 @@ export default function ReportsView({ orders }: Props) {
 
       tipTotal += o.tip ?? 0;
 
-      // BTW herberekenen op basis van de daadwerkelijk betaalde bedragen
-      // (dus na korting), verdeeld over de items naar rato van hun aandeel
-      // in de oorspronkelijke subtotaal.
       if (itemsSubtotal > 0) {
         const discountRatio = orderPaidTotal / itemsSubtotal;
         o.items.forEach((item) => {
@@ -66,7 +74,7 @@ export default function ReportsView({ orders }: Props) {
     });
 
     return {
-      orderCount: paidToday.length,
+      orderCount: paidInRange.length,
       grossRevenue,
       cashTotal,
       pinTotal,
@@ -98,51 +106,98 @@ export default function ReportsView({ orders }: Props) {
     color: "#2c3e50",
   };
 
-  const dateLabel = today.toLocaleDateString("nl-NL", {
+  const dateLabel = targetDate.toLocaleDateString("nl-NL", {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
 
+  const isFuture = mode === "day" && startOfDay(targetDate) > startOfDay(today);
+
   return (
     <div style={{ padding: "1.5rem", maxWidth: "1000px", margin: "0 auto" }}>
       <h2 style={{ marginBottom: "0.25rem" }}>Rapporten</h2>
-      <p style={{ color: "#888", marginTop: 0, marginBottom: "1.5rem" }}>
-        Vandaag — {dateLabel} · {stats.orderCount} betaalde bon{stats.orderCount === 1 ? "" : "nen"}
-      </p>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ ...cardStyle, background: "#2c3e50", color: "white" }}>
-          <div style={{ ...labelStyle, color: "#cdd6df" }}>Totale brutoomzet</div>
-          <div style={{ ...valueStyle, color: "white" }}>€{stats.grossRevenue.toFixed(2)}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={labelStyle}>💵 Cash</div>
-          <div style={valueStyle}>€{stats.cashTotal.toFixed(2)}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={labelStyle}>💳 Pin</div>
-          <div style={valueStyle}>€{stats.pinTotal.toFixed(2)}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={labelStyle}>🙌 Fooi</div>
-          <div style={valueStyle}>€{stats.tipTotal.toFixed(2)}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={labelStyle}>🧾 BTW totaal</div>
-          <div style={valueStyle}>€{stats.vatTotal.toFixed(2)}</div>
-          <div style={{ fontSize: "0.8rem", color: "#aaa", marginTop: "0.3rem" }}>
-            9%: €{stats.vat9Total.toFixed(2)} · 21%: €{stats.vat21Total.toFixed(2)}
-          </div>
-        </div>
+      {/* Schakelaar: Vandaag / Kies een dag */}
+      <div style={{
+        display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center",
+        marginBottom: "1rem",
+      }}>
+        <button
+          onClick={() => setMode("today")}
+          style={{
+            padding: "0.4rem 0.9rem", borderRadius: "20px", border: "none", cursor: "pointer",
+            background: mode === "today" ? "#2196F3" : "#ddd",
+            color: mode === "today" ? "white" : "#333",
+            fontWeight: mode === "today" ? "bold" : "normal",
+          }}
+        >
+          Vandaag
+        </button>
+        <button
+          onClick={() => setMode("day")}
+          style={{
+            padding: "0.4rem 0.9rem", borderRadius: "20px", border: "none", cursor: "pointer",
+            background: mode === "day" ? "#2196F3" : "#ddd",
+            color: mode === "day" ? "white" : "#333",
+            fontWeight: mode === "day" ? "bold" : "normal",
+          }}
+        >
+          Per dag
+        </button>
+        {mode === "day" && (
+          <input
+            type="date"
+            value={selectedDay}
+            max={formatDateInput(today)}
+            onChange={(e) => setSelectedDay(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        )}
       </div>
 
-      {stats.orderCount === 0 && (
-        <p style={{ color: "#888" }}>Nog geen betaalde bonnen vandaag.</p>
+      <p style={{ color: "#888", marginTop: 0, marginBottom: "1.5rem" }}>
+        {dateLabel} · {stats.orderCount} betaalde bon{stats.orderCount === 1 ? "" : "nen"}
+      </p>
+
+      {isFuture ? (
+        <p style={{ color: "#888" }}>Deze datum ligt in de toekomst.</p>
+      ) : (
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div style={{ ...cardStyle, background: "#2c3e50", color: "white" }}>
+              <div style={{ ...labelStyle, color: "#cdd6df" }}>Totale brutoomzet</div>
+              <div style={{ ...valueStyle, color: "white" }}>€{stats.grossRevenue.toFixed(2)}</div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={labelStyle}>💵 Cash</div>
+              <div style={valueStyle}>€{stats.cashTotal.toFixed(2)}</div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={labelStyle}>💳 Pin</div>
+              <div style={valueStyle}>€{stats.pinTotal.toFixed(2)}</div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={labelStyle}>🙌 Fooi</div>
+              <div style={valueStyle}>€{stats.tipTotal.toFixed(2)}</div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={labelStyle}>🧾 BTW totaal</div>
+              <div style={valueStyle}>€{stats.vatTotal.toFixed(2)}</div>
+              <div style={{ fontSize: "0.8rem", color: "#aaa", marginTop: "0.3rem" }}>
+                9%: €{stats.vat9Total.toFixed(2)} · 21%: €{stats.vat21Total.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          {stats.orderCount === 0 && (
+            <p style={{ color: "#888" }}>Geen betaalde bonnen op deze dag.</p>
+          )}
+        </>
       )}
     </div>
   );
