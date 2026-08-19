@@ -6,6 +6,7 @@ import KitchenView from "./components/KitchenView";
 import BarView from "./components/BarView";
 import BillingView from "./components/BillingView";
 import BeheerView from "./components/BeheerView";
+import ReportsView from "./components/ReportsView";
 import Login from "./components/Login";
 import SplitPaymentModal from "./components/SplitPaymentModal";
 import { useOrdersContext } from "./hooks/useOrders";
@@ -22,7 +23,7 @@ console.log("BarView:", BarView);
 console.log("BillingView:", BillingView);
 console.log("Login:", Login);
 
-type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer";
+type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports";
 
 export default function App() {
   const { user, logout } = useAuthContext();
@@ -201,6 +202,11 @@ export default function App() {
 />
         )}
 
+          {/* Rapporten — alleen manager */}
+{isManager && view === "reports" && (
+  <ReportsView orders={orders} />
+)}
+
       </main>
 
       {splitOrder && (
@@ -212,4 +218,7 @@ export default function App() {
       )}
     </div>
   );
+
 }
+
+

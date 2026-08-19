@@ -47,5 +47,6 @@ export type Order = {
   paymentMethod?: "cash" | "pin";
   tip?: number;
   paidTotal?: number;
+  paidAt?: number;
   discountAmount?: number;
 };

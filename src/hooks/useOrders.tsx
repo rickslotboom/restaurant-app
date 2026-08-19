@@ -18,6 +18,7 @@ import {
   runTransaction,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+
 import { Order, OrderItem, OrderStatus } from "../types";
  
 type OrdersContextValue = {
@@ -81,6 +82,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
               paymentMethod: data.paymentMethod ?? undefined,
               tip: data.tip ?? undefined,
               paidTotal: data.paidTotal ?? undefined,
+              paidAt: data.paidAt ?? undefined,
               discountAmount: data.discountAmount ?? undefined,
               items: (data.items || []).map((i: any) => ({
                 dishId: i.dishId ?? "",
@@ -160,21 +162,23 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
  
   const markOrderPaid = async (
-    id: string,
-    method: "cash" | "pin",
-    tip: number,
-    paidTotal: number,
-    discountAmount: number
-  ) => {
-    console.log("[FIRESTORE] markOrderPaid", id, method, tip, paidTotal, discountAmount);
-    await updateDoc(doc(db, "orders", id), {
-      status: "Betaald",
-      paymentMethod: method,
-      tip,
-      paidTotal,
-      discountAmount,
-    });
-  };
+  id: string,
+  method: "cash" | "pin",
+  tip: number,
+  paidTotal: number,
+  discountAmount: number
+) => {
+  console.log("[FIRESTORE] markOrderPaid", id, method, tip, paidTotal, discountAmount);
+  await updateDoc(doc(db, "orders", id), {
+    status: "Betaald",
+    paymentMethod: method,
+    tip,
+    paidTotal,
+    discountAmount,
+    paidAt: Date.now(),
+  });
+};
+ 
  
   const value = useMemo(
     () => ({
