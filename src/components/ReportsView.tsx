@@ -27,7 +27,7 @@ const formatMonthInput = (d: Date) => {
 };
 
 export default function ReportsView({ orders }: Props) {
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
 
   const [mode, setMode] = useState<RangeMode>("today");
   const [selectedDay, setSelectedDay] = useState<string>(formatDateInput(today));
