@@ -20,7 +20,6 @@ const isBeforeToday = (ts?: number) => {
   return d < today;
 };
 
-
 function OrderItemsList({ items }: { items: OrderItem[] }) {
   return (
     <ul style={{ margin: "0.5rem 0", listStyle: "none", padding: 0 }}>
