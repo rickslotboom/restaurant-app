@@ -36,7 +36,6 @@ const MenuContext = createContext<MenuContextValue | undefined>(undefined);
 const DEFAULT_CATEGORIES = [
   "Ontbijt",
   "Dranken",
-  "Snelle hap",
   "Soepen",
   "Salades & Bowls",
   "Lunch",

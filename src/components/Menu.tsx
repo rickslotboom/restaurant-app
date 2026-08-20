@@ -24,6 +24,7 @@ type CartLine = {
   vatRate: VatRate;
   modifiers: { id: string; name: string; price: number }[];
   qty: number;
+  note: string;
 };
 
 function makeLineId(dishId: string, modifierIds: string[]): string {
@@ -74,6 +75,13 @@ function OrderItemsList({
                 )}
               </div>
             ))}
+            {item.note && (
+              <div style={{
+                paddingLeft: "1.5rem", fontSize: "0.8rem", color: "#d9534f", fontStyle: "italic",
+              }}>
+                📝 {item.note}
+              </div>
+            )}
             {modTotal > 0 && (
               <div style={{
                 display: "flex", justifyContent: "space-between",
@@ -181,18 +189,17 @@ export default function Menu({
   const openOrder = orders.find((o) => o.table === table && o.status !== "Betaald");
 
   const handleRemoveItem = async (dishId: string) => {
-  if (!openOrder) return;
-  if (!window.confirm("Item verwijderen uit de bestelling?")) return;
+    if (!openOrder) return;
+    if (!window.confirm("Item verwijderen uit de bestelling?")) return;
 
-  const updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
+    const updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
 
-  if (updatedItems.length === 0) {
-    // Als er geen items meer zijn, verwijder de hele order
-    await deleteOrder(openOrder.id);
-  } else {
-    await updateOrderItems(openOrder.id, updatedItems);
-  }
-};
+    if (updatedItems.length === 0) {
+      await deleteOrder(openOrder.id);
+    } else {
+      await updateOrderItems(openOrder.id, updatedItems);
+    }
+  };
 
   const existingTotal = openOrder
     ? openOrder.items.reduce((sum, item) => sum + item.price * item.qty, 0)
@@ -212,22 +219,23 @@ export default function Menu({
     }
   };
 
-const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; price: number }[]) => {
-  const lineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
-  setCart((prev) => {
-    const existing = prev.find((l) => l.lineId === lineId);
-    if (existing) return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l);
-    return [...prev, {
-      lineId,
-      dishId: dish.id,
-      name: dish.name,
-      basePrice: dish.price,
-      vatRate: dish.vatRate ?? 9,
-      modifiers: chosenModifiers,
-      qty: 1,
-    }];
-  });
-};
+  const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; price: number }[]) => {
+    const lineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
+    setCart((prev) => {
+      const existing = prev.find((l) => l.lineId === lineId);
+      if (existing) return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l);
+      return [...prev, {
+        lineId,
+        dishId: dish.id,
+        name: dish.name,
+        basePrice: dish.price,
+        vatRate: dish.vatRate ?? 9,
+        modifiers: chosenModifiers,
+        qty: 1,
+        note: "",
+      }];
+    });
+  };
 
   const removeFromCart = (lineId: string) => {
     setCart((prev) => {
@@ -243,18 +251,24 @@ const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; pric
     setDeleteConfirmLineId(null);
   };
 
- const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
-  lines.map((line) => {
-    const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
-    return {
-      dishId: line.lineId,
-      name: line.name,
-      price: line.basePrice + modTotal,
-      qty: line.qty,
-      vatRate: line.vatRate,
-      modifiers: line.modifiers,
-    };
-  });
+  const setNoteForLine = (lineId: string, note: string) => {
+    setCart((prev) => prev.map((l) => (l.lineId === lineId ? { ...l, note } : l)));
+  };
+
+  // Sla gecombineerde prijs op (basisprijs + modifiers) zodat item.price altijd het totaal per stuk is
+  const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
+    lines.map((line) => {
+      const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
+      return {
+        dishId: line.lineId,
+        name: line.name,
+        price: line.basePrice + modTotal,
+        qty: line.qty,
+        vatRate: line.vatRate,
+        modifiers: line.modifiers,
+        ...(line.note.trim() ? { note: line.note.trim() } : {}),
+      };
+    });
 
   const handleConfirm = async () => {
     if (cart.length === 0) {
@@ -267,7 +281,17 @@ const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; pric
       const updatedItems: OrderItem[] = [...openOrder.items];
       newItems.forEach((newItem) => {
         const existing = updatedItems.find((i) => i.dishId === newItem.dishId);
-        if (existing) { existing.qty += newItem.qty; } else { updatedItems.push(newItem); }
+        // Let op: als een regel met dezelfde dishId al bestaat maar een andere
+        // (of geen) notitie heeft, worden ze toch samengevoegd op aantal —
+        // de notitie van de nieuwe toevoeging overschrijft dan de oude. Voor
+        // een losse notitie per identieke regel zou een aparte lineId nodig
+        // zijn; dat houden we voorlopig simpel.
+        if (existing) {
+          existing.qty += newItem.qty;
+          if (newItem.note) existing.note = newItem.note;
+        } else {
+          updatedItems.push(newItem);
+        }
       });
       try {
         await updateOrderItems(openOrder.id, updatedItems);
@@ -291,17 +315,17 @@ const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; pric
     }
   };
 
- const handlePaymentConfirm = (
-  orderId: string,
-  method: "cash" | "pin",
-  tip: number,
-  paidTotal: number,
-  discountAmount: number
-) => {
-  markOrderPaid(orderId, method, tip, paidTotal, discountAmount);
-  setShowPayment(false);
-  setCart([]); onClearCart(); onBack();
-};
+  const handlePaymentConfirm = (
+    orderId: string,
+    method: "cash" | "pin",
+    tip: number,
+    paidTotal: number,
+    discountAmount: number
+  ) => {
+    markOrderPaid(orderId, method, tip, paidTotal, discountAmount);
+    setShowPayment(false);
+    setCart([]); onClearCart(); onBack();
+  };
 
   const categoryIcons: Record<string, string> = {
     Ontbijt: "🍳", Dranken: "🍹", "Snelle hap": "🍔",
@@ -440,20 +464,20 @@ const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; pric
             <hr style={{ margin: "1rem 0" }} />
             <h3 style={{ margin: 0 }}>Geplaatst: €{existingTotal.toFixed(2)}</h3>
             <button
-  onClick={async () => {
-    if (!openOrder) return;
-    if (!window.confirm("Hele order verwijderen?")) return;
-    await deleteOrder(openOrder.id);
-    onBack();
-  }}
-  style={{
-    marginTop: "0.5rem", width: "100%", background: "#d9534f",
-    color: "white", border: "none", padding: "0.5rem",
-    borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem",
-  }}
->
-  🗑️ Verwijder hele order
-</button>
+              onClick={async () => {
+                if (!openOrder) return;
+                if (!window.confirm("Hele order verwijderen?")) return;
+                await deleteOrder(openOrder.id);
+                onBack();
+              }}
+              style={{
+                marginTop: "0.5rem", width: "100%", background: "#d9534f",
+                color: "white", border: "none", padding: "0.5rem",
+                borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem",
+              }}
+            >
+              🗑️ Verwijder hele order
+            </button>
           </div>
         )}
 
@@ -467,63 +491,69 @@ const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; pric
           {cart.length === 0 ? (
             <p>Geen gerechten geselecteerd.</p>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left" }}>Gerecht</th>
-                  <th>Aantal</th>
-                  <th style={{ textAlign: "right" }}>Prijs</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((line) => {
-                  const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
-                  const lineTotal = (line.basePrice + modTotal) * line.qty;
-                  return (
-                    <React.Fragment key={line.lineId}>
-                      <tr>
-                        <td style={{ paddingRight: "0.5rem" }}>{line.name}</td>
-                        <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-                          <button onClick={() => removeFromCart(line.lineId)}>-</button>
-                          <span style={{ margin: "0 0.4rem" }}>{line.qty}</span>
-                          <button onClick={() => {
-                            const dish = menu.find((d) => d.id === line.dishId);
-                            if (dish) addToCart(dish, line.modifiers);
-                          }}>+</button>
-                        </td>
-                        <td style={{ textAlign: "right" }}>€{(line.basePrice * line.qty).toFixed(2)}</td>
-                        <td>
-                          <button onClick={() => setDeleteConfirmLineId(line.lineId)} style={{
-                            background: "none", border: "none", color: "#d9534f", cursor: "pointer",
-                          }} title="Verwijder">🗑️</button>
-                        </td>
-                      </tr>
-                      {line.modifiers.map((mod, mIdx) => (
-                        <tr key={mIdx} style={{ color: "#666", fontSize: "0.85rem" }}>
-                          <td colSpan={2} style={{ paddingLeft: "1.5rem" }}>↳ {mod.name}</td>
-                          <td style={{ textAlign: "right", color: "#2e7d32" }}>
-                            {mod.price > 0 ? `+€${mod.price.toFixed(2)}` : "gratis"}
-                          </td>
-                          <td></td>
-                        </tr>
-                      ))}
-                      {modTotal > 0 && (
-                        <tr style={{ fontSize: "0.85rem", fontWeight: "bold" }}>
-                          <td colSpan={2} style={{
-                            paddingLeft: "1.5rem", borderTop: "1px solid #eee", paddingTop: "2px",
-                          }}>Totaal</td>
-                          <td style={{
-                            textAlign: "right", borderTop: "1px solid #eee", paddingTop: "2px",
-                          }}>€{lineTotal.toFixed(2)}</td>
-                          <td style={{ borderTop: "1px solid #eee" }}></td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {cart.map((line) => {
+                const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
+                const lineTotal = (line.basePrice + modTotal) * line.qty;
+                return (
+                  <div key={line.lineId} style={{
+                    borderBottom: "1px solid #eee", paddingBottom: "0.6rem",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ flex: 1 }}>{line.name}</span>
+                      <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                        <button onClick={() => removeFromCart(line.lineId)}>-</button>
+                        <span style={{ margin: "0 0.4rem" }}>{line.qty}</span>
+                        <button onClick={() => {
+                          const dish = menu.find((d) => d.id === line.dishId);
+                          if (dish) addToCart(dish, line.modifiers);
+                        }}>+</button>
+                      </div>
+                      <span style={{ minWidth: "55px", textAlign: "right" }}>
+                        €{(line.basePrice * line.qty).toFixed(2)}
+                      </span>
+                      <button onClick={() => setDeleteConfirmLineId(line.lineId)} style={{
+                        background: "none", border: "none", color: "#d9534f", cursor: "pointer",
+                      }} title="Verwijder">🗑️</button>
+                    </div>
+
+                    {line.modifiers.map((mod, mIdx) => (
+                      <div key={mIdx} style={{
+                        display: "flex", justifyContent: "space-between",
+                        paddingLeft: "1.5rem", fontSize: "0.85rem", color: "#666",
+                      }}>
+                        <span>↳ {mod.name}</span>
+                        <span style={{ color: "#2e7d32" }}>
+                          {mod.price > 0 ? `+€${mod.price.toFixed(2)}` : "gratis"}
+                        </span>
+                      </div>
+                    ))}
+                    {modTotal > 0 && (
+                      <div style={{
+                        display: "flex", justifyContent: "space-between",
+                        paddingLeft: "1.5rem", fontSize: "0.85rem", fontWeight: "bold",
+                      }}>
+                        <span>Totaal</span>
+                        <span>€{lineTotal.toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    {/* Notitie voor keuken/bar, bv. "geen ui" */}
+                    <input
+                      type="text"
+                      placeholder="📝 Notitie voor keuken/bar (optioneel)"
+                      value={line.note}
+                      onChange={(e) => setNoteForLine(line.lineId, e.target.value)}
+                      style={{
+                        marginTop: "0.4rem", width: "100%", boxSizing: "border-box",
+                        padding: "0.35rem 0.5rem", borderRadius: "6px",
+                        border: "1px solid #ccc", fontSize: "0.85rem",
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           <hr style={{ margin: "1rem 0" }} />

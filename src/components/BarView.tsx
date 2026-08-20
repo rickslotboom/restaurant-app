@@ -20,6 +20,7 @@ const isBeforeToday = (ts?: number) => {
   return d < today;
 };
 
+
 function OrderItemsList({ items }: { items: OrderItem[] }) {
   return (
     <ul style={{ margin: "0.5rem 0", listStyle: "none", padding: 0 }}>
@@ -39,6 +40,16 @@ function OrderItemsList({ items }: { items: OrderItem[] }) {
               )}
             </div>
           ))}
+          {item.note && (
+            <div style={{
+              paddingLeft: "1.5rem", marginTop: "2px",
+              fontSize: "0.9rem", fontWeight: "bold", color: "#d9534f",
+              background: "#fff5f5", border: "1px solid #ffcccc",
+              borderRadius: "6px", padding: "0.25rem 0.5rem", display: "inline-block",
+            }}>
+              📝 {item.note}
+            </div>
+          )}
         </li>
       ))}
     </ul>

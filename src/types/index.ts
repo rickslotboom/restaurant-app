@@ -26,6 +26,7 @@ export type OrderItem = {
   price: number;
   qty: number;
   vatRate?: VatRate;
+  note?: string;
   modifiers?: {
     id: string;
     name: string;
@@ -50,3 +51,4 @@ export type Order = {
   paidAt?: number;
   discountAmount?: number;
 };
+
