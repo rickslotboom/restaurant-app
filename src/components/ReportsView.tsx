@@ -5,7 +5,7 @@ type Props = {
   orders: Order[];
 };
 
-type RangeMode = "today" | "day";
+type RangeMode = "today" | "day" | "week" | "month";
 
 const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -20,20 +20,49 @@ const formatDateInput = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
+const formatMonthInput = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+};
+
 export default function ReportsView({ orders }: Props) {
   const today = new Date();
 
   const [mode, setMode] = useState<RangeMode>("today");
   const [selectedDay, setSelectedDay] = useState<string>(formatDateInput(today));
+  const [selectedWeek, setSelectedWeek] = useState<string>(formatDateInput(today));
+  const [selectedMonth, setSelectedMonth] = useState<string>(formatMonthInput(today));
 
-  const targetDate = mode === "today" ? today : new Date(selectedDay);
-  const fromTs = startOfDay(targetDate);
-  const toTs = endOfDay(targetDate);
+  const { fromTs, toTs, rangeLabel } = useMemo(() => {
+    if (mode === "today") {
+      return { fromTs: startOfDay(today), toTs: endOfDay(today), rangeLabel: today.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" }) };
+    }
+    if (mode === "day") {
+      const d = new Date(selectedDay);
+      return { fromTs: startOfDay(d), toTs: endOfDay(d), rangeLabel: d.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" }) };
+    }
+    if (mode === "week") {
+      const d = new Date(selectedWeek);
+      const day = d.getDay() === 0 ? 6 : d.getDay() - 1;
+      const mon = new Date(d);
+      mon.setDate(d.getDate() - day);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      const label = `${mon.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} — ${sun.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}`;
+      return { fromTs: startOfDay(mon), toTs: endOfDay(sun), rangeLabel: `Week van ${label}` };
+    }
+    // mode === "month"
+    const [yStr, mStr] = selectedMonth.split("-");
+    const y = parseInt(yStr, 10);
+    const m = parseInt(mStr, 10) - 1;
+    const first = new Date(y, m, 1);
+    const last = new Date(y, m + 1, 0);
+    const label = first.toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+    return { fromTs: startOfDay(first), toTs: endOfDay(last), rangeLabel: label.charAt(0).toUpperCase() + label.slice(1) };
+  }, [mode, selectedDay, selectedWeek, selectedMonth, today]);
 
   const stats = useMemo(() => {
-    // Alleen betaalde orders, gefilterd op het moment van BETALEN (paidAt),
-    // niet op het moment van aanmaken (timestamp) — met een fallback naar
-    // timestamp voor orders die zijn afgerekend vóórdat paidAt bestond.
     const paidInRange = orders.filter((o) => {
       if (o.status !== "Betaald") return false;
       const relevantTs = o.paidAt ?? o.timestamp;
@@ -106,45 +135,29 @@ export default function ReportsView({ orders }: Props) {
     color: "#2c3e50",
   };
 
-  const dateLabel = targetDate.toLocaleDateString("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const isFuture = fromTs > endOfDay(today);
 
-  const isFuture = mode === "day" && startOfDay(targetDate) > startOfDay(today);
+  const toggleBtn = (active: boolean): React.CSSProperties => ({
+    padding: "0.4rem 0.9rem", borderRadius: "20px", border: "none", cursor: "pointer",
+    background: active ? "#2196F3" : "#ddd",
+    color: active ? "white" : "#333",
+    fontWeight: active ? "bold" : "normal",
+  });
 
   return (
     <div style={{ padding: "1.5rem", maxWidth: "1000px", margin: "0 auto" }}>
       <h2 style={{ marginBottom: "0.25rem" }}>Rapporten</h2>
 
-      {/* Schakelaar: Vandaag / Kies een dag */}
+      {/* Schakelaar: Vandaag / Per dag / Per week / Per maand */}
       <div style={{
         display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center",
         marginBottom: "1rem",
       }}>
-        <button
-          onClick={() => setMode("today")}
-          style={{
-            padding: "0.4rem 0.9rem", borderRadius: "20px", border: "none", cursor: "pointer",
-            background: mode === "today" ? "#2196F3" : "#ddd",
-            color: mode === "today" ? "white" : "#333",
-            fontWeight: mode === "today" ? "bold" : "normal",
-          }}
-        >
-          Vandaag
-        </button>
-        <button
-          onClick={() => setMode("day")}
-          style={{
-            padding: "0.4rem 0.9rem", borderRadius: "20px", border: "none", cursor: "pointer",
-            background: mode === "day" ? "#2196F3" : "#ddd",
-            color: mode === "day" ? "white" : "#333",
-            fontWeight: mode === "day" ? "bold" : "normal",
-          }}
-        >
-          Per dag
-        </button>
+        <button onClick={() => setMode("today")} style={toggleBtn(mode === "today")}>Vandaag</button>
+        <button onClick={() => setMode("day")} style={toggleBtn(mode === "day")}>Per dag</button>
+        <button onClick={() => setMode("week")} style={toggleBtn(mode === "week")}>Per week</button>
+        <button onClick={() => setMode("month")} style={toggleBtn(mode === "month")}>Per maand</button>
+
         {mode === "day" && (
           <input
             type="date"
@@ -154,14 +167,32 @@ export default function ReportsView({ orders }: Props) {
             style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
           />
         )}
+        {mode === "week" && (
+          <input
+            type="date"
+            value={selectedWeek}
+            max={formatDateInput(today)}
+            onChange={(e) => setSelectedWeek(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        )}
+        {mode === "month" && (
+          <input
+            type="month"
+            value={selectedMonth}
+            max={formatMonthInput(today)}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc" }}
+          />
+        )}
       </div>
 
       <p style={{ color: "#888", marginTop: 0, marginBottom: "1.5rem" }}>
-        {dateLabel} · {stats.orderCount} betaalde bon{stats.orderCount === 1 ? "" : "nen"}
+        {rangeLabel} · {stats.orderCount} betaalde bon{stats.orderCount === 1 ? "" : "nen"}
       </p>
 
       {isFuture ? (
-        <p style={{ color: "#888" }}>Deze datum ligt in de toekomst.</p>
+        <p style={{ color: "#888" }}>Deze periode ligt in de toekomst.</p>
       ) : (
         <>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -195,7 +226,7 @@ export default function ReportsView({ orders }: Props) {
           </div>
 
           {stats.orderCount === 0 && (
-            <p style={{ color: "#888" }}>Geen betaalde bonnen op deze dag.</p>
+            <p style={{ color: "#888" }}>Geen betaalde bonnen in deze periode.</p>
           )}
         </>
       )}
