@@ -104,16 +104,6 @@ export default function BeheerView({
     await onDeleteDish(dish.id);
   };
 
-  // Voeg deze functie toe binnen de component:
-const handleRestartPrintService = async () => {
-  if (!window.confirm("Print-service herstarten? Dit duurt ongeveer 1 minuut.")) return;
-  try {
-    await updateDoc(doc(db, "system", "printservice"), { restart: true });
-    alert("Herstart-verzoek verstuurd. De print-service herstart binnen een minuut.");
-  } catch (error) {
-    alert("Fout bij versturen herstart-verzoek.");
-  }
-};
 
   const addModifierToForm = () => {
     if (!newModifier.name.trim()) return;
