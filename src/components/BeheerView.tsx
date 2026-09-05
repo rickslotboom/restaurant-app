@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Dish, Modifier, VatRate } from "../types";
 import { useMenuContext } from "../hooks/useMenu";
 import FloorPlanEditor from "./FloorPlanEditor";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
 
 
 type Props = {
