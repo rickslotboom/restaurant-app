@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Dish, Modifier, VatRate } from "../types";
 import { useMenuContext } from "../hooks/useMenu";
 import FloorPlanEditor from "./FloorPlanEditor";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+
 
 type Props = {
   menu: Dish[];
@@ -20,7 +23,7 @@ export default function BeheerView({
 }: Props) {
   const { categories, addCategory, updateCategory, deleteCategory } = useMenuContext();
 
-  const [activeTab, setActiveTab] = useState<"menu" | "categories" | "vloerplan">("menu");
+  const [activeTab, setActiveTab] = useState<"menu" | "categories" | "vloerplan" | "beheer">("menu");
   const [filterCategory, setFilterCategory] = useState<string>("Alle");
 
   const [form, setForm] = useState({
@@ -101,6 +104,17 @@ export default function BeheerView({
     await onDeleteDish(dish.id);
   };
 
+  // Voeg deze functie toe binnen de component:
+const handleRestartPrintService = async () => {
+  if (!window.confirm("Print-service herstarten? Dit duurt ongeveer 1 minuut.")) return;
+  try {
+    await updateDoc(doc(db, "system", "printservice"), { restart: true });
+    alert("Herstart-verzoek verstuurd. De print-service herstart binnen een minuut.");
+  } catch (error) {
+    alert("Fout bij versturen herstart-verzoek.");
+  }
+};
+
   const addModifierToForm = () => {
     if (!newModifier.name.trim()) return;
     setForm((f) => ({
@@ -138,16 +152,16 @@ export default function BeheerView({
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
-        {(["menu", "categories", "vloerplan"] as const).map((t) => (
-          <button key={t} onClick={() => setActiveTab(t)} style={{
-            padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
-            background: activeTab === t ? "#2196F3" : "#eee",
-            color: activeTab === t ? "white" : "#333",
-            fontWeight: "600", cursor: "pointer",
-          }}>
-            {t === "menu" ? "Menu" : t === "categories" ? "Categorieën" : "Vloerplan"}
-          </button>
-        ))}
+        {(["menu", "categories", "vloerplan", "beheer"] as const).map((t) => (
+  <button key={t} onClick={() => setActiveTab(t)} style={{
+    padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
+    background: activeTab === t ? "#2196F3" : "#eee",
+    color: activeTab === t ? "white" : "#333",
+    fontWeight: "600", cursor: "pointer",
+  }}>
+    {t === "menu" ? "Menu" : t === "categories" ? "Categorieën" : t === "vloerplan" ? "Vloerplan" : "Beheer"}
+  </button>
+))}
       </div>
 
       {/* ───── MENU TAB ───── */}
@@ -442,6 +456,45 @@ export default function BeheerView({
 
       {/* ───── VLOERPLAN TAB ───── */}
       {activeTab === "vloerplan" && <FloorPlanEditor />}
+
+      {/* ───── BEHEER TAB ───── */}
+{activeTab === "beheer" && (
+  <div>
+    <h3 style={{ marginTop: 0 }}>Systeembeheer</h3>
+    <div style={{
+      background: "#fff", border: "1px solid #e0e0e0",
+      borderRadius: "8px", padding: "1rem",
+    }}>
+      <p style={{ margin: "0 0 0.75rem", fontWeight: "500" }}>Print-service</p>
+      <p style={{ margin: "0 0 1rem", fontSize: "0.85rem", color: "#666" }}>
+        Als bonnetjes niet meer uitkomen, kun je hier de print-service herstarten.
+        Dit duurt ongeveer 1 minuut.
+      </p>
+      <button
+        onClick={async () => {
+          if (!window.confirm("Print-service herstarten?")) return;
+          try {
+            const { doc, updateDoc } = await import("firebase/firestore");
+            const { db } = await import("../firebase");
+            await updateDoc(doc(db, "system", "printservice"), { restart: true });
+            alert("Herstart-verzoek verstuurd. De print-service herstart binnen een minuut.");
+          } catch (error) {
+            alert("Fout bij versturen herstart-verzoek.");
+          }
+        }}
+        style={{
+          background: "#e67e22", color: "white", border: "none",
+          padding: "0.75rem 1.5rem", borderRadius: "8px",
+          cursor: "pointer", fontSize: "1rem", fontWeight: "bold",
+        }}
+      >
+        🔄 Herstart print-service
+      </button>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }
