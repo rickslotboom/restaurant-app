@@ -14,6 +14,7 @@ import { useMenuContext } from "./hooks/useMenu";
 import styles from "./App.module.css";
 import { useAuthContext } from "./hooks/useAuth";
 import { OrderItem } from "./types";
+import RoosterView from "./components/RoosterView";
 
 console.log("Header:", Header);
 console.log("Menu:", Menu);
@@ -23,7 +24,7 @@ console.log("BarView:", BarView);
 console.log("BillingView:", BillingView);
 console.log("Login:", Login);
 
-type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports";
+type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports" | "rooster";
 
 export default function App() {
   const { user, logout } = useAuthContext();
@@ -205,6 +206,11 @@ export default function App() {
           {/* Rapporten — alleen manager */}
 {isManager && view === "reports" && (
   <ReportsView orders={orders} />
+)}
+
+{/* Rooster — alleen manager */}
+{isManager && view === "rooster" && (
+  <RoosterView />
 )}
 
       </main>

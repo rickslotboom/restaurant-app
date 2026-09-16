@@ -2,8 +2,8 @@ import React from "react";
 import styles from "./Header.module.css";
 
 type Props = {
-  view: "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports";
-  setView: React.Dispatch<React.SetStateAction<"floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports">>;
+  view: "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports" | "rooster";
+  setView: React.Dispatch<React.SetStateAction<"floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" | "reports" | "rooster">>;
   orderCount: number;
   user: { username: string; role: string };
   onLogout: () => void;
@@ -90,6 +90,12 @@ export default function Header({ view, setView, orderCount, user, onLogout }: Pr
               onClick={() => setView("reports")}
             >
               📊 Rapporten
+            </button>
+            <button
+              className={view === "rooster" ? styles.active : ""}
+              onClick={() => setView("rooster")}
+            >
+              📅 Rooster
             </button>
             <button
               className={view === "beheer" ? styles.active : ""}
