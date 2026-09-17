@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 // ── Hulpfuncties ──
 function getWeekNumber(date: Date): number {
@@ -25,22 +27,14 @@ function getDaysOfWeek(year: number, week: number): Date[] {
   });
 }
 
-function getWeeksInMonth(year: number, month: number): { week: number; days: Date[] }[] {
-  const weeks: { week: number; days: Date[] }[] = [];
+function getWeeksInMonth(year: number, month: number): number[] {
   const seenWeeks = new Set<number>();
-
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-
   for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-    const week = getWeekNumber(new Date(d));
-    if (!seenWeeks.has(week)) {
-      seenWeeks.add(week);
-      weeks.push({ week, days: getDaysOfWeek(year, week) });
-    }
+    seenWeeks.add(getWeekNumber(new Date(d)));
   }
-
-  return weeks;
+  return Array.from(seenWeeks);
 }
 
 const MAANDEN = [
@@ -56,40 +50,63 @@ type WeekEntry = {
   tot: string;
 };
 
-type Rooster = Record<string, WeekEntry[]>; // key: "2026-W36-0" (jaar-week-dagindex)
+type DagRooster = WeekEntry[];
 
 export default function RoosterView() {
   const today = new Date();
   const [jaar, setJaar] = useState(today.getFullYear());
   const [geselecteerdeWeek, setGeselecteerdeWeek] = useState<number | null>(getWeekNumber(today));
-  const [rooster, setRooster] = useState<Rooster>({});
+  const [geselecteerdeDag, setGeselecteerdeDag] = useState<number | null>(null);
+  const [dagRoosters, setDagRoosters] = useState<Record<string, DagRooster>>({});
   const [nieuwNaam, setNieuwNaam] = useState("");
   const [nieuwVan, setNieuwVan] = useState("");
   const [nieuwTot, setNieuwTot] = useState("");
-  const [geselecteerdeDag, setGeselecteerdeDag] = useState<number | null>(null);
+  const [laden, setLaden] = useState(false);
 
   const todayWeek = getWeekNumber(today);
 
-  const voegToe = (dagIndex: number) => {
-    if (!nieuwNaam || !nieuwVan || !nieuwTot || geselecteerdeWeek === null) return;
-    const key = `${jaar}-W${geselecteerdeWeek}-${dagIndex}`;
-    setRooster((prev) => ({
-      ...prev,
-      [key]: [...(prev[key] ?? []), { naam: nieuwNaam, van: nieuwVan, tot: nieuwTot }],
-    }));
+  // ── Laad weekdata uit Firestore ──
+  useEffect(() => {
+    if (geselecteerdeWeek === null) return;
+    setLaden(true);
+
+    const weekKey = `${jaar}-W${geselecteerdeWeek}`;
+    const docRef = doc(db, "rooster", weekKey);
+
+    getDoc(docRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        setDagRoosters(snapshot.data() as Record<string, DagRooster>);
+      } else {
+        setDagRoosters({});
+      }
+      setLaden(false);
+    }).catch(() => setLaden(false));
+  }, [geselecteerdeWeek, jaar]);
+
+  // ── Sla dagdata op in Firestore ──
+  const slaOp = async (dagKey: string, entries: DagRooster) => {
+    if (geselecteerdeWeek === null) return;
+    const weekKey = `${jaar}-W${geselecteerdeWeek}`;
+    const updated = { ...dagRoosters, [dagKey]: entries };
+    setDagRoosters(updated);
+    await setDoc(doc(db, "rooster", weekKey), updated, { merge: true });
+  };
+
+  const voegToe = async (dagIndex: number) => {
+    if (!nieuwNaam || !nieuwVan || !nieuwTot) return;
+    const dagKey = `dag${dagIndex}`;
+    const entries = [...(dagRoosters[dagKey] ?? []), { naam: nieuwNaam, van: nieuwVan, tot: nieuwTot }];
+    await slaOp(dagKey, entries);
     setNieuwNaam("");
     setNieuwVan("");
     setNieuwTot("");
   };
 
-  const verwijder = (dagIndex: number, entryIndex: number) => {
-    if (geselecteerdeWeek === null) return;
-    const key = `${jaar}-W${geselecteerdeWeek}-${dagIndex}`;
-    setRooster((prev) => {
-      const updated = [...(prev[key] ?? [])];
-      updated.splice(entryIndex, 1);
-      return { ...prev, [key]: updated };
-    });
+  const verwijder = async (dagIndex: number, entryIndex: number) => {
+    const dagKey = `dag${dagIndex}`;
+    const entries = [...(dagRoosters[dagKey] ?? [])];
+    entries.splice(entryIndex, 1);
+    await slaOp(dagKey, entries);
   };
 
   const weekDagen = geselecteerdeWeek !== null ? getDaysOfWeek(jaar, geselecteerdeWeek) : [];
@@ -117,7 +134,7 @@ export default function RoosterView() {
                   {maand}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                  {weken.map(({ week }) => {
+                  {weken.map((week) => {
                     const isHuidig = week === todayWeek && jaar === today.getFullYear();
                     return (
                       <button
@@ -143,14 +160,17 @@ export default function RoosterView() {
         /* ── Weekweergave ── */
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-            <button onClick={() => setGeselecteerdeWeek(null)} style={navBtn}>← Kalender</button>
+            <button onClick={() => { setGeselecteerdeWeek(null); setGeselecteerdeDag(null); }} style={navBtn}>
+              ← Kalender
+            </button>
             <h3 style={{ margin: 0 }}>Week {geselecteerdeWeek}</h3>
+            {laden && <span style={{ color: "#aaa", fontSize: "0.85rem" }}>Laden...</span>}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {weekDagen.map((dag, dagIdx) => {
-              const key = `${jaar}-W${geselecteerdeWeek}-${dagIdx}`;
-              const entries = rooster[key] ?? [];
+              const dagKey = `dag${dagIdx}`;
+              const entries = dagRoosters[dagKey] ?? [];
               const isVandaag = dag.toDateString() === today.toDateString();
               const isOpen = geselecteerdeDag === dagIdx;
 
@@ -217,13 +237,13 @@ export default function RoosterView() {
                           type="time"
                           value={nieuwVan}
                           onChange={e => setNieuwVan(e.target.value)}
-                          style={{ ...inputStyle, width: "100px" }}
+                          style={{ ...inputStyle, width: "100px", flex: "none" }}
                         />
                         <input
                           type="time"
                           value={nieuwTot}
                           onChange={e => setNieuwTot(e.target.value)}
-                          style={{ ...inputStyle, width: "100px" }}
+                          style={{ ...inputStyle, width: "100px", flex: "none" }}
                         />
                         <button
                           onClick={() => voegToe(dagIdx)}
@@ -254,5 +274,5 @@ const navBtn: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   padding: "0.4rem 0.6rem", borderRadius: "6px",
-  border: "1px solid #ccc", fontSize: "0.9rem", flex: 1,
+  border: "1px solid #ccc", fontSize: "0.9rem", flex: 1, minWidth: "80px",
 };
