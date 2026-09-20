@@ -328,9 +328,24 @@ export default function Menu({
   };
 
   const categoryIcons: Record<string, string> = {
-    Ontbijt: "🍳", Dranken: "🍹", "Snelle hap": "🍔",
-    Soepen: "🍲", "Salades & Bowls": "🥗", Lunch: "🍽️", Broodjes: "🥪",
-  };
+  "Ontbijt": "🍳",
+  "Drankjes": "🥤",
+  "Soepen": "🍲",
+  "Salades & Bowls": "🥗",
+  "Lunch": "🍽️",
+  "Broodjes": "🥪",
+  "Gebak": "🥐",
+  "Dranken": "🍹",
+  "Pannenkoeken": "🥞",
+  "Koffie": "☕",
+  "Thee": "🫖",
+  "Frisdrank": "🥤",
+  "Sapjes": "🧃",
+  "Alcohol": "🍷",
+  "Kleine borrelhapjes": "🫒",
+  "Frietjes": "🍟",
+  "Borrelplanken": "🧀",
+};
 
   const lineToDelete = cart.find((l) => l.lineId === deleteConfirmLineId);
 
