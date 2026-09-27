@@ -25,6 +25,7 @@ const itemFullPrice = (item: Order["items"][0]) => {
 export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   const [paymentStep, setPaymentStep] = useState<"discount" | "method" | "tip" | "waiting">("discount");
   const [tipAmount, setTipAmount] = useState<number>(0);
+  const [selectedMethod, setSelectedMethod] = useState<"cash" | "pin" | null>(null);
   const [customTip, setCustomTip] = useState<string>("");
   const [pinError, setPinError] = useState<string | null>(null);
 
@@ -335,17 +336,16 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem" }}>
-              <button onClick={() => setPaymentStep("tip")} style={{
-                flex: 1, background: "#4CAF50", color: "white",
-                border: "none", padding: "0.75rem", borderRadius: "8px",
-                cursor: "pointer", fontSize: "1rem",
-              }}>💵 Cash</button>
-              <button onClick={handlePinClick} style={{
-                flex: 1, background: "#2196F3", color: "white",
-                border: "none", padding: "0.75rem", borderRadius: "8px",
-                cursor: "pointer", fontSize: "1rem",
-              }}>💳 Pin</button>
-            </div>
+             <button onClick={() => { setSelectedMethod("cash"); setPaymentStep("tip"); }} style={{
+  flex: 1, background: "#4CAF50", color: "white",
+  border: "none", padding: "0.75rem", borderRadius: "8px",
+  cursor: "pointer", fontSize: "1rem",
+}}>💵 Cash</button>
+<button onClick={() => { setSelectedMethod("pin"); setPaymentStep("tip"); }} style={{
+  flex: 1, background: "#2196F3", color: "white",
+  border: "none", padding: "0.75rem", borderRadius: "8px",
+  cursor: "pointer", fontSize: "1rem",
+}}>💳 Pin</button>
             <button onClick={() => setPaymentStep("discount")} style={{
               marginTop: "0.75rem", width: "100%", background: "#eee",
               border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer",
@@ -353,7 +353,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
           </>
         )}
 
-        {/* ── STAP 3: FOOI (alleen bij cash) ── */}
+              {/* ── STAP 3: FOOI ── */}
         {paymentStep === "tip" && (
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>
@@ -382,7 +382,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
             <div style={{ background: "#f5f5f5", borderRadius: "8px", padding: "0.75rem", marginBottom: "1rem" }}>
               <p style={{ margin: 0, fontSize: "0.9rem", color: "#555" }}>
-                Betaalmethode: <strong>💵 Cash</strong>
+                Betaalmethode: <strong>{selectedMethod === "pin" ? "💳 Pin" : "💵 Cash"}</strong>
               </p>
               {savings > 0.001 && (
                 <p style={{ margin: "0.25rem 0 0", fontSize: "0.9rem", color: "#2e7d32" }}>
@@ -397,28 +397,28 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
               </p>
             </div>
 
-            <button onClick={handleCashConfirm} style={{
-              width: "100%", background: "#4CAF50", color: "white",
-              border: "none", padding: "0.75rem", borderRadius: "8px",
-              cursor: "pointer", fontSize: "1rem", fontWeight: "bold",
-            }}>✅ Bevestig betaling</button>
+            {selectedMethod === "cash" ? (
+              <button onClick={handleCashConfirm} style={{
+                width: "100%", background: "#4CAF50", color: "white",
+                border: "none", padding: "0.75rem", borderRadius: "8px",
+                cursor: "pointer", fontSize: "1rem", fontWeight: "bold",
+              }}>✅ Bevestig betaling</button>
+            ) : (
+              <button onClick={handlePinClick} style={{
+                width: "100%", background: "#2196F3", color: "white",
+                border: "none", padding: "0.75rem", borderRadius: "8px",
+                cursor: "pointer", fontSize: "1rem", fontWeight: "bold",
+              }}>💳 Betalen via terminal</button>
+            )}
             <button onClick={() => setPaymentStep("method")} style={{
               marginTop: "0.5rem", width: "100%", background: "#eee",
               border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer",
             }}>← Terug</button>
-            <button onClick={async () => {
-              try {
-                await fetch("/api/sumup-cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: order.id }) });
-              } catch (e) {
-                console.error("Annuleren mislukt:", e);
-              }
-              onCancel();
-            }} style={{
-              background: "#eee", border: "none", padding: "0.5rem 1rem",
-              borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem",
-            }}>
-              Annuleren
-            </button>
+            <button onClick={onCancel} style={{
+              marginTop: "0.5rem", width: "100%", background: "#fff",
+              border: "1px solid #ccc", padding: "0.5rem", borderRadius: "8px",
+              cursor: "pointer", color: "#d9534f",
+            }}>Annuleren</button>
           </>
         )}
       </div>
