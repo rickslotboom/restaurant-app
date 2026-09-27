@@ -147,10 +147,16 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     await updateDoc(doc(db, "orders", id), { status });
   };
  
-  const updateOrderItems = async (id: string, items: OrderItem[]) => {
-    console.log("[FIRESTORE] updateOrderItems", id, items);
+const updateOrderItems = async (id: string, items: OrderItem[]) => {
+  console.log("[FIRESTORE] updateOrderItems", id, items);
+  try {
     await updateDoc(doc(db, "orders", id), { items });
-  };
+    console.log("[FIRESTORE] updateOrderItems success");
+  } catch (err) {
+    console.error("[FIRESTORE] updateOrderItems FOUT:", err);
+    throw err;
+  }
+};
  
   const updateOrderTable = async (id: string, table: string) => {
     console.log("[FIRESTORE] updateOrderTable", id, table);
