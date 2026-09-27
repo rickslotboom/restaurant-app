@@ -149,13 +149,27 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
  
 const updateOrderItems = async (id: string, items: OrderItem[]) => {
   console.log("[FIRESTORE] updateOrderItems", id, items);
-  try {
-    await updateDoc(doc(db, "orders", id), { items });
-    console.log("[FIRESTORE] updateOrderItems success");
-  } catch (err) {
-    console.error("[FIRESTORE] updateOrderItems FOUT:", err);
-    throw err;
-  }
+  
+  // Strip undefined velden — Firestore accepteert die niet
+  const cleanItems = items.map((item) => {
+    const clean: any = {
+      dishId: item.dishId,
+      name: item.name,
+      price: item.price,
+      qty: item.qty,
+      vatRate: item.vatRate ?? 9,
+      modifiers: (item.modifiers ?? []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        price: m.price,
+      })),
+    };
+    if (item.note !== undefined) clean.note = item.note;
+    if (item.discount !== undefined) clean.discount = item.discount;
+    return clean;
+  });
+
+  await updateDoc(doc(db, "orders", id), { items: cleanItems });
 };
  
   const updateOrderTable = async (id: string, table: string) => {
