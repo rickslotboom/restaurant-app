@@ -310,7 +310,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
           </>
         )}
 
-        {/* ── STAP 2: BETAALMETHODE ── */}
+          {/* ── STAP 2: BETAALMETHODE ── */}
         {paymentStep === "method" && (
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>
@@ -336,16 +336,17 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Betaalmethode:</p>
             <div style={{ display: "flex", gap: "1rem" }}>
-             <button onClick={() => { setSelectedMethod("cash"); setPaymentStep("tip"); }} style={{
-  flex: 1, background: "#4CAF50", color: "white",
-  border: "none", padding: "0.75rem", borderRadius: "8px",
-  cursor: "pointer", fontSize: "1rem",
-}}>💵 Cash</button>
-<button onClick={() => { setSelectedMethod("pin"); setPaymentStep("tip"); }} style={{
-  flex: 1, background: "#2196F3", color: "white",
-  border: "none", padding: "0.75rem", borderRadius: "8px",
-  cursor: "pointer", fontSize: "1rem",
-}}>💳 Pin</button>
+              <button onClick={() => { setSelectedMethod("cash"); setPaymentStep("tip"); }} style={{
+                flex: 1, background: "#4CAF50", color: "white",
+                border: "none", padding: "0.75rem", borderRadius: "8px",
+                cursor: "pointer", fontSize: "1rem",
+              }}>💵 Cash</button>
+              <button onClick={() => { setSelectedMethod("pin"); setPaymentStep("tip"); }} style={{
+                flex: 1, background: "#2196F3", color: "white",
+                border: "none", padding: "0.75rem", borderRadius: "8px",
+                cursor: "pointer", fontSize: "1rem",
+              }}>💳 Pin</button>
+            </div>
             <button onClick={() => setPaymentStep("discount")} style={{
               marginTop: "0.75rem", width: "100%", background: "#eee",
               border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer",
