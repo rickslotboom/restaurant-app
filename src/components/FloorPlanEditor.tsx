@@ -70,6 +70,39 @@ export default function FloorPlanEditor() {
     setDraggingId(null);
   };
 
+  const handleTouchStart = (e: React.TouchEvent, t: TableDef) => {
+    if (editingId === t.id) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDraggingId(t.id);
+    setDragOffset({
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!draggingId || !canvasRef.current) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const t = tables.find((t) => t.id === draggingId);
+    if (!t) return;
+    const dims = SIZE_DIMS[t.size];
+    const newX = Math.max(0, Math.min(
+      touch.clientX - canvasRect.left - dragOffset.x,
+      canvasRect.width - dims.width
+    ));
+    const newY = Math.max(0, Math.min(
+      touch.clientY - canvasRect.top - dragOffset.y,
+      canvasRect.height - dims.height
+    ));
+    const snappedX = Math.round(newX / 8) * 8;
+    const snappedY = Math.round(newY / 8) * 8;
+    updateTable(draggingId, { x: snappedX, y: snappedY });
+  };
+
   const startEdit = (t: TableDef) => {
     setEditingId(t.id);
     setEditForm({ name: t.name, shape: t.shape, size: t.size, floor: t.floor });
@@ -122,7 +155,7 @@ export default function FloorPlanEditor() {
         </div>
       </div>
 
-      {/* Edit panel — boven het canvas zodat het altijd zichtbaar is */}
+      {/* Edit panel */}
       {editingId && (
         <div style={{
           background: "#fff", border: "1px solid #2196F3",
@@ -188,13 +221,15 @@ export default function FloorPlanEditor() {
         </div>
       )}
 
-      {/* Canvas — scrollbaar wrapper */}
+      {/* Canvas */}
       <div style={{ overflowX: "auto" }}>
         <div
           ref={canvasRef}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
           style={{
             position: "relative",
             width: canvasWidth,
@@ -202,7 +237,7 @@ export default function FloorPlanEditor() {
             background: "#f8f9fa",
             border: "2px dashed #ccc",
             borderRadius: "12px",
-            overflow: "visible", // ← fix: was "hidden", knoppen werden weggeknipt
+            overflow: "visible",
             cursor: draggingId ? "grabbing" : "default",
           }}
         >
@@ -225,6 +260,7 @@ export default function FloorPlanEditor() {
               <div
                 key={t.id}
                 onMouseDown={(e) => handleMouseDown(e, t)}
+                onTouchStart={(e) => handleTouchStart(e, t)}
                 style={{
                   position: "absolute",
                   left: t.x,
@@ -243,6 +279,7 @@ export default function FloorPlanEditor() {
                   fontSize: "13px",
                   cursor: isDragging ? "grabbing" : "grab",
                   userSelect: "none",
+                  touchAction: "none",
                   boxShadow: isDragging
                     ? "0 8px 24px rgba(0,0,0,0.3)"
                     : isEditing
@@ -269,6 +306,7 @@ export default function FloorPlanEditor() {
                 }}>
                   <button
                     onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     onClick={(e) => { e.stopPropagation(); startEdit(t); }}
                     style={{
                       width: "22px", height: "22px", borderRadius: "50%",
@@ -282,6 +320,7 @@ export default function FloorPlanEditor() {
                   >✏</button>
                   <button
                     onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                     style={{
                       width: "22px", height: "22px", borderRadius: "50%",
