@@ -161,10 +161,23 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
     }
 
   } catch (error: any) {
-    console.error("[SplitPaymentModal] Pin fout:", error.message);
+  console.error("[PaymentModal] Pin fout:", error.message);
+  
+  // Vraag of de terminal al een bedrag toont — de betaling kan toch zijn doorgekomen
+  const terminalToontBedrag = window.confirm(
+    "Er was een verbindingsprobleem. Toont de terminal al een bedrag?\n\n" +
+    "✅ OK = Ja, terminal toont bedrag (wacht op betaling)\n" +
+    "❌ Annuleren = Nee, opnieuw proberen"
+  );
+  
+  if (terminalToontBedrag) {
+    // Betaling is toch doorgekomen — wachtstatus tonen
+    setPaymentStep("waiting");
+  } else {
     setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
-    setStep("method");
+    setPaymentStep("method");
   }
+}
 };
   const discBtnStyle = (active: boolean): React.CSSProperties => ({
     padding: "0.35rem 0.6rem", borderRadius: "8px",
