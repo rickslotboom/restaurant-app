@@ -110,10 +110,23 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
       // Wachtstatus — useEffect luistert naar Firestore en sluit de modal automatisch
 
     } catch (error: any) {
-      console.error("[PaymentModal] Pin fout:", error.message);
-      setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
-      setPaymentStep("method");
-    }
+  console.error("[PaymentModal] Pin fout:", error.message);
+  
+  // Vraag of de terminal al een bedrag toont — de betaling kan toch zijn doorgekomen
+  const terminalToontBedrag = window.confirm(
+    "Er was een verbindingsprobleem. Toont de terminal al een bedrag?\n\n" +
+    "✅ OK = Ja, terminal toont bedrag (wacht op betaling)\n" +
+    "❌ Annuleren = Nee, opnieuw proberen"
+  );
+  
+  if (terminalToontBedrag) {
+    // Betaling is toch doorgekomen — wachtstatus tonen
+    setPaymentStep("waiting");
+  } else {
+    setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
+    setPaymentStep("method");
+  }
+}
   };
 
   const inputStyle = {
