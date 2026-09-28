@@ -137,37 +137,35 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
     onConfirm(Object.values(remainingMap), "cash", tipAmount);
   };
 
-  const handlePinClick = async () => {
-    setPinError(null);
-    setStep("waiting");
+ const handlePinClick = async () => {
+  setPinError(null);
+  setStep("waiting");
 
-    try {
-      const totalWithTip = total + tipAmount;
-      const splitTransactionId = `${order.id}-split-${Date.now()}`;
+  try {
+    const totalWithTip = total + tipAmount;
 
-      const response = await fetch("/api/sumup-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: splitTransactionId,
-          amount: parseFloat(totalWithTip.toFixed(2)),
-          description: `Tafel ${order.table} (deel)`,
-        }),
-      });
+    const response = await fetch("/api/sumup-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId: order.id,
+        amount: parseFloat(totalWithTip.toFixed(2)),
+        description: `Tafel ${order.table} (deel)`,
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Betaling aanmaken mislukt");
-      }
-
-    } catch (error: any) {
-      console.error("[SplitPaymentModal] Pin fout:", error.message);
-      setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
-      setStep("method");
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Betaling aanmaken mislukt");
     }
-  };
 
+  } catch (error: any) {
+    console.error("[SplitPaymentModal] Pin fout:", error.message);
+    setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
+    setStep("method");
+  }
+};
   const discBtnStyle = (active: boolean): React.CSSProperties => ({
     padding: "0.35rem 0.6rem", borderRadius: "8px",
     border: `2px solid ${active ? "#2196F3" : "#ccc"}`,
