@@ -172,10 +172,10 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   
   if (terminalToontBedrag) {
     // Betaling is toch doorgekomen — wachtstatus tonen
-    setPaymentStep("waiting");
+    setStep("waiting");
   } else {
     setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
-    setPaymentStep("method");
+    setStep("method");
   }
 }
 };
