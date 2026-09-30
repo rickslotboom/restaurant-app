@@ -54,7 +54,7 @@ export default function RoosterView() {
   const [openDag, setOpenDag] = useState<string | null>(null);
   const [naam, setNaam] = useState("");
   const [start, setStart] = useState("09:00");
-  const [eind, setEind] = useState("17:00");
+  const [eind, setEind] = useState("16:00");
 
   // Herhaling state
   const [toonHerhaling, setToonHerhaling] = useState<string | null>(null); // dag-naam
