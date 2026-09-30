@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -10,6 +13,7 @@ interface RoosterEntry {
   naam: string;
   start: string;
   eind: string;
+  herhalingId?: string; // koppeling naar de reeks
 }
 
 interface DagRooster {
@@ -20,10 +24,20 @@ interface WeekDoc {
   entries: DagRooster;
 }
 
+interface Herhaling {
+  id: string;
+  dag: string;
+  naam: string;
+  start: string;
+  eind: string;
+  interval: number;
+  eindDatum: string;
+  startWeek: string;
+}
+
 const DAYS = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"];
 
 function getWeekKey(date: Date): string {
-  // ISO week — maandag als startdag
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 4 - (d.getDay() || 7));
@@ -48,19 +62,24 @@ function addWeeks(date: Date, n: number): Date {
   return d;
 }
 
+type Tab = "rooster" | "herhalingen";
+
 export default function RoosterView() {
+  const [tab, setTab] = useState<Tab>("rooster");
   const [weekKey, setWeekKey] = useState<string>(getWeekKey(new Date()));
   const [rooster, setRooster] = useState<DagRooster>({});
+  const [herhalingen, setHerhalingen] = useState<Herhaling[]>([]);
   const [openDag, setOpenDag] = useState<string | null>(null);
   const [naam, setNaam] = useState("");
   const [start, setStart] = useState("09:00");
   const [eind, setEind] = useState("16:00");
 
   // Herhaling state
-  const [toonHerhaling, setToonHerhaling] = useState<string | null>(null); // dag-naam
+  const [toonHerhaling, setToonHerhaling] = useState<string | null>(null);
   const [herhalingInterval, setHerhalingInterval] = useState(1);
   const [herhalingEindDatum, setHerhalingEindDatum] = useState("");
   const [herhalingBezig, setHerhalingBezig] = useState(false);
+  const [verwijderBezig, setVerwijderBezig] = useState<string | null>(null);
 
   // Kalender toggle
   const [toonKalender, setToonKalender] = useState(false);
@@ -68,6 +87,10 @@ export default function RoosterView() {
   useEffect(() => {
     laadWeek(weekKey);
   }, [weekKey]);
+
+  useEffect(() => {
+    laadHerhalingen();
+  }, []);
 
   async function laadWeek(key: string) {
     const ref = doc(db, "rooster", key);
@@ -79,6 +102,13 @@ export default function RoosterView() {
     }
   }
 
+  async function laadHerhalingen() {
+    const snap = await getDocs(collection(db, "rooster-herhalingen"));
+    const lijst: Herhaling[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as Herhaling));
+    lijst.sort((a, b) => a.dag.localeCompare(b.dag) || a.naam.localeCompare(b.naam));
+    setHerhalingen(lijst);
+  }
+
   async function voegToe(dag: string) {
     if (!naam.trim()) return;
     const entry: RoosterEntry = { naam: naam.trim(), start, eind };
@@ -87,8 +117,7 @@ export default function RoosterView() {
       [dag]: [...(rooster[dag] || []), entry],
     };
     setRooster(updated);
-    const ref = doc(db, "rooster", weekKey);
-    await setDoc(ref, { entries: updated }, { merge: true });
+    await setDoc(doc(db, "rooster", weekKey), { entries: updated }, { merge: true });
     setNaam("");
   }
 
@@ -98,24 +127,30 @@ export default function RoosterView() {
       [dag]: (rooster[dag] || []).filter((_, i) => i !== index),
     };
     setRooster(updated);
-    const ref = doc(db, "rooster", weekKey);
-    await setDoc(ref, { entries: updated }, { merge: true });
+    await setDoc(doc(db, "rooster", weekKey), { entries: updated }, { merge: true });
   }
 
   async function voegHerhalingToe(dag: string) {
-    if (!naam.trim()) {
-      alert("Vul eerst een naam in.");
-      return;
-    }
-    if (!herhalingEindDatum) {
-      alert("Vul een einddatum in voor de herhaling.");
-      return;
-    }
+    if (!naam.trim()) { alert("Vul eerst een naam in."); return; }
+    if (!herhalingEindDatum) { alert("Vul een einddatum in."); return; }
 
     const eindDate = new Date(herhalingEindDatum);
     eindDate.setHours(23, 59, 59);
     const entry: RoosterEntry = { naam: naam.trim(), start, eind };
     const dagIndex = DAYS.indexOf(dag);
+
+    // Sla de reeks op in rooster-herhalingen
+    const herhalingId = `${dag}-${naam.trim()}-${Date.now()}`;
+    const herhalingDoc: Omit<Herhaling, "id"> = {
+      dag,
+      naam: naam.trim(),
+      start,
+      eind,
+      interval: herhalingInterval,
+      eindDatum: herhalingEindDatum,
+      startWeek: weekKey,
+    };
+    await setDoc(doc(db, "rooster-herhalingen", herhalingId), herhalingDoc);
 
     setHerhalingBezig(true);
 
@@ -127,7 +162,7 @@ export default function RoosterView() {
       dagDatum.setDate(maandag.getDate() + dagIndex);
 
       if (dagDatum > eindDate) break;
-      if (teller > 104) break; // veiligheidsgrens: max 2 jaar weken
+      if (teller > 104) break;
 
       const key = getWeekKey(dagDatum);
       const ref = doc(db, "rooster", key);
@@ -135,14 +170,11 @@ export default function RoosterView() {
       const bestaand: DagRooster = snap.exists() ? (snap.data() as WeekDoc).entries || {} : {};
       const bijgewerkt = {
         ...bestaand,
-        [dag]: [...(bestaand[dag] || []), entry],
+        [dag]: [...(bestaand[dag] || []), { ...entry, herhalingId }],
       };
       await setDoc(ref, { entries: bijgewerkt }, { merge: true });
 
-      // Als het de huidige week is, update lokale state ook
-      if (key === weekKey) {
-        setRooster(bijgewerkt);
-      }
+      if (key === weekKey) setRooster(bijgewerkt);
 
       maandag = addWeeks(maandag, herhalingInterval);
       teller++;
@@ -151,154 +183,278 @@ export default function RoosterView() {
     setHerhalingBezig(false);
     setToonHerhaling(null);
     setNaam("");
-    alert(`✅ Herhaling toegevoegd voor ${teller} week(en).`);
+    await laadHerhalingen();
+    alert(`✅ Herhaling opgeslagen voor ${teller} week(en).`);
+  }
+
+  async function verwijderHerhaling(herhaling: Herhaling) {
+    if (!window.confirm(
+      `Verwijder de volledige reeks "${herhaling.naam}" op ${herhaling.dag}?\n\n` +
+      `Dit verwijdert de dienst uit alle toekomstige weken (vanaf vandaag). ` +
+      `Weken in het verleden blijven staan.`
+    )) return;
+
+    setVerwijderBezig(herhaling.id);
+
+    const vandaag = new Date();
+    vandaag.setHours(0, 0, 0, 0);
+    const eindDate = new Date(herhaling.eindDatum);
+    eindDate.setHours(23, 59, 59);
+    const dagIndex = DAYS.indexOf(herhaling.dag);
+
+    let maandag = getMondayOfWeek(herhaling.startWeek);
+    let teller = 0;
+
+    while (true) {
+      const dagDatum = new Date(maandag);
+      dagDatum.setDate(maandag.getDate() + dagIndex);
+
+      if (dagDatum > eindDate) break;
+      if (teller > 104) break;
+
+      // Alleen toekomstige weken aanpassen (inclusief deze week)
+      if (dagDatum >= vandaag) {
+        const key = getWeekKey(dagDatum);
+        const ref = doc(db, "rooster", key);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data() as WeekDoc;
+          const entries = data.entries || {};
+          const gefilterd = {
+            ...entries,
+            [herhaling.dag]: (entries[herhaling.dag] || []).filter(
+              e => e.herhalingId !== herhaling.id
+            ),
+          };
+          await setDoc(ref, { entries: gefilterd }, { merge: true });
+          if (key === weekKey) setRooster(gefilterd);
+        }
+      }
+
+      maandag = addWeeks(maandag, herhaling.interval);
+      teller++;
+    }
+
+    // Verwijder de reeks zelf
+    await deleteDoc(doc(db, "rooster-herhalingen", herhaling.id));
+    await laadHerhalingen();
+    setVerwijderBezig(null);
+    alert(`✅ Reeks verwijderd uit ${teller} week(en).`);
   }
 
   const monday = getMondayOfWeek(weekKey);
 
-  function prevWeek() {
-    setWeekKey(getWeekKey(addWeeks(monday, -1)));
-  }
-  function nextWeek() {
-    setWeekKey(getWeekKey(addWeeks(monday, 1)));
-  }
+  function prevWeek() { setWeekKey(getWeekKey(addWeeks(monday, -1))); }
+  function nextWeek() { setWeekKey(getWeekKey(addWeeks(monday, 1))); }
 
   return (
     <div style={{ padding: 16, fontFamily: "sans-serif", maxWidth: 700, margin: "0 auto" }}>
-      {/* Week navigatie */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <button onClick={prevWeek} style={navBtnStyle}>◀</button>
-        <strong style={{ fontSize: 18 }}>
-          Week {weekKey.split("-W")[1]} — {monday.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}
-        </strong>
-        <button onClick={nextWeek} style={navBtnStyle}>▶</button>
-        <button
-          onClick={() => setToonKalender(!toonKalender)}
-          style={{ ...navBtnStyle, marginLeft: "auto" }}
-        >
-          📅 {toonKalender ? "Verberg" : "Kalender"}
-        </button>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "2px solid #e0e0e0" }}>
+        {(["rooster", "herhalingen"] as Tab[]).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            style={{
+              padding: "8px 20px",
+              border: "none",
+              borderBottom: tab === t ? "2px solid #4f6ef7" : "2px solid transparent",
+              background: "none",
+              fontWeight: tab === t ? 700 : 400,
+              color: tab === t ? "#4f6ef7" : "#555",
+              cursor: "pointer",
+              fontSize: 15,
+              marginBottom: -2,
+            }}
+          >
+            {t === "rooster" ? "📅 Weekrooster" : `🔁 Herhalingen (${herhalingen.length})`}
+          </button>
+        ))}
       </div>
 
-      {/* Simpele week-picker kalender */}
-      {toonKalender && (
-        <WeekPicker
-          currentKey={weekKey}
-          onSelect={(key) => { setWeekKey(key); setToonKalender(false); }}
-        />
-      )}
-
-      {/* Dagen */}
-      {DAYS.map((dag, dagIndex) => {
-        const dagDatum = new Date(monday);
-        dagDatum.setDate(monday.getDate() + dagIndex);
-        const isOpen = openDag === dag;
-        const entries = rooster[dag] || [];
-
-        return (
-          <div key={dag} style={{ marginBottom: 8, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden" }}>
-            {/* Dag header */}
-            <div
-              onClick={() => { setOpenDag(isOpen ? null : dag); setToonHerhaling(null); }}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "10px 14px", cursor: "pointer",
-                background: isOpen ? "#f0f4ff" : "#fafafa",
-              }}
+      {/* ── TAB: WEEKROOSTER ── */}
+      {tab === "rooster" && (
+        <>
+          {/* Week navigatie */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <button onClick={prevWeek} style={navBtnStyle}>◀</button>
+            <strong style={{ fontSize: 16 }}>
+              Week {weekKey.split("-W")[1]} — {monday.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}
+            </strong>
+            <button onClick={nextWeek} style={navBtnStyle}>▶</button>
+            <button
+              onClick={() => setToonKalender(!toonKalender)}
+              style={{ ...navBtnStyle, marginLeft: "auto" }}
             >
-              <strong>{dag} {dagDatum.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}</strong>
-              <span style={{ color: "#888", fontSize: 13 }}>
-                {entries.length > 0 ? `${entries.length} medewerker(s)` : "Vrij"} {isOpen ? "▲" : "▼"}
-              </span>
-            </div>
+              📅 {toonKalender ? "Verberg" : "Kalender"}
+            </button>
+          </div>
 
-            {/* Detail panel */}
-            {isOpen && (
-              <div style={{ padding: "12px 14px", background: "#fff" }}>
-                {/* Bestaande entries */}
-                {entries.map((e, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, fontSize: 14 }}>
-                    <span style={{ flex: 1 }}>{e.naam}</span>
-                    <span style={{ color: "#555" }}>{e.start}–{e.eind}</span>
-                    <button onClick={() => verwijder(dag, i)} style={deleteBtnStyle}>✕</button>
-                  </div>
-                ))}
+          {toonKalender && (
+            <WeekPicker
+              currentKey={weekKey}
+              onSelect={(key) => { setWeekKey(key); setToonKalender(false); }}
+            />
+          )}
 
-                {/* Toevoegen rij */}
-                <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
-                  <input
-                    value={naam}
-                    onChange={e => setNaam(e.target.value)}
-                    placeholder="Naam medewerker"
-                    style={inputStyle}
-                    onKeyDown={e => e.key === "Enter" && voegToe(dag)}
-                  />
-                  <input type="time" value={start} onChange={e => setStart(e.target.value)} style={{ ...inputStyle, width: 100 }} />
-                  <input type="time" value={eind} onChange={e => setEind(e.target.value)} style={{ ...inputStyle, width: 100 }} />
-                  <button onClick={() => voegToe(dag)} style={addBtnStyle}>+ Toevoegen</button>
-                  <button
-                    onClick={() => setToonHerhaling(toonHerhaling === dag ? null : dag)}
-                    style={{ ...addBtnStyle, background: toonHerhaling === dag ? "#7c5cbf" : "#9b72cf" }}
-                    title="Voeg herhalende dienst toe"
-                  >
-                    🔁 Herhalen
-                  </button>
+          {/* Dagen */}
+          {DAYS.map((dag, dagIndex) => {
+            const dagDatum = new Date(monday);
+            dagDatum.setDate(monday.getDate() + dagIndex);
+            const isOpen = openDag === dag;
+            const entries = rooster[dag] || [];
+
+            return (
+              <div key={dag} style={{ marginBottom: 8, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden" }}>
+                <div
+                  onClick={() => { setOpenDag(isOpen ? null : dag); setToonHerhaling(null); }}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 14px", cursor: "pointer",
+                    background: isOpen ? "#f0f4ff" : "#fafafa",
+                  }}
+                >
+                  <strong>{dag} {dagDatum.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}</strong>
+                  <span style={{ color: "#888", fontSize: 13 }}>
+                    {entries.length > 0 ? `${entries.length} medewerker(s)` : "Vrij"} {isOpen ? "▲" : "▼"}
+                  </span>
                 </div>
 
-                {/* Herhaling panel */}
-                {toonHerhaling === dag && (
-                  <div style={{
-                    marginTop: 10, padding: 12, background: "#f5f0ff",
-                    borderRadius: 8, border: "1px solid #c9b0ef"
-                  }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8, color: "#5a3d9a" }}>
-                      🔁 Herhalende dienst instellen
-                    </div>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                      <label style={{ fontSize: 13 }}>
-                        Elke
-                        <input
-                          type="number"
-                          min={1}
-                          max={52}
-                          value={herhalingInterval}
-                          onChange={e => setHerhalingInterval(parseInt(e.target.value) || 1)}
-                          style={{ ...inputStyle, width: 60, marginLeft: 6, marginRight: 6 }}
-                        />
-                        week(en)
-                      </label>
-                      <label style={{ fontSize: 13 }}>
-                        Tot en met
-                        <input
-                          type="date"
-                          value={herhalingEindDatum}
-                          onChange={e => setHerhalingEindDatum(e.target.value)}
-                          style={{ ...inputStyle, marginLeft: 6 }}
-                        />
-                      </label>
+                {isOpen && (
+                  <div style={{ padding: "12px 14px", background: "#fff" }}>
+                    {entries.map((e, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, fontSize: 14 }}>
+                        <span style={{ flex: 1 }}>{e.naam}</span>
+                        {e.herhalingId && (
+                          <span style={{ fontSize: 11, color: "#9b72cf", background: "#f5f0ff", padding: "1px 6px", borderRadius: 10 }}>
+                            🔁 reeks
+                          </span>
+                        )}
+                        <span style={{ color: "#555" }}>{e.start}–{e.eind}</span>
+                        <button onClick={() => verwijder(dag, i)} style={deleteBtnStyle}>✕</button>
+                      </div>
+                    ))}
+
+                    {/* Toevoegen rij */}
+                    <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <input
+                        value={naam}
+                        onChange={e => setNaam(e.target.value)}
+                        placeholder="Naam medewerker"
+                        style={inputStyle}
+                        onKeyDown={e => e.key === "Enter" && voegToe(dag)}
+                      />
+                      <input type="time" value={start} onChange={e => setStart(e.target.value)} style={{ ...inputStyle, width: 100 }} />
+                      <input type="time" value={eind} onChange={e => setEind(e.target.value)} style={{ ...inputStyle, width: 100 }} />
+                      <button onClick={() => voegToe(dag)} style={addBtnStyle}>+ Toevoegen</button>
                       <button
-                        onClick={() => voegHerhalingToe(dag)}
-                        disabled={herhalingBezig}
-                        style={{ ...addBtnStyle, background: herhalingBezig ? "#aaa" : "#5a3d9a" }}
+                        onClick={() => setToonHerhaling(toonHerhaling === dag ? null : dag)}
+                        style={{ ...addBtnStyle, background: toonHerhaling === dag ? "#7c5cbf" : "#9b72cf" }}
                       >
-                        {herhalingBezig ? "Bezig…" : "✅ Opslaan"}
+                        🔁 Herhalen
                       </button>
                     </div>
-                    <div style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
-                      Voegt {naam || "[naam]"} toe aan elke {herhalingInterval === 1 ? "" : `${herhalingInterval}e `}{dag} van de huidige week t/m de einddatum.
-                    </div>
+
+                    {/* Herhaling panel */}
+                    {toonHerhaling === dag && (
+                      <div style={{
+                        marginTop: 10, padding: 12, background: "#f5f0ff",
+                        borderRadius: 8, border: "1px solid #c9b0ef"
+                      }}>
+                        <div style={{ fontWeight: 600, marginBottom: 8, color: "#5a3d9a" }}>
+                          🔁 Herhalende dienst instellen
+                        </div>
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                          <label style={{ fontSize: 13 }}>
+                            Elke
+                            <input
+                              type="number"
+                              min={1}
+                              max={52}
+                              value={herhalingInterval}
+                              onChange={e => setHerhalingInterval(parseInt(e.target.value) || 1)}
+                              style={{ ...inputStyle, width: 60, marginLeft: 6, marginRight: 6 }}
+                            />
+                            week(en)
+                          </label>
+                          <label style={{ fontSize: 13 }}>
+                            Tot en met
+                            <input
+                              type="date"
+                              value={herhalingEindDatum}
+                              onChange={e => setHerhalingEindDatum(e.target.value)}
+                              style={{ ...inputStyle, marginLeft: 6 }}
+                            />
+                          </label>
+                          <button
+                            onClick={() => voegHerhalingToe(dag)}
+                            disabled={herhalingBezig}
+                            style={{ ...addBtnStyle, background: herhalingBezig ? "#aaa" : "#5a3d9a" }}
+                          >
+                            {herhalingBezig ? "Bezig…" : "✅ Opslaan"}
+                          </button>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
+                          Voegt {naam || "[naam]"} toe aan elke {herhalingInterval === 1 ? "" : `${herhalingInterval}e `}{dag} t/m de einddatum.
+                          De reeks is terug te vinden (en te verwijderen) onder het tabblad "Herhalingen".
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })}
+        </>
+      )}
+
+      {/* ── TAB: HERHALINGEN ── */}
+      {tab === "herhalingen" && (
+        <div>
+          {herhalingen.length === 0 ? (
+            <div style={{ color: "#888", padding: 24, textAlign: "center" }}>
+              Geen herhalingen ingesteld. Voeg ze toe via het weekrooster (🔁 Herhalen knop).
+            </div>
+          ) : (
+            herhalingen.map(h => (
+              <div key={h.id} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "12px 14px", marginBottom: 8,
+                border: "1px solid #e0d4f7", borderRadius: 8, background: "#faf7ff"
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15 }}>{h.naam}</div>
+                  <div style={{ fontSize: 13, color: "#555", marginTop: 2 }}>
+                    {h.dag} · {h.start}–{h.eind} · elke {h.interval === 1 ? "week" : `${h.interval} weken`}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#999", marginTop: 1 }}>
+                    Vanaf week {h.startWeek.split("-W")[1]} t/m {new Date(h.eindDatum).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}
+                  </div>
+                </div>
+                <button
+                  onClick={() => verwijderHerhaling(h)}
+                  disabled={verwijderBezig === h.id}
+                  style={{
+                    padding: "6px 14px", borderRadius: 6, border: "1px solid #e0a0a0",
+                    background: verwijderBezig === h.id ? "#eee" : "#fff5f5",
+                    color: verwijderBezig === h.id ? "#aaa" : "#c00",
+                    cursor: verwijderBezig === h.id ? "default" : "pointer",
+                    fontSize: 13, whiteSpace: "nowrap",
+                  }}
+                >
+                  {verwijderBezig === h.id ? "Bezig…" : "🗑 Reeks verwijderen"}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-// Simpele jaar-kalender week-picker
+// Simpele kalender week-picker
 function WeekPicker({ currentKey, onSelect }: { currentKey: string; onSelect: (key: string) => void }) {
   const jaar = parseInt(currentKey.split("-W")[0], 10);
   const [viewYear, setViewYear] = useState(jaar);
@@ -307,7 +463,6 @@ function WeekPicker({ currentKey, onSelect }: { currentKey: string; onSelect: (k
   for (let w = 1; w <= 53; w++) {
     const key = `${viewYear}-W${String(w).padStart(2, "0")}`;
     const monday = getMondayOfWeek(key);
-    // skip week 53 als die niet bestaat
     if (monday.getFullYear() > viewYear && w === 53) break;
     weken.push(key);
   }
@@ -345,7 +500,6 @@ function WeekPicker({ currentKey, onSelect }: { currentKey: string; onSelect: (k
   );
 }
 
-// Styles
 const navBtnStyle: React.CSSProperties = {
   padding: "6px 12px", borderRadius: 6, border: "1px solid #ccc",
   background: "#fff", cursor: "pointer", fontSize: 14,
