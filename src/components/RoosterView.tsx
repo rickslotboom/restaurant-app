@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
-  collection,
   doc,
   getDoc,
   setDoc,
-  updateDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
