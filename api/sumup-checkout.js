@@ -25,6 +25,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  console.log("[SumUp] body:", JSON.stringify(req.body));
+
   try {
     const { orderId, amount, description } = req.body;
 
@@ -61,7 +63,7 @@ export default async function handler(req, res) {
     console.log("[SumUp] response body:", JSON.stringify(data));
 
     if (!response.ok) {
-      console.error("[SumUp Checkout] Fout:", JSON.stringify(data));
+      console.error("[SumUp Checkout] Fout response:", response.status, JSON.stringify(data));
       return res.status(500).json({ error: "Betaling aanmaken mislukt", details: data });
     }
 
