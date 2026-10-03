@@ -17,6 +17,9 @@ const SUMUP_READER_ID = process.env.SUMUP_READER_ID;
 const WEBHOOK_URL = process.env.SUMUP_WEBHOOK_URL;
 
 export default async function handler(req, res) {
+    console.log("[SumUp] merchant:", SUMUP_MERCHANT_CODE);
+console.log("[SumUp] reader:", SUMUP_READER_ID);
+console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
