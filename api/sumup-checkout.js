@@ -3,12 +3,16 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-if (getApps().length === 0) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  initializeApp({ credential: cert(serviceAccount) });
+let db;
+try {
+  if (getApps().length === 0) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    initializeApp({ credential: cert(serviceAccount) });
+  }
+  db = getFirestore();
+} catch (initErr) {
+  console.error("[SumUp] Firebase init fout:", initErr.message);
 }
-
-const db = getFirestore();
 
 const SUMUP_API_KEY = process.env.SUMUP_API_KEY;
 const SUMUP_AFFILIATE_KEY = process.env.SUMUP_AFFILIATE_KEY;
@@ -18,6 +22,7 @@ const WEBHOOK_URL = process.env.SUMUP_WEBHOOK_URL;
 
 export default async function handler(req, res) {
   console.log("[SumUp] merchant:", SUMUP_MERCHANT_CODE);
+  console.log("[SumUp] firebase ok:", !!db);
   console.log("[SumUp] reader:", SUMUP_READER_ID);
   console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
 
@@ -69,9 +74,13 @@ export default async function handler(req, res) {
 
     const clientTransactionId = data?.data?.client_transaction_id || orderId;
 
-    await db.collection("orders").doc(orderId).update({
-      sumupTransactionId: clientTransactionId,
-    });
+    if (db) {
+      await db.collection("orders").doc(orderId).update({
+        sumupTransactionId: clientTransactionId,
+      });
+    } else {
+      console.warn("[SumUp] Firebase niet beschikbaar, transactie ID niet opgeslagen.");
+    }
 
     return res.status(200).json({
       success: true,
