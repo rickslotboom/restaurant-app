@@ -17,9 +17,10 @@ const SUMUP_READER_ID = process.env.SUMUP_READER_ID;
 const WEBHOOK_URL = process.env.SUMUP_WEBHOOK_URL;
 
 export default async function handler(req, res) {
-    console.log("[SumUp] merchant:", SUMUP_MERCHANT_CODE);
-console.log("[SumUp] reader:", SUMUP_READER_ID);
-console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
+  console.log("[SumUp] merchant:", SUMUP_MERCHANT_CODE);
+  console.log("[SumUp] reader:", SUMUP_READER_ID);
+  console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -32,7 +33,6 @@ console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
     }
 
     const amountInCents = Math.round(amount * 100);
-
 
     const response = await fetch(
       `https://api.sumup.com/v0.1/merchants/${SUMUP_MERCHANT_CODE}/readers/${SUMUP_READER_ID}/checkout`,
@@ -57,6 +57,8 @@ console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
     );
 
     const data = await response.json();
+    console.log("[SumUp] response status:", response.status);
+    console.log("[SumUp] response body:", JSON.stringify(data));
 
     if (!response.ok) {
       console.error("[SumUp Checkout] Fout:", JSON.stringify(data));
@@ -68,7 +70,6 @@ console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
     await db.collection("orders").doc(orderId).update({
       sumupTransactionId: clientTransactionId,
     });
-
 
     return res.status(200).json({
       success: true,
