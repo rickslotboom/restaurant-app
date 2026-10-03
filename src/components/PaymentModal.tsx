@@ -44,13 +44,9 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   const total = subtotal - orderDiscAmt;
   const origTotal = order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const savings = origTotal - total;
-  // Totale korting = besparing op regelniveau + besparing op orderniveau,
-  // dat is precies wat "savings" hierboven al berekent (origTotal - total).
   const totalDiscountAmount = savings;
 
   // ── Luister naar Firestore order-status wijzigingen ──
-  // Zodra de webhook de order op "Betaald" zet, roepen we onConfirm aan
-  // zodat de modal automatisch sluit
   useEffect(() => {
     if (paymentStep !== "waiting") return;
 
@@ -58,10 +54,8 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
       const data = snapshot.data();
       if (data?.status === "Betaald") {
         onConfirm(order.id, "pin", tipAmount, total, totalDiscountAmount);
-      } else if (data?.sumupStatus === "failed" || data?.sumupStatus === "cancelled") {
-        setPinError("Betaling mislukt of geweigerd. Probeer opnieuw.");
-        setPaymentStep("method");
       }
+      // failed/cancelled negeren — medewerker ziet het op de terminal zelf
     });
 
     return () => unsubscribe();
@@ -107,26 +101,11 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
         throw new Error(data.error || "Betaling aanmaken mislukt");
       }
 
-      // Wachtstatus — useEffect luistert naar Firestore en sluit de modal automatisch
-
     } catch (error: any) {
-  console.error("[PaymentModal] Pin fout:", error.message);
-  
-  // Vraag of de terminal al een bedrag toont — de betaling kan toch zijn doorgekomen
-  const terminalToontBedrag = window.confirm(
-    "Er was een verbindingsprobleem. Toont de terminal al een bedrag?\n\n" +
-    "✅ OK = Ja, terminal toont bedrag (wacht op betaling)\n" +
-    "❌ Annuleren = Nee, opnieuw proberen"
-  );
-  
-  if (terminalToontBedrag) {
-    // Betaling is toch doorgekomen — wachtstatus tonen
-    setPaymentStep("waiting");
-  } else {
-    setPinError(error.message || "Er ging iets mis. Probeer opnieuw.");
-    setPaymentStep("method");
-  }
-}
+      console.error("[PaymentModal] Pin fout:", error.message);
+      // Blijf in wachtstatus — betaling kan toch zijn doorgekomen op de terminal
+      // Medewerker kan annuleren als de terminal niets toont
+    }
   };
 
   const inputStyle = {
@@ -145,7 +124,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
     <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none" }}>
       {order.items.map((item, i) => {
         const disc = itemDiscounts[i];
-        const orig = item.price * item.qty; // item.price bevat al modifiers
+        const orig = item.price * item.qty;
         const final = orig * (1 - disc / 100);
         const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
         const basePrice = item.price - modTotal;
@@ -186,6 +165,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
       })}
     </ul>
   );
+
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
@@ -323,7 +303,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
           </>
         )}
 
-          {/* ── STAP 2: BETAALMETHODE ── */}
+        {/* ── STAP 2: BETAALMETHODE ── */}
         {paymentStep === "method" && (
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>
@@ -367,7 +347,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
           </>
         )}
 
-              {/* ── STAP 3: FOOI ── */}
+        {/* ── STAP 3: FOOI ── */}
         {paymentStep === "tip" && (
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Overzicht:</p>

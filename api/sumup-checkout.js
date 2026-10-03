@@ -21,16 +21,10 @@ const SUMUP_READER_ID = process.env.SUMUP_READER_ID;
 const WEBHOOK_URL = process.env.SUMUP_WEBHOOK_URL;
 
 export default async function handler(req, res) {
-  console.log("[SumUp] merchant:", SUMUP_MERCHANT_CODE);
-  console.log("[SumUp] firebase ok:", !!db);
-  console.log("[SumUp] reader:", SUMUP_READER_ID);
-  console.log("[SumUp] api key prefix:", SUMUP_API_KEY?.substring(0, 20));
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  console.log("[SumUp] body:", JSON.stringify(req.body));
 
   try {
     const { orderId, amount, description } = req.body;
@@ -64,9 +58,7 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    console.log("[SumUp] response status:", response.status);
-    console.log("[SumUp] response body:", JSON.stringify(data));
-
+    
     if (!response.ok) {
       console.error("[SumUp Checkout] Fout response:", response.status, JSON.stringify(data));
       return res.status(500).json({ error: "Betaling aanmaken mislukt", details: data });
