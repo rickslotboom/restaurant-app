@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Order } from "../types";
 import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 
 type Props = {
   order: Order;
@@ -84,6 +84,14 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
 
     try {
       const totalWithTip = total + tipAmount;
+
+      // Sla fooi/paidTotal/korting alvast op zodat de webhook alle info heeft
+      // als de betaling slaagt terwijl de modal niet meer luistert
+      await updateDoc(doc(db, "orders", order.id), {
+        tip: tipAmount,
+        paidTotal: parseFloat(totalWithTip.toFixed(2)),
+        discountAmount: totalDiscountAmount,
+      });
 
       const response = await fetch("/api/sumup-checkout", {
         method: "POST",

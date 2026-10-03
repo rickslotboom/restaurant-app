@@ -1,17 +1,9 @@
-// api/sumup-webhook.js
-//
-// Deze route wordt aangeroepen door SumUp zodra een betaling geslaagd of mislukt is.
-// Gebruikt Firebase Admin SDK om Firestore te updaten zonder authenticatie-beperkingen.
-
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-// Firebase Admin initialisatie via service account uit environment variable
 if (getApps().length === 0) {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
+  initializeApp({ credential: cert(serviceAccount) });
 }
 
 const db = getFirestore();
@@ -33,7 +25,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true });
     }
 
-    // Zoek de order in Firestore op basis van client_transaction_id
     const snapshot = await db
       .collection("orders")
       .where("sumupTransactionId", "==", client_transaction_id)
@@ -47,17 +38,18 @@ export default async function handler(req, res) {
     const orderDoc = snapshot.docs[0];
 
     if (status === "successful") {
-      // Order op "Betaald" zetten
+      // tip/paidTotal/discountAmount zijn al opgeslagen door PaymentModal
+      // — hier zetten we alleen de status, betaalmethode en tijdstip
       await db.collection("orders").doc(orderDoc.id).update({
         status: "Betaald",
+        paymentMethod: "pin",
+        paidAt: Date.now(),
         sumupCheckoutId: body.id,
         sumupStatus: "successful",
       });
       console.log(`[SumUp Webhook] Order ${orderDoc.id} op Betaald gezet.`);
 
     } else if (status === "failed" || status === "cancelled") {
-      // Betaling mislukt — order blijft Open maar sumupStatus wordt bijgewerkt
-      // zodat de PaymentModal de foutmelding kan tonen
       await db.collection("orders").doc(orderDoc.id).update({
         sumupStatus: status,
       });
