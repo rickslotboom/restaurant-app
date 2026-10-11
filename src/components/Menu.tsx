@@ -30,13 +30,13 @@ type CartLine = {
 // Categorieën zichtbaar in Dranken-tab (inclusief Verse sinaasappelsap)
 const DRANKEN_CATEGORIES = new Set([
   "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
-  "Verse sinaasappelsap",
+  "Verse Sinaasappelsap",
 ]);
 
 // Categorieën die ALLEEN in Dranken-tab staan (niet ook in Eten)
 const DRANKEN_ONLY = new Set([
   "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
-  "Verse sinaasappelsap",
+  "Verse Sinaasappelsap",
 ]);
 
 // Volgorde Dranken: Koffie, Thee, Frisdrank eerst — dan rest alfabetisch
