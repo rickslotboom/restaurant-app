@@ -180,8 +180,7 @@
               "ViewState": "AgIAAG8BAAAAAAAAAAAAAJsBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:45:58.885Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -205,8 +204,7 @@
               "RelativeToolTip": "api\\sumup-webhook.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-07-10T12:49:33.847Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-10T12:49:33.847Z"
             },
             {
               "$type": "Document",
@@ -240,7 +238,7 @@
               "RelativeDocumentMoniker": "src\\components\\Menu.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
               "RelativeToolTip": "src\\components\\Menu.tsx",
-              "ViewState": "AgIAAGsCAAAAAAAAAAAUwIYCAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAHkCAAAAAAAAAAAUwJQCAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:46:10.703Z",
               "EditorCaption": ""

@@ -27,10 +27,25 @@ type CartLine = {
   note: string;
 };
 
-// Categorieën die onder "Dranken" vallen
+// Categorieën onder "Dranken" (exclusief "Verse sinaasappelsap" → die valt onder Eten)
 const DRANKEN_CATEGORIES = new Set([
   "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
 ]);
+
+// Volgorde binnen Dranken: koffie & thee eerst, dan rest alfabetisch
+const DRANKEN_PRIORITY = ["Koffie", "Thee"];
+
+// Volgorde binnen Eten: broodjes/gebak/lunch eerst, dan rest alfabetisch
+const ETEN_PRIORITY = ["Broodjes", "Gebak", "Lunch"];
+
+// Categorieën die altijd onder Eten vallen ook al staan ze in DRANKEN_CATEGORIES-achtige namen
+const ETEN_OVERRIDE_CATEGORIES = new Set(["Verse sinaasappelsap"]);
+
+function sortCategories(cats: string[], priority: string[]): string[] {
+  const prioritized = priority.filter((p) => cats.includes(p));
+  const rest = cats.filter((c) => !priority.includes(c)).sort((a, b) => a.localeCompare(b, "nl"));
+  return [...prioritized, ...rest];
+}
 
 function makeLineId(dishId: string, modifierIds: string[]): string {
   return [dishId, ...[...modifierIds].sort()].join("|");
@@ -75,15 +90,11 @@ function OrderItemsList({
                 paddingLeft: "1.5rem", fontSize: "0.8rem", color: "#555",
               }}>
                 <span>↳ {mod.name}</span>
-                {mod.price > 0 && (
-                  <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>
-                )}
+                {mod.price > 0 && <span style={{ color: "#2e7d32" }}>+€{mod.price.toFixed(2)}</span>}
               </div>
             ))}
             {item.note && (
-              <div style={{
-                paddingLeft: "1.5rem", fontSize: "0.8rem", color: "#d9534f", fontStyle: "italic",
-              }}>
+              <div style={{ paddingLeft: "1.5rem", fontSize: "0.8rem", color: "#d9534f", fontStyle: "italic" }}>
                 📝 {item.note}
               </div>
             )}
@@ -129,9 +140,7 @@ function ModifierModal({
         width: "340px", boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
       }}>
         <h2 style={{ margin: "0 0 0.25rem 0" }}>{dish.name}</h2>
-        <p style={{ margin: "0 0 1.25rem 0", color: "#555" }}>
-          Basisprijs: €{dish.price.toFixed(2)}
-        </p>
+        <p style={{ margin: "0 0 1.25rem 0", color: "#555" }}>Basisprijs: €{dish.price.toFixed(2)}</p>
         <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Toevoegingen (optioneel):</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
           {(dish.modifiers || []).map((mod) => (
@@ -191,6 +200,7 @@ const categoryIcons: Record<string, string> = {
   "Kleine borrelhapjes": "🫒",
   "Frietjes": "🍟",
   "Borrelplanken": "🧀",
+  "Verse sinaasappelsap": "🍊",
 };
 
 export default function Menu({
@@ -200,6 +210,7 @@ export default function Menu({
   const { user } = useAuthContext();
 
   const [tab, setTab] = useState<"dranken" | "eten">("eten");
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [deleteConfirmLineId, setDeleteConfirmLineId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -207,14 +218,17 @@ export default function Menu({
 
   const activeMenu = menu.filter((dish) => !(dish as any).blocked);
 
-  // Splits menu in dranken en eten op basis van categorie
-  const drankenDishes = activeMenu.filter((d) => DRANKEN_CATEGORIES.has(d.category));
-  const etenDishes = activeMenu.filter((d) => !DRANKEN_CATEGORIES.has(d.category));
+  const isDranken = (d: Dish) =>
+    DRANKEN_CATEGORIES.has(d.category) && !ETEN_OVERRIDE_CATEGORIES.has(d.category);
+
+  const drankenDishes = activeMenu.filter(isDranken);
+  const etenDishes = activeMenu.filter((d) => !isDranken(d));
 
   const visibleDishes = tab === "dranken" ? drankenDishes : etenDishes;
-
-  // Groepeer per categorie voor de huidige tab
-  const categoriesInTab = [...new Set(visibleDishes.map((d) => d.category))];
+  const allCatsInTab = [...new Set(visibleDishes.map((d) => d.category))];
+  const sortedCategories = tab === "dranken"
+    ? sortCategories(allCatsInTab, DRANKEN_PRIORITY)
+    : sortCategories(allCatsInTab, ETEN_PRIORITY);
 
   const openOrder = orders.find((o) => o.table === table && o.status !== "Betaald");
 
@@ -253,14 +267,9 @@ export default function Menu({
       const existing = prev.find((l) => l.lineId === lineId);
       if (existing) return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l);
       return [...prev, {
-        lineId,
-        dishId: dish.id,
-        name: dish.name,
-        basePrice: dish.price,
-        vatRate: dish.vatRate ?? 9,
-        modifiers: chosenModifiers,
-        qty: 1,
-        note: "",
+        lineId, dishId: dish.id, name: dish.name,
+        basePrice: dish.price, vatRate: dish.vatRate ?? 9,
+        modifiers: chosenModifiers, qty: 1, note: "",
       }];
     });
   };
@@ -270,7 +279,7 @@ export default function Menu({
       const line = prev.find((l) => l.lineId === lineId);
       if (!line) return prev;
       if (line.qty === 1) return prev.filter((l) => l.lineId !== lineId);
-      return prev.map((l) => (l.lineId === lineId ? { ...l, qty: l.qty - 1 } : l));
+      return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty - 1 } : l);
     });
   };
 
@@ -280,7 +289,7 @@ export default function Menu({
   };
 
   const setNoteForLine = (lineId: string, note: string) => {
-    setCart((prev) => prev.map((l) => (l.lineId === lineId ? { ...l, note } : l)));
+    setCart((prev) => prev.map((l) => l.lineId === lineId ? { ...l, note } : l));
   };
 
   const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
@@ -319,7 +328,7 @@ export default function Menu({
         await updateOrderItems(openOrder.id, updatedItems);
         alert("✅ Extra items zijn toegevoegd!");
         setCart([]); onClearCart(); onBack();
-      } catch (err) {
+      } catch {
         alert("Er ging iets mis bij het updaten van de bestelling.");
       }
     } else {
@@ -331,18 +340,15 @@ export default function Menu({
         await addOrder(order);
         alert("✅ Bestelling is geplaatst!");
         setCart([]); onClearCart(); onBack();
-      } catch (err) {
+      } catch {
         alert("Er ging iets mis bij het plaatsen van de bestelling.");
       }
     }
   };
 
   const handlePaymentConfirm = (
-    orderId: string,
-    method: "cash" | "pin",
-    tip: number,
-    paidTotal: number,
-    discountAmount: number
+    orderId: string, method: "cash" | "pin",
+    tip: number, paidTotal: number, discountAmount: number
   ) => {
     markOrderPaid(orderId, method, tip, paidTotal, discountAmount);
     setShowPayment(false);
@@ -350,6 +356,16 @@ export default function Menu({
   };
 
   const lineToDelete = cart.find((l) => l.lineId === deleteConfirmLineId);
+
+  // Wissel van tab: sluit open categorie
+  const switchTab = (t: "dranken" | "eten") => {
+    setTab(t);
+    setOpenCategory(null);
+  };
+
+  const toggleCategory = (cat: string) => {
+    setOpenCategory((prev) => (prev === cat ? null : cat));
+  };
 
   return (
     <div style={{ display: "flex", gap: "1.5rem", padding: "1rem", alignItems: "flex-start" }}>
@@ -400,129 +416,134 @@ export default function Menu({
         />
       )}
 
-      {/* LINKERKANT: menu */}
+      {/* LINKERKANT */}
       <div style={{ flex: 1, minWidth: 0 }}>
 
-        {/* Dranken / Eten tabs */}
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem" }}>
-          <button
-            onClick={() => setTab("eten")}
-            style={{
-              flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none",
-              cursor: "pointer", fontWeight: "bold", fontSize: "1rem",
-              background: tab === "eten" ? "#2c3e50" : "#e0e0e0",
-              color: tab === "eten" ? "white" : "#333",
-              transition: "background 0.15s",
-            }}
-          >
-            🍽️ Eten
-          </button>
-          <button
-            onClick={() => setTab("dranken")}
-            style={{
-              flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none",
-              cursor: "pointer", fontWeight: "bold", fontSize: "1rem",
-              background: tab === "dranken" ? "#2c3e50" : "#e0e0e0",
-              color: tab === "dranken" ? "white" : "#333",
-              transition: "background 0.15s",
-            }}
-          >
-            🍹 Dranken
-          </button>
+        {/* Eten / Dranken tabs */}
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+          <button onClick={() => switchTab("eten")} style={{
+            flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none",
+            cursor: "pointer", fontWeight: "bold", fontSize: "1rem",
+            background: tab === "eten" ? "#2c3e50" : "#e0e0e0",
+            color: tab === "eten" ? "white" : "#333",
+          }}>🍽️ Eten</button>
+          <button onClick={() => switchTab("dranken")} style={{
+            flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none",
+            cursor: "pointer", fontWeight: "bold", fontSize: "1rem",
+            background: tab === "dranken" ? "#2c3e50" : "#e0e0e0",
+            color: tab === "dranken" ? "white" : "#333",
+          }}>🍹 Dranken</button>
         </div>
 
-        {/* Terug knop */}
-        <button
-          onClick={onBack}
-          style={{
-            marginBottom: "1rem", padding: "0.4rem 0.8rem",
-            borderRadius: "8px", border: "1px solid #ccc",
-            background: "#fff", cursor: "pointer", fontSize: "0.9rem",
-          }}
-        >
-          ← Terug
-        </button>
+        {/* Terug */}
+        <button onClick={onBack} style={{
+          marginBottom: "1rem", padding: "0.4rem 0.8rem",
+          borderRadius: "8px", border: "1px solid #ccc",
+          background: "#fff", cursor: "pointer", fontSize: "0.9rem",
+        }}>← Terug</button>
 
-        {/* Per categorie een sectie met alle gerechten naast elkaar */}
-        {categoriesInTab.length === 0 ? (
-          <p style={{ color: "#888" }}>Geen items beschikbaar.</p>
-        ) : (
-          categoriesInTab.map((category) => {
+        {/* Categorieën als klikbare blokken, daarna gerechten */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {sortedCategories.map((category) => {
             const dishes = visibleDishes.filter((d) => d.category === category);
+            const isOpen = openCategory === category;
             return (
-              <div key={category} style={{ marginBottom: "1.75rem" }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: "0.5rem",
-                  marginBottom: "0.75rem",
-                  borderBottom: "2px solid #e0e0e0", paddingBottom: "0.4rem",
-                }}>
-                  <span style={{ fontSize: "1.3rem" }}>{categoryIcons[category] || "🍽️"}</span>
-                  <h3 style={{ margin: 0, fontSize: "1.05rem", color: "#2c3e50" }}>{category}</h3>
-                </div>
+              <div key={category}>
+                {/* Categorie-header knop */}
+                <button
+                  onClick={() => toggleCategory(category)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.6rem",
+                    width: "100%", padding: "0.75rem 1rem",
+                    borderRadius: isOpen ? "10px 10px 0 0" : "10px",
+                    border: "2px solid " + (isOpen ? "#2c3e50" : "#ddd"),
+                    background: isOpen ? "#2c3e50" : "#f5f5f5",
+                    color: isOpen ? "white" : "#2c3e50",
+                    cursor: "pointer", textAlign: "left",
+                    fontWeight: "bold", fontSize: "1rem",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <span style={{ fontSize: "1.2rem" }}>{categoryIcons[category] || "🍽️"}</span>
+                  <span style={{ flex: 1 }}>{category}</span>
+                  <span style={{ fontSize: "0.9rem", opacity: 0.7 }}>
+                    {dishes.length} item{dishes.length !== 1 ? "s" : ""}
+                  </span>
+                  <span style={{ fontSize: "0.8rem", marginLeft: "0.25rem" }}>
+                    {isOpen ? "▲" : "▼"}
+                  </span>
+                </button>
 
-                <div style={{
-                  display: "flex", flexWrap: "wrap", gap: "0.75rem",
-                }}>
-                  {dishes.map((dish) => (
-                    <div
-                      key={dish.id}
-                      onClick={() => handleDishClick(dish)}
-                      style={{
-                        border: "2px solid #ddd", borderRadius: "10px", padding: "0.75rem",
-                        width: "150px", textAlign: "center", backgroundColor: "#fff",
-                        boxShadow: "1px 2px 5px rgba(0,0,0,0.08)", cursor: "pointer",
-                        transition: "transform 0.12s ease, box-shadow 0.12s ease",
-                        position: "relative", userSelect: "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.04)";
-                        e.currentTarget.style.boxShadow = "2px 4px 12px rgba(0,0,0,0.15)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "scale(1)";
-                        e.currentTarget.style.boxShadow = "1px 2px 5px rgba(0,0,0,0.08)";
-                      }}
-                    >
-                      {dish.modifiers && dish.modifiers.length > 0 && (
-                        <span style={{
-                          position: "absolute", top: "6px", right: "6px",
-                          background: "#ff9800", color: "white", borderRadius: "99px",
-                          fontSize: "0.6rem", fontWeight: "bold", padding: "2px 6px",
-                        }}>opties</span>
-                      )}
-                      <img
-                        src={dish.image}
-                        alt={dish.name}
+                {/* Gerechten grid — zichtbaar als open */}
+                {isOpen && (
+                  <div style={{
+                    border: "2px solid #2c3e50", borderTop: "none",
+                    borderRadius: "0 0 10px 10px",
+                    padding: "0.75rem",
+                    background: "#fff",
+                    display: "flex", flexWrap: "wrap", gap: "0.6rem",
+                  }}>
+                    {dishes.map((dish) => (
+                      <div
+                        key={dish.id}
+                        onClick={() => handleDishClick(dish)}
                         style={{
-                          width: "100%", borderRadius: "6px",
-                          userSelect: "none", pointerEvents: "none",
-                          aspectRatio: "4/3", objectFit: "cover",
+                          border: "2px solid #ddd", borderRadius: "10px", padding: "0.65rem",
+                          width: "140px", textAlign: "center", backgroundColor: "#fff",
+                          boxShadow: "1px 2px 4px rgba(0,0,0,0.07)", cursor: "pointer",
+                          transition: "transform 0.12s, box-shadow 0.12s",
+                          position: "relative", userSelect: "none",
+                          flexShrink: 0,
                         }}
-                      />
-                      <div style={{
-                        marginTop: "0.4rem", fontWeight: "bold",
-                        fontSize: "0.85rem", lineHeight: 1.3,
-                      }}>{dish.name}</div>
-                      <div style={{
-                        margin: "0.2rem 0", fontWeight: "bold",
-                        color: "#2c3e50", fontSize: "0.9rem",
-                      }}>€{dish.price.toFixed(2)}</div>
-                    </div>
-                  ))}
-                </div>
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "scale(1.04)";
+                          e.currentTarget.style.boxShadow = "2px 4px 10px rgba(0,0,0,0.14)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "scale(1)";
+                          e.currentTarget.style.boxShadow = "1px 2px 4px rgba(0,0,0,0.07)";
+                        }}
+                      >
+                        {dish.modifiers && dish.modifiers.length > 0 && (
+                          <span style={{
+                            position: "absolute", top: "6px", right: "6px",
+                            background: "#ff9800", color: "white", borderRadius: "99px",
+                            fontSize: "0.6rem", fontWeight: "bold", padding: "2px 6px",
+                          }}>opties</span>
+                        )}
+                        <img
+                          src={dish.image}
+                          alt={dish.name}
+                          style={{
+                            width: "100%", borderRadius: "6px",
+                            userSelect: "none", pointerEvents: "none",
+                            aspectRatio: "4/3", objectFit: "cover",
+                          }}
+                        />
+                        <div style={{
+                          marginTop: "0.35rem", fontWeight: "bold",
+                          fontSize: "0.82rem", lineHeight: 1.3,
+                        }}>{dish.name}</div>
+                        <div style={{
+                          marginTop: "0.2rem", fontWeight: "bold",
+                          color: "#2c3e50", fontSize: "0.88rem",
+                        }}>€{dish.price.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
 
-      {/* RECHTERKANT: bestaande bestelling + winkelwagen */}
+      {/* RECHTERKANT */}
       <div style={{
         width: "370px", minWidth: "370px",
         display: "flex", flexDirection: "column", gap: "1rem",
         position: "sticky", top: "1rem",
       }}>
-        {/* REEDS BESTELD */}
         {openOrder && (
           <div style={{
             border: "2px solid #4a90e2", borderRadius: "12px",
@@ -544,13 +565,10 @@ export default function Menu({
                 color: "white", border: "none", padding: "0.5rem",
                 borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem",
               }}
-            >
-              🗑️ Verwijder hele order
-            </button>
+            >🗑️ Verwijder hele order</button>
           </div>
         )}
 
-        {/* WINKELWAGEN */}
         <div style={{
           border: "2px solid #ddd", borderRadius: "12px",
           padding: "1rem", backgroundColor: "#fafafa",
@@ -565,9 +583,7 @@ export default function Menu({
                 const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
                 const lineTotal = (line.basePrice + modTotal) * line.qty;
                 return (
-                  <div key={line.lineId} style={{
-                    borderBottom: "1px solid #eee", paddingBottom: "0.6rem",
-                  }}>
+                  <div key={line.lineId} style={{ borderBottom: "1px solid #eee", paddingBottom: "0.6rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <span style={{ flex: 1 }}>{line.name}</span>
                       <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
@@ -585,7 +601,6 @@ export default function Menu({
                         background: "none", border: "none", color: "#d9534f", cursor: "pointer",
                       }} title="Verwijder">🗑️</button>
                     </div>
-
                     {line.modifiers.map((mod, mIdx) => (
                       <div key={mIdx} style={{
                         display: "flex", justifyContent: "space-between",
@@ -606,7 +621,6 @@ export default function Menu({
                         <span>€{lineTotal.toFixed(2)}</span>
                       </div>
                     )}
-
                     <input
                       type="text"
                       placeholder="📝 Notitie voor keuken/bar (optioneel)"
