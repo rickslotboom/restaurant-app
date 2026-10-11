@@ -4,7 +4,9 @@
     "\\api",
     "\\src",
     "\\src\\components",
-    "\\src\\hooks"
+    "\\src\\hooks",
+    "\\src\\types"
   ],
+  "SelectedNode": "\\src\\components\\BeheerView.tsx",
   "PreviewInSolutionExplorer": false
 }

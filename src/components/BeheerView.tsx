@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Dish, Modifier, VatRate } from "../types";
+import { Dish, Modifier, ModifierGroup, VatRate } from "../types";
 import { useMenuContext } from "../hooks/useMenu";
 import FloorPlanEditor from "./FloorPlanEditor";
-
 
 type Props = {
   menu: Dish[];
@@ -13,12 +12,133 @@ type Props = {
 
 const isFirestoreItem = (id: string) => /^[a-zA-Z0-9]{20}$/.test(id);
 
-export default function BeheerView({
-  menu,
-  onAddDish,
-  onUpdateDish,
-  onDeleteDish,
-}: Props) {
+// Lege groep-template
+const emptyGroup = (): ModifierGroup => ({
+  id: Date.now().toString(),
+  name: "",
+  required: true,
+  type: "single",
+  options: [],
+});
+
+// UI voor het bewerken van modifier-groepen (herbruikbaar voor add én edit)
+function ModifierGroupsEditor({
+  groups,
+  onChange,
+  inputStyle,
+  btn,
+}: {
+  groups: ModifierGroup[];
+  onChange: (groups: ModifierGroup[]) => void;
+  inputStyle: React.CSSProperties;
+  btn: (color: string, small?: boolean) => React.CSSProperties;
+}) {
+  const [newOptions, setNewOptions] = useState<Record<string, { name: string; price: string }>>({});
+
+  const updateGroup = (idx: number, patch: Partial<ModifierGroup>) => {
+    onChange(groups.map((g, i) => i === idx ? { ...g, ...patch } : g));
+  };
+
+  const addOption = (idx: number, groupId: string) => {
+    const opt = newOptions[groupId];
+    if (!opt?.name.trim()) return;
+    updateGroup(idx, {
+      options: [
+        ...groups[idx].options,
+        { id: Date.now().toString(), name: opt.name.trim(), price: parseFloat(opt.price) || 0 },
+      ],
+    });
+    setNewOptions((p) => ({ ...p, [groupId]: { name: "", price: "" } }));
+  };
+
+  const removeOption = (gIdx: number, oIdx: number) => {
+    updateGroup(gIdx, { options: groups[gIdx].options.filter((_, i) => i !== oIdx) });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      {groups.map((g, gIdx) => (
+        <div key={g.id} style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "0.75rem", background: "#fafafa" }}>
+          {/* Groep-header */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
+            <input
+              style={inputStyle}
+              placeholder="Groepnaam (bv. Broodkeuze)"
+              value={g.name}
+              onChange={(e) => updateGroup(gIdx, { name: e.target.value })}
+            />
+            <select
+              style={{ ...inputStyle, width: "auto" }}
+              value={g.type}
+              onChange={(e) => updateGroup(gIdx, { type: e.target.value as "single" | "multiple" })}
+            >
+              <option value="single">Kies 1 (radio)</option>
+              <option value="multiple">Meerdere (checkbox)</option>
+            </select>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "13px", whiteSpace: "nowrap", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={g.required}
+                onChange={(e) => updateGroup(gIdx, { required: e.target.checked })}
+              />
+              Verplicht
+            </label>
+            <button style={btn("#d9534f", true)} onClick={() => onChange(groups.filter((_, i) => i !== gIdx))}>🗑</button>
+          </div>
+
+          {/* Bestaande opties */}
+          {g.options.map((opt, oIdx) => (
+            <div key={opt.id} style={{ display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "4px" }}>
+              <input
+                style={{ ...inputStyle, flex: 1 }}
+                value={opt.name}
+                onChange={(e) => updateGroup(gIdx, {
+                  options: g.options.map((o, i) => i === oIdx ? { ...o, name: e.target.value } : o),
+                })}
+              />
+              <input
+                style={{ ...inputStyle, width: "80px" }}
+                type="number" step="0.01"
+                value={opt.price}
+                onChange={(e) => updateGroup(gIdx, {
+                  options: g.options.map((o, i) => i === oIdx ? { ...o, price: parseFloat(e.target.value) || 0 } : o),
+                })}
+              />
+              <button style={btn("#d9534f", true)} onClick={() => removeOption(gIdx, oIdx)}>✕</button>
+            </div>
+          ))}
+
+          {/* Nieuwe optie toevoegen */}
+          <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.4rem" }}>
+            <input
+              style={{ ...inputStyle, flex: 1 }}
+              placeholder="Optie naam (bv. Wit brood)"
+              value={newOptions[g.id]?.name ?? ""}
+              onChange={(e) => setNewOptions((p) => ({ ...p, [g.id]: { ...p[g.id], name: e.target.value } }))}
+              onKeyDown={(e) => { if (e.key === "Enter") addOption(gIdx, g.id); }}
+            />
+            <input
+              style={{ ...inputStyle, width: "80px" }}
+              type="number" step="0.01" placeholder="€0.00"
+              value={newOptions[g.id]?.price ?? ""}
+              onChange={(e) => setNewOptions((p) => ({ ...p, [g.id]: { ...p[g.id], price: e.target.value } }))}
+            />
+            <button style={btn("#555", true)} onClick={() => addOption(gIdx, g.id)}>+ Optie</button>
+          </div>
+        </div>
+      ))}
+
+      <button
+        style={{ ...btn("#2196F3"), alignSelf: "flex-start" }}
+        onClick={() => onChange([...groups, emptyGroup()])}
+      >
+        + Groep toevoegen
+      </button>
+    </div>
+  );
+}
+
+export default function BeheerView({ menu, onAddDish, onUpdateDish, onDeleteDish }: Props) {
   const { categories, addCategory, updateCategory, deleteCategory } = useMenuContext();
 
   const [activeTab, setActiveTab] = useState<"menu" | "categories" | "vloerplan" | "beheer">("menu");
@@ -30,6 +150,7 @@ export default function BeheerView({
     category: categories[0] ?? "",
     image: "",
     modifiers: [] as Modifier[],
+    modifierGroups: [] as ModifierGroup[],
     vatRate: 9 as VatRate,
   });
   const [saving, setSaving] = useState(false);
@@ -62,9 +183,10 @@ export default function BeheerView({
         category: form.category || categories[0],
         image: form.image || "/images/placeholder.jpg",
         modifiers: form.modifiers ?? [],
+        modifierGroups: form.modifierGroups ?? [],
         vatRate: form.vatRate,
       } as any);
-      setForm({ name: "", price: "", category: categories[0] ?? "", image: "", modifiers: [], vatRate: 9 });
+      setForm({ name: "", price: "", category: categories[0] ?? "", image: "", modifiers: [], modifierGroups: [], vatRate: 9 });
     } finally {
       setSaving(false);
     }
@@ -72,7 +194,12 @@ export default function BeheerView({
 
   const startEdit = (dish: Dish) => {
     setEditingId(dish.id);
-    setEditForm({ ...dish, modifiers: dish.modifiers ?? [], vatRate: dish.vatRate ?? 9 });
+    setEditForm({
+      ...dish,
+      modifiers: dish.modifiers ?? [],
+      modifierGroups: dish.modifierGroups ?? [],
+      vatRate: dish.vatRate ?? 9,
+    });
     setEditNewModifier({ name: "", price: "" });
   };
 
@@ -84,6 +211,7 @@ export default function BeheerView({
       category: editForm.category,
       image: editForm.image,
       modifiers: editForm.modifiers ?? [],
+      modifierGroups: editForm.modifierGroups ?? [],
       vatRate: editForm.vatRate ?? 9,
     });
     setEditingId(null);
@@ -101,7 +229,6 @@ export default function BeheerView({
     if (!window.confirm(`"${dish.name}" verwijderen?`)) return;
     await onDeleteDish(dish.id);
   };
-
 
   const addModifierToForm = () => {
     if (!newModifier.name.trim()) return;
@@ -134,6 +261,15 @@ export default function BeheerView({
     fontWeight: "500", whiteSpace: "nowrap",
   });
 
+  const totalGroupsLabel = (dish: Dish) => {
+    const g = (dish.modifierGroups ?? []).length;
+    const m = (dish.modifiers ?? []).length;
+    const parts = [];
+    if (g > 0) parts.push(`${g} groep(en)`);
+    if (m > 0) parts.push(`${m} losse optie(s)`);
+    return parts.length > 0 ? ` · ${parts.join(", ")}` : "";
+  };
+
   return (
     <div style={{ padding: "1.5rem", maxWidth: "960px", margin: "0 auto" }}>
       <h2 style={{ marginBottom: "1.5rem" }}>Beheer</h2>
@@ -141,24 +277,21 @@ export default function BeheerView({
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
         {(["menu", "categories", "vloerplan", "beheer"] as const).map((t) => (
-  <button key={t} onClick={() => setActiveTab(t)} style={{
-    padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
-    background: activeTab === t ? "#2196F3" : "#eee",
-    color: activeTab === t ? "white" : "#333",
-    fontWeight: "600", cursor: "pointer",
-  }}>
-    {t === "menu" ? "Menu" : t === "categories" ? "Categorieën" : t === "vloerplan" ? "Vloerplan" : "Beheer"}
-  </button>
-))}
+          <button key={t} onClick={() => setActiveTab(t)} style={{
+            padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
+            background: activeTab === t ? "#2196F3" : "#eee",
+            color: activeTab === t ? "white" : "#333",
+            fontWeight: "600", cursor: "pointer",
+          }}>
+            {t === "menu" ? "Menu" : t === "categories" ? "Categorieën" : t === "vloerplan" ? "Vloerplan" : "Beheer"}
+          </button>
+        ))}
       </div>
 
       {/* ───── MENU TAB ───── */}
       {activeTab === "menu" && (
         <>
-          <div style={{
-            background: "#f9f9f9", borderRadius: "10px",
-            padding: "1.25rem", marginBottom: "2rem", border: "1px solid #e0e0e0",
-          }}>
+          <div style={{ background: "#f9f9f9", borderRadius: "10px", padding: "1.25rem", marginBottom: "2rem", border: "1px solid #e0e0e0" }}>
             <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Nieuw gerecht toevoegen</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
               <div>
@@ -193,8 +326,24 @@ export default function BeheerView({
               </div>
             </div>
 
+            {/* Verplichte keuzegroepen */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "6px", fontWeight: "600" }}>
+                Keuzegroepen (verplicht / radio / meerdere)
+              </label>
+              <ModifierGroupsEditor
+                groups={form.modifierGroups}
+                onChange={(groups) => setForm((f) => ({ ...f, modifierGroups: groups }))}
+                inputStyle={inputStyle}
+                btn={btn}
+              />
+            </div>
+
+            {/* Losse opties (legacy checkboxes) */}
             <div style={{ marginBottom: "0.75rem" }}>
-              <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px" }}>Opties / extras</label>
+              <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "4px", fontWeight: "600" }}>
+                Losse opties (optioneel, checkbox)
+              </label>
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
                 <input style={{ ...inputStyle, flex: 1, width: "auto" }} placeholder="Naam (bv. havermelk)"
                   value={newModifier.name} onChange={(e) => setNewModifier((m) => ({ ...m, name: e.target.value }))} />
@@ -275,8 +424,22 @@ export default function BeheerView({
                         </div>
                       </div>
 
+                      {/* Keuzegroepen bewerken */}
+                      <div style={{ marginBottom: "0.75rem" }}>
+                        <label style={{ fontSize: "12px", color: "#666", display: "block", marginBottom: "6px", fontWeight: "600" }}>
+                          Keuzegroepen
+                        </label>
+                        <ModifierGroupsEditor
+                          groups={editForm.modifierGroups ?? []}
+                          onChange={(groups) => setEditForm((f: any) => ({ ...f, modifierGroups: groups }))}
+                          inputStyle={inputStyle}
+                          btn={btn}
+                        />
+                      </div>
+
+                      {/* Losse opties bewerken */}
                       <div style={{ marginBottom: "0.5rem" }}>
-                        <label style={{ fontSize: "12px", color: "#666" }}>Opties / extras</label>
+                        <label style={{ fontSize: "12px", color: "#666", fontWeight: "600" }}>Losse opties (optioneel)</label>
                         <div style={{ display: "flex", gap: "0.5rem", margin: "0.4rem 0" }}>
                           <input style={{ ...inputStyle, flex: 1, width: "auto" }} placeholder="Naam"
                             value={editNewModifier.name} onChange={(e) => setEditNewModifier((m) => ({ ...m, name: e.target.value }))} />
@@ -286,27 +449,16 @@ export default function BeheerView({
                         </div>
                         {(editForm.modifiers ?? []).map((m: any, idx: number) => (
                           <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
-                            <input
-                              style={{ ...inputStyle, flex: 1 }}
-                              value={m.name}
+                            <input style={{ ...inputStyle, flex: 1 }} value={m.name}
                               onChange={(e) => setEditForm((f: any) => ({
                                 ...f,
-                                modifiers: f.modifiers.map((mod: any, i: number) =>
-                                  i === idx ? { ...mod, name: e.target.value } : mod
-                                ),
-                              }))}
-                            />
-                            <input
-                              style={{ ...inputStyle, width: "80px" }}
-                              type="number" step="0.01"
-                              value={m.price}
+                                modifiers: f.modifiers.map((mod: any, i: number) => i === idx ? { ...mod, name: e.target.value } : mod),
+                              }))} />
+                            <input style={{ ...inputStyle, width: "80px" }} type="number" step="0.01" value={m.price}
                               onChange={(e) => setEditForm((f: any) => ({
                                 ...f,
-                                modifiers: f.modifiers.map((mod: any, i: number) =>
-                                  i === idx ? { ...mod, price: parseFloat(e.target.value) || 0 } : mod
-                                ),
-                              }))}
-                            />
+                                modifiers: f.modifiers.map((mod: any, i: number) => i === idx ? { ...mod, price: parseFloat(e.target.value) || 0 } : mod),
+                              }))} />
                             <button style={btn("#d9534f", true)} onClick={() =>
                               setEditForm((f: any) => ({ ...f, modifiers: f.modifiers.filter((_: any, i: number) => i !== idx) }))}>🗑</button>
                           </div>
@@ -320,36 +472,22 @@ export default function BeheerView({
                     </div>
                   ) : (
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                      <img src={dish.image} alt={dish.name} style={{
-                        width: "40px", height: "40px", borderRadius: "6px",
-                        objectFit: "cover", flexShrink: 0,
-                      }} />
+                      <img src={dish.image} alt={dish.name} style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover", flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: "600", fontSize: "14px" }}>{dish.name}</div>
                         <div style={{ fontSize: "12px", color: "#888" }}>
                           {dish.category} · €{dish.price.toFixed(2)} · BTW {dish.vatRate ?? 9}%
-                          {(dish.modifiers ?? []).length > 0 && ` · ${dish.modifiers!.length} optie(s)`}
+                          {totalGroupsLabel(dish)}
                         </div>
                       </div>
-                      {!editable && (
-                        <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>statisch</span>
-                      )}
-                      {blocked && (
-                        <span style={{
-                          fontSize: "11px", background: "#ffcccc", color: "#c00",
-                          padding: "2px 6px", borderRadius: "4px",
-                        }}>geblokkeerd</span>
-                      )}
+                      {!editable && <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>statisch</span>}
+                      {blocked && <span style={{ fontSize: "11px", background: "#ffcccc", color: "#c00", padding: "2px 6px", borderRadius: "4px" }}>geblokkeerd</span>}
                       <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-                        {editable && (
-                          <button style={btn("#2196F3", true)} onClick={() => startEdit(dish)}>✏️</button>
-                        )}
+                        {editable && <button style={btn("#2196F3", true)} onClick={() => startEdit(dish)}>✏️</button>}
                         <button style={btn(blocked ? "#4CAF50" : "#FF9800", true)} onClick={() => toggleDishBlock(dish)}>
                           {blocked ? "🔓 Tonen" : "🚫 Blokkeren"}
                         </button>
-                        {editable && (
-                          <button style={btn("#d9534f", true)} onClick={() => deleteDish(dish)}>🗑</button>
-                        )}
+                        {editable && <button style={btn("#d9534f", true)} onClick={() => deleteDish(dish)}>🗑</button>}
                       </div>
                     </div>
                   )}
@@ -369,67 +507,35 @@ export default function BeheerView({
               placeholder="Nieuwe categorie naam"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  addCategory(newCategoryName);
-                  setNewCategoryName("");
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === "Enter") { addCategory(newCategoryName); setNewCategoryName(""); } }}
             />
-            <button style={btn("#4CAF50")} onClick={() => {
-              addCategory(newCategoryName);
-              setNewCategoryName("");
-            }}>+ Toevoegen</button>
+            <button style={btn("#4CAF50")} onClick={() => { addCategory(newCategoryName); setNewCategoryName(""); }}>+ Toevoegen</button>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {categories.map((c) => {
               const isDefault = DEFAULT_CATEGORIES.includes(c);
               const dishCount = menu.filter((d) => d.category === c).length;
-
               return (
-                <div key={c} style={{
-                  display: "flex", alignItems: "center", gap: "0.75rem",
-                  background: "#fff", border: "1px solid #e0e0e0",
-                  borderRadius: "8px", padding: "0.75rem 1rem",
-                }}>
+                <div key={c} style={{ display: "flex", alignItems: "center", gap: "0.75rem", background: "#fff", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "0.75rem 1rem" }}>
                   {editingCategory === c ? (
                     <>
-                      <input
-                        style={{ ...inputStyle, flex: 1 }}
-                        value={editCategoryValue}
+                      <input style={{ ...inputStyle, flex: 1 }} value={editCategoryValue}
                         onChange={(e) => setEditCategoryValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            updateCategory(c, editCategoryValue);
-                            setEditingCategory(null);
-                          }
-                        }}
-                        autoFocus
-                      />
-                      <button style={btn("#4CAF50")} onClick={() => {
-                        updateCategory(c, editCategoryValue);
-                        setEditingCategory(null);
-                      }}>✅ Opslaan</button>
+                        onKeyDown={(e) => { if (e.key === "Enter") { updateCategory(c, editCategoryValue); setEditingCategory(null); } }}
+                        autoFocus />
+                      <button style={btn("#4CAF50")} onClick={() => { updateCategory(c, editCategoryValue); setEditingCategory(null); }}>✅ Opslaan</button>
                       <button style={btn("#999")} onClick={() => setEditingCategory(null)}>Annuleren</button>
                     </>
                   ) : (
                     <>
                       <span style={{ flex: 1, fontWeight: "500" }}>{c}</span>
                       <span style={{ fontSize: "12px", color: "#aaa" }}>{dishCount} item(s)</span>
-                      {isDefault && (
-                        <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>standaard</span>
-                      )}
-                      <button style={btn("#2196F3", true)} onClick={() => {
-                        setEditingCategory(c);
-                        setEditCategoryValue(c);
-                      }}>✏️ Hernoemen</button>
+                      {isDefault && <span style={{ fontSize: "11px", color: "#aaa", fontStyle: "italic" }}>standaard</span>}
+                      <button style={btn("#2196F3", true)} onClick={() => { setEditingCategory(c); setEditCategoryValue(c); }}>✏️ Hernoemen</button>
                       {!isDefault && (
                         <button style={btn("#d9534f", true)} onClick={() => {
-                          if (dishCount > 0) {
-                            alert(`Er zijn nog ${dishCount} items in deze categorie. Verplaats ze eerst.`);
-                            return;
-                          }
+                          if (dishCount > 0) { alert(`Er zijn nog ${dishCount} items in deze categorie. Verplaats ze eerst.`); return; }
                           deleteCategory(c);
                         }}>🗑 Verwijderen</button>
                       )}
@@ -446,43 +552,33 @@ export default function BeheerView({
       {activeTab === "vloerplan" && <FloorPlanEditor />}
 
       {/* ───── BEHEER TAB ───── */}
-{activeTab === "beheer" && (
-  <div>
-    <h3 style={{ marginTop: 0 }}>Systeembeheer</h3>
-    <div style={{
-      background: "#fff", border: "1px solid #e0e0e0",
-      borderRadius: "8px", padding: "1rem",
-    }}>
-      <p style={{ margin: "0 0 0.75rem", fontWeight: "500" }}>Print-service</p>
-      <p style={{ margin: "0 0 1rem", fontSize: "0.85rem", color: "#666" }}>
-        Als bonnetjes niet meer uitkomen, kun je hier de print-service herstarten.
-        Dit duurt ongeveer 1 minuut.
-      </p>
-      <button
-        onClick={async () => {
-          if (!window.confirm("Print-service herstarten?")) return;
-          try {
-            const { doc, updateDoc } = await import("firebase/firestore");
-            const { db } = await import("../firebase");
-            await updateDoc(doc(db, "system", "printservice"), { restart: true });
-            alert("Herstart-verzoek verstuurd. De print-service herstart binnen een minuut.");
-          } catch (error) {
-            alert("Fout bij versturen herstart-verzoek.");
-          }
-        }}
-        style={{
-          background: "#e67e22", color: "white", border: "none",
-          padding: "0.75rem 1.5rem", borderRadius: "8px",
-          cursor: "pointer", fontSize: "1rem", fontWeight: "bold",
-        }}
-      >
-        🔄 Herstart print-service
-      </button>
-    </div>
-  </div>
-)}
-
-
+      {activeTab === "beheer" && (
+        <div>
+          <h3 style={{ marginTop: 0 }}>Systeembeheer</h3>
+          <div style={{ background: "#fff", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "1rem" }}>
+            <p style={{ margin: "0 0 0.75rem", fontWeight: "500" }}>Print-service</p>
+            <p style={{ margin: "0 0 1rem", fontSize: "0.85rem", color: "#666" }}>
+              Als bonnetjes niet meer uitkomen, kun je hier de print-service herstarten. Dit duurt ongeveer 1 minuut.
+            </p>
+            <button
+              onClick={async () => {
+                if (!window.confirm("Print-service herstarten?")) return;
+                try {
+                  const { doc, updateDoc } = await import("firebase/firestore");
+                  const { db } = await import("../firebase");
+                  await updateDoc(doc(db, "system", "printservice"), { restart: true });
+                  alert("Herstart-verzoek verstuurd. De print-service herstart binnen een minuut.");
+                } catch {
+                  alert("Fout bij versturen herstart-verzoek.");
+                }
+              }}
+              style={{ background: "#e67e22", color: "white", border: "none", padding: "0.75rem 1.5rem", borderRadius: "8px", cursor: "pointer", fontSize: "1rem", fontWeight: "bold" }}
+            >
+              🔄 Herstart print-service
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

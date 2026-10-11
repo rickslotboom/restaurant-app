@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dish, Order, OrderItem, OrderStatus, VatRate } from "../types";
+import { Dish, ModifierGroup, Order, OrderItem, OrderStatus, VatRate } from "../types";
 import { useOrdersContext } from "../hooks/useOrders";
 import { useAuthContext } from "../hooks/useAuth";
 import PaymentModal from "./PaymentModal";
@@ -111,35 +111,150 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
   onConfirm: (chosen: { id: string; name: string; price: number }[]) => void;
   onCancel: () => void;
 }) {
-  const [chosen, setChosen] = useState<Record<string, boolean>>({});
-  const toggle = (id: string) => setChosen((prev) => ({ ...prev, [id]: !prev[id] }));
-  const selectedModifiers = (dish.modifiers || []).filter((m) => chosen[m.id]);
-  const extraPrice = selectedModifiers.reduce((s, m) => s + m.price, 0);
+  // Legacy enkelvoudige modifiers (checkbox, optioneel)
+  const [checkedLegacy, setCheckedLegacy] = useState<Record<string, boolean>>({});
+  // Groepen: single → één geselecteerde optie-id per groep, multiple → set van ids
+  const [groupSingle, setGroupSingle] = useState<Record<string, string>>({});
+  const [groupMulti, setGroupMulti] = useState<Record<string, Record<string, boolean>>>({});
+
+  const groups: ModifierGroup[] = dish.modifierGroups ?? [];
+  const legacyMods = dish.modifiers ?? [];
+
+  // Verzamel alle gekozen modifiers
+  const chosenModifiers: { id: string; name: string; price: number }[] = [];
+
+  // Legacy
+  legacyMods.forEach((m) => { if (checkedLegacy[m.id]) chosenModifiers.push(m); });
+
+  // Groepen
+  groups.forEach((g) => {
+    if (g.type === "single") {
+      const id = groupSingle[g.id];
+      if (id) {
+        const opt = g.options.find((o) => o.id === id);
+        if (opt) chosenModifiers.push(opt);
+      }
+    } else {
+      const selected = groupMulti[g.id] ?? {};
+      g.options.forEach((o) => { if (selected[o.id]) chosenModifiers.push(o); });
+    }
+  });
+
+  // Validatie: zijn alle verplichte groepen ingevuld?
+  const missingRequired = groups.filter((g) => {
+    if (!g.required) return false;
+    if (g.type === "single") return !groupSingle[g.id];
+    // multiple + required: minstens 1 optie gekozen
+    return !Object.values(groupMulti[g.id] ?? {}).some(Boolean);
+  });
+  const canConfirm = missingRequired.length === 0;
+
+  const extraPrice = chosenModifiers.reduce((s, m) => s + m.price, 0);
   const totalPrice = dish.price + extraPrice;
+
+  const optionStyle = (active: boolean): React.CSSProperties => ({
+    display: "flex", alignItems: "center", gap: "0.75rem",
+    cursor: "pointer", padding: "0.55rem 0.75rem", borderRadius: "8px",
+    background: active ? "#e8f5e9" : "#f5f5f5",
+    border: active ? "2px solid #4CAF50" : "2px solid transparent",
+    transition: "all 0.15s", userSelect: "none",
+  });
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
-      <div style={{ background: "white", borderRadius: "16px", padding: "2rem", width: "340px", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+      <div style={{ background: "white", borderRadius: "16px", padding: "2rem", width: "360px", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
         <h2 style={{ margin: "0 0 0.25rem 0" }}>{dish.name}</h2>
         <p style={{ margin: "0 0 1.25rem 0", color: "#555" }}>Basisprijs: €{dish.price.toFixed(2)}</p>
-        <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Toevoegingen (optioneel):</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-          {(dish.modifiers || []).map((mod) => (
-            <label key={mod.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", padding: "0.6rem 0.75rem", borderRadius: "8px", background: chosen[mod.id] ? "#e8f5e9" : "#f5f5f5", border: chosen[mod.id] ? "2px solid #4CAF50" : "2px solid transparent", transition: "all 0.15s", userSelect: "none" }}>
-              <input type="checkbox" checked={!!chosen[mod.id]} onChange={() => toggle(mod.id)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-              <span style={{ flex: 1 }}>{mod.name}</span>
-              <span style={{ color: mod.price === 0 ? "#888" : "#2e7d32", fontWeight: "bold" }}>
-                {mod.price === 0 ? "gratis" : `+€${mod.price.toFixed(2)}`}
-              </span>
-            </label>
-          ))}
-        </div>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
+
+        {/* Verplichte / gegroepeerde keuzes */}
+        {groups.map((g) => (
+          <div key={g.id} style={{ marginBottom: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <span style={{ fontWeight: "bold", fontSize: "0.95rem" }}>{g.name}</span>
+              {g.required && (
+                <span style={{ fontSize: "0.72rem", background: "#e53935", color: "white", borderRadius: "99px", padding: "2px 8px", fontWeight: "bold" }}>verplicht</span>
+              )}
+              {g.type === "single" && !g.required && (
+                <span style={{ fontSize: "0.72rem", color: "#888" }}>(kies 1)</span>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+              {g.options.map((opt) => {
+                const active = g.type === "single"
+                  ? groupSingle[g.id] === opt.id
+                  : !!(groupMulti[g.id]?.[opt.id]);
+                return (
+                  <label key={opt.id} style={optionStyle(active)}>
+                    <input
+                      type={g.type === "single" ? "radio" : "checkbox"}
+                      name={g.type === "single" ? `group-${g.id}` : undefined}
+                      checked={active}
+                      onChange={() => {
+                        if (g.type === "single") {
+                          setGroupSingle((prev) => ({ ...prev, [g.id]: opt.id }));
+                        } else {
+                          setGroupMulti((prev) => ({
+                            ...prev,
+                            [g.id]: { ...(prev[g.id] ?? {}), [opt.id]: !prev[g.id]?.[opt.id] },
+                          }));
+                        }
+                      }}
+                      style={{ width: "17px", height: "17px", cursor: "pointer" }}
+                    />
+                    <span style={{ flex: 1 }}>{opt.name}</span>
+                    <span style={{ color: opt.price === 0 ? "#888" : "#2e7d32", fontWeight: "bold" }}>
+                      {opt.price === 0 ? "gratis" : `+€${opt.price.toFixed(2)}`}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* Legacy enkelvoudige modifiers */}
+        {legacyMods.length > 0 && (
+          <div style={{ marginBottom: "1.25rem" }}>
+            <p style={{ fontWeight: "bold", fontSize: "0.95rem", marginBottom: "0.5rem" }}>
+              Toevoegingen (optioneel)
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+              {legacyMods.map((mod) => (
+                <label key={mod.id} style={optionStyle(!!checkedLegacy[mod.id])}>
+                  <input
+                    type="checkbox"
+                    checked={!!checkedLegacy[mod.id]}
+                    onChange={() => setCheckedLegacy((prev) => ({ ...prev, [mod.id]: !prev[mod.id] }))}
+                    style={{ width: "17px", height: "17px", cursor: "pointer" }}
+                  />
+                  <span style={{ flex: 1 }}>{mod.name}</span>
+                  <span style={{ color: mod.price === 0 ? "#888" : "#2e7d32", fontWeight: "bold" }}>
+                    {mod.price === 0 ? "gratis" : `+€${mod.price.toFixed(2)}`}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Waarschuwing verplichte velden */}
+        {!canConfirm && (
+          <p style={{ color: "#e53935", fontSize: "0.85rem", margin: "0 0 0.75rem 0" }}>
+            Maak nog een keuze bij: {missingRequired.map((g) => g.name).join(", ")}
+          </p>
+        )}
+
+        <div style={{ paddingTop: "1rem", borderTop: "1px solid #eee", marginBottom: "1rem" }}>
           <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>Totaal: €{totalPrice.toFixed(2)}</span>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+
+        <div style={{ display: "flex", gap: "0.75rem" }}>
           <button onClick={onCancel} style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid #ccc", cursor: "pointer", background: "#fff" }}>Annuleren</button>
-          <button onClick={() => onConfirm(selectedModifiers)} style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "none", cursor: "pointer", background: "#4CAF50", color: "white", fontWeight: "bold" }}>Toevoegen</button>
+          <button
+            onClick={() => canConfirm && onConfirm(chosenModifiers)}
+            disabled={!canConfirm}
+            style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "none", cursor: canConfirm ? "pointer" : "not-allowed", background: canConfirm ? "#4CAF50" : "#ccc", color: "white", fontWeight: "bold" }}
+          >Toevoegen</button>
         </div>
       </div>
     </div>
@@ -195,7 +310,9 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
   );
 
   const handleDishClick = (dish: Dish) => {
-    if (dish.modifiers && dish.modifiers.length > 0) setModifierDish(dish);
+    const hasGroups = dish.modifierGroups && dish.modifierGroups.length > 0;
+    const hasLegacy = dish.modifiers && dish.modifiers.length > 0;
+    if (hasGroups || hasLegacy) setModifierDish(dish);
     else addToCart(dish, []);
   };
 

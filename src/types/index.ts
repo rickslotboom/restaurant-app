@@ -4,6 +4,14 @@ export type Modifier = {
   price: number;
 };
 
+export type ModifierGroup = {
+  id: string;
+  name: string;           // bv. "Broodkeuze", "Eiwitbron"
+  required: boolean;      // true = moet gekozen worden voor je kunt toevoegen
+  type: "single" | "multiple"; // single = radio (kies 1), multiple = checkbox (kies meerdere)
+  options: Modifier[];
+};
+
 export type VatRate = 9 | 21;
 
 export type Dish = {
@@ -13,7 +21,8 @@ export type Dish = {
   image: string;
   category: string;
   vatRate?: VatRate;
-  modifiers?: Modifier[];
+  modifiers?: Modifier[];         // legacy: enkelvoudige optionele modifiers (checkbox)
+  modifierGroups?: ModifierGroup[]; // nieuw: gegroepeerde modifiers met verplicht/type
 };
 
 export type OrderStatus = "Open" | "Afgehandeld" | "Betaald";
@@ -51,4 +60,3 @@ export type Order = {
   paidAt?: number;
   discountAmount?: number;
 };
-
