@@ -27,19 +27,25 @@ type CartLine = {
   note: string;
 };
 
-// Categorieën onder "Dranken" (exclusief "Verse sinaasappelsap" → die valt onder Eten)
+// Categorieën zichtbaar onder "Dranken"
 const DRANKEN_CATEGORIES = new Set([
   "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
+  "Verse sinaasappelsap",
 ]);
 
-// Volgorde binnen Dranken: koffie & thee eerst, dan rest alfabetisch
-const DRANKEN_PRIORITY = ["Koffie", "Thee"];
+// Categorieën die OOK onder Eten meetellen voor BTW/rapportage maar in Dranken-tab staan
+// (hier niet gebruikt voor filtering, alleen voor zichtbaarheid in tab)
 
-// Volgorde binnen Eten: broodjes/gebak/lunch eerst, dan rest alfabetisch
-const ETEN_PRIORITY = ["Broodjes", "Gebak", "Lunch"];
+// Volgorde binnen Dranken: koffie, thee, frisdrank eerst — dan rest alfabetisch
+const DRANKEN_PRIORITY = ["Koffie", "Thee", "Frisdrank"];
 
-// Categorieën die altijd onder Eten vallen ook al staan ze in DRANKEN_CATEGORIES-achtige namen
-const ETEN_OVERRIDE_CATEGORIES = new Set(["Verse sinaasappelsap"]);
+// Volgorde binnen Eten: broodjes/gebak/lunch/pannenkoeken/salades/soepen eerst — dan rest alfabetisch
+const ETEN_PRIORITY = ["Broodjes", "Gebak", "Lunch", "Pannenkoeken", "Salades & Bowls", "Soepen"];
+
+// Categorieën die in de Dranken-tab staan maar NIET tot eten-tab behoren
+const DRANKEN_ONLY = new Set([
+  "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
+]);
 
 function sortCategories(cats: string[], priority: string[]): string[] {
   const prioritized = priority.filter((p) => cats.includes(p));
@@ -218,11 +224,10 @@ export default function Menu({
 
   const activeMenu = menu.filter((dish) => !(dish as any).blocked);
 
-  const isDranken = (d: Dish) =>
-    DRANKEN_CATEGORIES.has(d.category) && !ETEN_OVERRIDE_CATEGORIES.has(d.category);
-
-  const drankenDishes = activeMenu.filter(isDranken);
-  const etenDishes = activeMenu.filter((d) => !isDranken(d));
+  // Dranken-tab: alles in DRANKEN_CATEGORIES (inclusief Verse sinaasappelsap)
+  // Eten-tab: alles NIET in DRANKEN_ONLY (Verse sinaasappelsap verschijnt dus ook hier)
+  const drankenDishes = activeMenu.filter((d) => DRANKEN_CATEGORIES.has(d.category));
+  const etenDishes = activeMenu.filter((d) => !DRANKEN_ONLY.has(d.category));
 
   const visibleDishes = tab === "dranken" ? drankenDishes : etenDishes;
   const allCatsInTab = [...new Set(visibleDishes.map((d) => d.category))];
@@ -488,8 +493,8 @@ export default function Menu({
                         key={dish.id}
                         onClick={() => handleDishClick(dish)}
                         style={{
-                          border: "2px solid #ddd", borderRadius: "10px", padding: "0.65rem",
-                          width: "140px", textAlign: "center", backgroundColor: "#fff",
+                          border: "2px solid #ddd", borderRadius: "10px", padding: "0.55rem",
+                          width: "115px", textAlign: "center", backgroundColor: "#fff",
                           boxShadow: "1px 2px 4px rgba(0,0,0,0.07)", cursor: "pointer",
                           transition: "transform 0.12s, box-shadow 0.12s",
                           position: "relative", userSelect: "none",
