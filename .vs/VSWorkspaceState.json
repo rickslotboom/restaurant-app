@@ -3,10 +3,9 @@
     "",
     "\\api",
     "\\src",
-    "\\src\\components",
     "\\src\\hooks",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\components\\BeheerView.tsx",
+  "SelectedNode": "\\src\\hooks\\useMenu.tsx",
   "PreviewInSolutionExplorer": false
 }

@@ -58,6 +58,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           category: data.category ?? "",
           image: data.image ?? "/images/placeholder.jpg",
           modifiers: data.modifiers ?? [],
+          modifierGroups: data.modifierGroups ?? [],  // ← toegevoegd
           vatRate: (data.vatRate ?? 9) as VatRate,
           blocked: data.blocked ?? false,
         } as Dish & { blocked?: boolean };
@@ -141,6 +142,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await addDoc(collection(db, "menu"), {
       ...dish,
       modifiers: dish.modifiers ?? [],
+      modifierGroups: dish.modifierGroups ?? [],  // ← expliciet meesturen
       vatRate: dish.vatRate ?? 9,
       blocked: false,
     });
