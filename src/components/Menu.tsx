@@ -36,6 +36,7 @@ const DRANKEN_CATEGORIES = new Set([
 // Categorieën die ALLEEN in Dranken-tab staan (niet ook in Eten)
 const DRANKEN_ONLY = new Set([
   "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
+  "Verse sinaasappelsap",
 ]);
 
 // Volgorde Dranken: Koffie, Thee, Frisdrank eerst — dan rest alfabetisch
