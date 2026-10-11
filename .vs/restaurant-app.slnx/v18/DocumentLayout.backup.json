@@ -180,8 +180,7 @@
               "ViewState": "AgIAAIABAAAAAAAAAAAUwJsBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:45:58.885Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -193,8 +192,7 @@
               "RelativeToolTip": "src\\components\\PaymentModal.tsx",
               "ViewState": "AgIAAJEBAAAAAAAAAAAYwKwBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:03Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:52:03Z"
             },
             {
               "$type": "Document",
@@ -206,8 +204,7 @@
               "RelativeToolTip": "api\\sumup-checkout.js",
               "ViewState": "AgIAADoAAAAAAAAAAAAUwFUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-07-11T15:55:53.78Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-11T15:55:53.78Z"
             },
             {
               "$type": "Document",
@@ -217,7 +214,7 @@
               "RelativeDocumentMoniker": "api\\sumup-webhook.js",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\api\\sumup-webhook.js",
               "RelativeToolTip": "api\\sumup-webhook.js",
-              "ViewState": "AgIAACgAAAAAAAAAAAAUwEMAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2026-07-10T12:49:33.847Z",
               "EditorCaption": ""
@@ -232,8 +229,7 @@
               "RelativeToolTip": "src\\components\\ReportsView.tsx",
               "ViewState": "AgIAANAAAAAAAAAAAAAYwOsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-19T07:08:30.124Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-19T07:08:30.124Z"
             },
             {
               "$type": "Document",
@@ -245,8 +241,7 @@
               "RelativeToolTip": "src\\hooks\\useOrders.tsx",
               "ViewState": "AgIAAL8AAAAAAAAAAAAUwNoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T13:14:55.115Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T13:14:55.115Z"
             },
             {
               "$type": "Document",

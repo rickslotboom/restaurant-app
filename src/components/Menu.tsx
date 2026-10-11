@@ -27,6 +27,11 @@ type CartLine = {
   note: string;
 };
 
+// Categorieën die onder "Dranken" vallen
+const DRANKEN_CATEGORIES = new Set([
+  "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
+]);
+
 function makeLineId(dishId: string, modifierIds: string[]): string {
   return [dishId, ...[...modifierIds].sort()].join("|");
 }
@@ -168,32 +173,55 @@ function ModifierModal({
   );
 }
 
+const categoryIcons: Record<string, string> = {
+  "Ontbijt": "🍳",
+  "Drankjes": "🥤",
+  "Soepen": "🍲",
+  "Salades & Bowls": "🥗",
+  "Lunch": "🍽️",
+  "Broodjes": "🥪",
+  "Gebak": "🥐",
+  "Dranken": "🍹",
+  "Pannenkoeken": "🥞",
+  "Koffie": "☕",
+  "Thee": "🫖",
+  "Frisdrank": "🥤",
+  "Sapjes": "🧃",
+  "Alcohol": "🍷",
+  "Kleine borrelhapjes": "🫒",
+  "Frietjes": "🍟",
+  "Borrelplanken": "🧀",
+};
+
 export default function Menu({
   menu, selected, table, onBack, onAdd, onRemove, onClearCart, orders, onUpdateStatus,
 }: Props) {
   const { addOrder, deleteOrder, updateOrderItems, markOrderPaid } = useOrdersContext();
   const { user } = useAuthContext();
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [tab, setTab] = useState<"dranken" | "eten">("eten");
   const [deleteConfirmLineId, setDeleteConfirmLineId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [modifierDish, setModifierDish] = useState<Dish | null>(null);
 
   const activeMenu = menu.filter((dish) => !(dish as any).blocked);
-  const categories = [...new Set(activeMenu.map((dish) => dish.category))];
-  const visibleDishes = selectedCategory
-    ? activeMenu.filter((dish) => dish.category === selectedCategory)
-    : [];
+
+  // Splits menu in dranken en eten op basis van categorie
+  const drankenDishes = activeMenu.filter((d) => DRANKEN_CATEGORIES.has(d.category));
+  const etenDishes = activeMenu.filter((d) => !DRANKEN_CATEGORIES.has(d.category));
+
+  const visibleDishes = tab === "dranken" ? drankenDishes : etenDishes;
+
+  // Groepeer per categorie voor de huidige tab
+  const categoriesInTab = [...new Set(visibleDishes.map((d) => d.category))];
 
   const openOrder = orders.find((o) => o.table === table && o.status !== "Betaald");
 
   const handleRemoveItem = async (dishId: string) => {
     if (!openOrder) return;
     if (!window.confirm("Item verwijderen uit de bestelling?")) return;
-
     const updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
-
     if (updatedItems.length === 0) {
       await deleteOrder(openOrder.id);
     } else {
@@ -255,7 +283,6 @@ export default function Menu({
     setCart((prev) => prev.map((l) => (l.lineId === lineId ? { ...l, note } : l)));
   };
 
-  // Sla gecombineerde prijs op (basisprijs + modifiers) zodat item.price altijd het totaal per stuk is
   const cartToOrderItems = (lines: CartLine[]): OrderItem[] =>
     lines.map((line) => {
       const modTotal = line.modifiers.reduce((s, m) => s + m.price, 0);
@@ -281,11 +308,6 @@ export default function Menu({
       const updatedItems: OrderItem[] = [...openOrder.items];
       newItems.forEach((newItem) => {
         const existing = updatedItems.find((i) => i.dishId === newItem.dishId);
-        // Let op: als een regel met dezelfde dishId al bestaat maar een andere
-        // (of geen) notitie heeft, worden ze toch samengevoegd op aantal —
-        // de notitie van de nieuwe toevoeging overschrijft dan de oude. Voor
-        // een losse notitie per identieke regel zou een aparte lineId nodig
-        // zijn; dat houden we voorlopig simpel.
         if (existing) {
           existing.qty += newItem.qty;
           if (newItem.note) existing.note = newItem.note;
@@ -327,30 +349,10 @@ export default function Menu({
     setCart([]); onClearCart(); onBack();
   };
 
-  const categoryIcons: Record<string, string> = {
-  "Ontbijt": "🍳",
-  "Drankjes": "🥤",
-  "Soepen": "🍲",
-  "Salades & Bowls": "🥗",
-  "Lunch": "🍽️",
-  "Broodjes": "🥪",
-  "Gebak": "🥐",
-  "Dranken": "🍹",
-  "Pannenkoeken": "🥞",
-  "Koffie": "☕",
-  "Thee": "🫖",
-  "Frisdrank": "🥤",
-  "Sapjes": "🧃",
-  "Alcohol": "🍷",
-  "Kleine borrelhapjes": "🫒",
-  "Frietjes": "🍟",
-  "Borrelplanken": "🧀",
-};
-
   const lineToDelete = cart.find((l) => l.lineId === deleteConfirmLineId);
 
   return (
-    <div style={{ display: "flex", gap: "2rem", padding: "1rem", alignItems: "flex-start" }}>
+    <div style={{ display: "flex", gap: "1.5rem", padding: "1rem", alignItems: "flex-start" }}>
 
       {modifierDish && (
         <ModifierModal
@@ -398,71 +400,123 @@ export default function Menu({
         />
       )}
 
-      {/* LINKERKANT */}
-      <div style={{ flex: 1 }}>
-        <h2 style={{ textAlign: "center" }}>
-          {selectedCategory ? selectedCategory : "Kies een categorie"}
-        </h2>
+      {/* LINKERKANT: menu */}
+      <div style={{ flex: 1, minWidth: 0 }}>
 
-        {!selectedCategory ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center", marginTop: "1rem" }}>
-            {categories.map((category) => (
-              <div key={category} onClick={() => setSelectedCategory(category)} style={{
-                backgroundColor: "#2c3e50", color: "white",
-                borderRadius: "16px", padding: "1.5rem", width: "200px",
-                textAlign: "center", cursor: "pointer", fontWeight: "bold",
-                boxShadow: "2px 4px 12px rgba(0,0,0,0.2)",
-                transition: "transform 0.15s ease", userSelect: "none",
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              >
-                <div style={{ fontSize: "2rem" }}>{categoryIcons[category] || "🍽️"}</div>
-                <div style={{ marginTop: "0.5rem" }}>{category}</div>
-              </div>
-            ))}
-          </div>
+        {/* Dranken / Eten tabs */}
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem" }}>
+          <button
+            onClick={() => setTab("eten")}
+            style={{
+              flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none",
+              cursor: "pointer", fontWeight: "bold", fontSize: "1rem",
+              background: tab === "eten" ? "#2c3e50" : "#e0e0e0",
+              color: tab === "eten" ? "white" : "#333",
+              transition: "background 0.15s",
+            }}
+          >
+            🍽️ Eten
+          </button>
+          <button
+            onClick={() => setTab("dranken")}
+            style={{
+              flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none",
+              cursor: "pointer", fontWeight: "bold", fontSize: "1rem",
+              background: tab === "dranken" ? "#2c3e50" : "#e0e0e0",
+              color: tab === "dranken" ? "white" : "#333",
+              transition: "background 0.15s",
+            }}
+          >
+            🍹 Dranken
+          </button>
+        </div>
+
+        {/* Terug knop */}
+        <button
+          onClick={onBack}
+          style={{
+            marginBottom: "1rem", padding: "0.4rem 0.8rem",
+            borderRadius: "8px", border: "1px solid #ccc",
+            background: "#fff", cursor: "pointer", fontSize: "0.9rem",
+          }}
+        >
+          ← Terug
+        </button>
+
+        {/* Per categorie een sectie met alle gerechten naast elkaar */}
+        {categoriesInTab.length === 0 ? (
+          <p style={{ color: "#888" }}>Geen items beschikbaar.</p>
         ) : (
-          <>
-            <button onClick={() => setSelectedCategory(null)}
-              style={{ marginBottom: "1rem", padding: "0.75rem 1rem" }}>
-              ← Terug naar categorieën
-            </button>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center", marginTop: "1rem" }}>
-              {visibleDishes.map((dish) => (
-                <div key={dish.id} onClick={() => handleDishClick(dish)} style={{
-                  border: "2px solid #ccc", borderRadius: "12px", padding: "1rem",
-                  width: "180px", textAlign: "center", backgroundColor: "#fff",
-                  boxShadow: "2px 2px 5px rgba(0,0,0,0.1)", cursor: "pointer",
-                  transition: "transform 0.15s ease, box-shadow 0.15s ease", position: "relative",
-                }}
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                >
-                  {dish.modifiers && dish.modifiers.length > 0 && (
-                    <span style={{
-                      position: "absolute", top: "8px", right: "8px",
-                      background: "#ff9800", color: "white", borderRadius: "99px",
-                      fontSize: "0.65rem", fontWeight: "bold", padding: "2px 7px",
-                    }}>opties</span>
-                  )}
-                  <img src={dish.image} alt={dish.name}
-                    style={{ width: "100%", borderRadius: "8px", userSelect: "none", pointerEvents: "none" }} />
-                  <h3 style={{ margin: "0.5rem 0 0 0" }}>{dish.name}</h3>
-                  <p style={{ margin: "0.25rem 0", fontWeight: "bold" }}>€{dish.price.toFixed(2)}</p>
-                  {dish.modifiers && dish.modifiers.length > 0 && (
-                    <p style={{ margin: "0.25rem 0", fontSize: "0.75rem", color: "#888" }}>
-                      Tik om opties te kiezen
-                    </p>
-                  )}
+          categoriesInTab.map((category) => {
+            const dishes = visibleDishes.filter((d) => d.category === category);
+            return (
+              <div key={category} style={{ marginBottom: "1.75rem" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "0.5rem",
+                  marginBottom: "0.75rem",
+                  borderBottom: "2px solid #e0e0e0", paddingBottom: "0.4rem",
+                }}>
+                  <span style={{ fontSize: "1.3rem" }}>{categoryIcons[category] || "🍽️"}</span>
+                  <h3 style={{ margin: 0, fontSize: "1.05rem", color: "#2c3e50" }}>{category}</h3>
                 </div>
-              ))}
-            </div>
-          </>
+
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: "0.75rem",
+                }}>
+                  {dishes.map((dish) => (
+                    <div
+                      key={dish.id}
+                      onClick={() => handleDishClick(dish)}
+                      style={{
+                        border: "2px solid #ddd", borderRadius: "10px", padding: "0.75rem",
+                        width: "150px", textAlign: "center", backgroundColor: "#fff",
+                        boxShadow: "1px 2px 5px rgba(0,0,0,0.08)", cursor: "pointer",
+                        transition: "transform 0.12s ease, box-shadow 0.12s ease",
+                        position: "relative", userSelect: "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.04)";
+                        e.currentTarget.style.boxShadow = "2px 4px 12px rgba(0,0,0,0.15)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow = "1px 2px 5px rgba(0,0,0,0.08)";
+                      }}
+                    >
+                      {dish.modifiers && dish.modifiers.length > 0 && (
+                        <span style={{
+                          position: "absolute", top: "6px", right: "6px",
+                          background: "#ff9800", color: "white", borderRadius: "99px",
+                          fontSize: "0.6rem", fontWeight: "bold", padding: "2px 6px",
+                        }}>opties</span>
+                      )}
+                      <img
+                        src={dish.image}
+                        alt={dish.name}
+                        style={{
+                          width: "100%", borderRadius: "6px",
+                          userSelect: "none", pointerEvents: "none",
+                          aspectRatio: "4/3", objectFit: "cover",
+                        }}
+                      />
+                      <div style={{
+                        marginTop: "0.4rem", fontWeight: "bold",
+                        fontSize: "0.85rem", lineHeight: 1.3,
+                      }}>{dish.name}</div>
+                      <div style={{
+                        margin: "0.2rem 0", fontWeight: "bold",
+                        color: "#2c3e50", fontSize: "0.9rem",
+                      }}>€{dish.price.toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* RECHTERKANT */}
+      {/* RECHTERKANT: bestaande bestelling + winkelwagen */}
       <div style={{
         width: "370px", minWidth: "370px",
         display: "flex", flexDirection: "column", gap: "1rem",
@@ -553,7 +607,6 @@ export default function Menu({
                       </div>
                     )}
 
-                    {/* Notitie voor keuken/bar, bv. "geen ui" */}
                     <input
                       type="text"
                       placeholder="📝 Notitie voor keuken/bar (optioneel)"
@@ -575,7 +628,6 @@ export default function Menu({
           <h3>Nieuw totaal: €{cartTotal.toFixed(2)}</h3>
 
           <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <button onClick={onBack}>← Terug</button>
             <button onClick={handleConfirm} disabled={cart.length === 0} style={{
               backgroundColor: "#4CAF50", color: "white", border: "none", padding: "0.75rem",
               cursor: cart.length === 0 ? "not-allowed" : "pointer",
