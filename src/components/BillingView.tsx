@@ -386,7 +386,12 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
                 <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
                   <button
                     onClick={async () => {
-                      // Zet printPreview op alle orders van deze tafel
+                      // Reset eerst naar false, dan true — zo triggert elke klik opnieuw
+                      await Promise.all(
+                        tableOrders.map((o) =>
+                          updateDoc(doc(db, "orders", o.id), { printPreview: false })
+                        )
+                      );
                       await Promise.all(
                         tableOrders.map((o) =>
                           updateDoc(doc(db, "orders", o.id), { printPreview: true })
