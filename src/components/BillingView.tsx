@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Order, OrderItem, OrderStatus } from "../types";
 import PaymentModal from "./PaymentModal";
 import { useOrdersContext } from "../hooks/useOrders";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 type Props = {
   orders: Order[];
@@ -381,7 +383,23 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
               </strong>
 
               {tab === "open" && (
-                <div style={{ marginTop: "0.75rem" }}>
+                <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
+                  <button
+                    onClick={async () => {
+                      // Zet printPreview op alle orders van deze tafel
+                      await Promise.all(
+                        tableOrders.map((o) =>
+                          updateDoc(doc(db, "orders", o.id), { printPreview: true })
+                        )
+                      );
+                    }}
+                    style={{
+                      background: "#607d8b", color: "white", border: "none",
+                      padding: "0.5rem 1rem", borderRadius: "8px", cursor: "pointer",
+                    }}
+                  >
+                    🖨️ Rekening
+                  </button>
                   <button onClick={() => setConfirmTable(tableId)} style={{
                     background: "#4CAF50", color: "white", border: "none",
                     padding: "0.5rem 1rem", borderRadius: "8px", cursor: "pointer",

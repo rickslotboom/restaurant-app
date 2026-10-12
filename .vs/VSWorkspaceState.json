@@ -3,6 +3,7 @@
     "",
     "\\api",
     "\\src",
+    "\\src\\components",
     "\\src\\hooks",
     "\\src\\types"
   ],
