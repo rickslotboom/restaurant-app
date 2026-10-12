@@ -376,10 +376,19 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
               ))}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-              <label style={{ fontSize: "0.9rem" }}>Ander bedrag:</label>
-              <input type="number" min="0" step="0.50" placeholder="€ 0.00" value={customTip}
-                onChange={e => { setCustomTip(e.target.value); setTipAmount(parseFloat(e.target.value) || 0); }}
-                style={{ width: "80px", padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc", fontSize: "0.95rem" }} />
+              <label style={{ fontSize: "0.9rem" }}>Totaal incl. fooi:</label>
+              <input
+                type="number"
+                min={total}
+                step="0.50"
+              placeholder={"€ " + total.toFixed(2)}
+                value={customTip}
+                onChange={e => {
+                  setCustomTip(e.target.value);
+                  setTipAmount(Math.max(0, (parseFloat(e.target.value) || 0) - total));
+                }}
+                style={{ width: "90px", padding: "0.4rem", borderRadius: "6px", border: "1px solid #ccc", fontSize: "0.95rem" }}
+              />
             </div>
 
             <div style={{ background: "#f5f5f5", borderRadius: "8px", padding: "0.75rem", marginBottom: "1rem" }}>
