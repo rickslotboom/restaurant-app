@@ -17,11 +17,6 @@ type Props = {
 
 const DISC_OPTIONS = [0, 30, 50, 100];
 
-const itemFullPrice = (item: Order["items"][0]) => {
-  const modTotal = (item.modifiers ?? []).reduce((s, m) => s + m.price, 0);
-  return (item.price + modTotal) * item.qty;
-};
-
 export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
   const [paymentStep, setPaymentStep] = useState<"discount" | "method" | "tip" | "waiting">("discount");
   const [tipAmount, setTipAmount] = useState<number>(0);
