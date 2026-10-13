@@ -223,7 +223,7 @@ export default function PaymentModal({ order, onConfirm, onCancel }: Props) {
           <>
             <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Korting per regel:</p>
             {order.items.map((item, i) => {
-              const orig = itemFullPrice(item);
+              const orig = item.price * item.qty;
               const disc = itemDiscounts[i];
               const final = orig * (1 - disc / 100);
               return (
