@@ -29,21 +29,21 @@ type CartLine = {
 
 // Categorieën zichtbaar in Dranken-tab (inclusief Verse sinaasappelsap)
 const DRANKEN_CATEGORIES = new Set([
-  "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
-  "Verse Sinaasappelsap",
+  "Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol",
+  "Gebak", "Verse Sinaasappelsap",
 ]);
 
 // Categorieën die ALLEEN in Dranken-tab staan (niet ook in Eten)
 const DRANKEN_ONLY = new Set([
-  "Dranken", "Drankjes", "Koffie", "Thee", "Frisdrank", "Sapjes", "Alcohol",
+  "Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol",
   "Verse Sinaasappelsap",
 ]);
 
 // Volgorde Dranken: Koffie, Thee, Frisdrank eerst — dan rest alfabetisch
-const DRANKEN_PRIORITY = ["Koffie", "Thee", "Frisdrank"];
+const DRANKEN_PRIORITY = ["Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol", "Verse Sinaasappelsap"];
 
 // Volgorde Eten: prioriteit bovenaan — dan rest alfabetisch
-const ETEN_PRIORITY = ["Broodjes", "Gebak", "Lunch", "Pannenkoeken", "Salades & Bowls", "Soepen"];
+const ETEN_PRIORITY = ["Gebak", "Lunch", "Lekkere Trek", "Acties", "Arrangementen"];
 
 function sortCategories(cats: string[], priority: string[]): string[] {
   const prioritized = priority.filter((p) => cats.includes(p));
@@ -263,18 +263,18 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
 }
 
 const categoryIcons: Record<string, string> = {
-  "Ontbijt": "🍳", "Drankjes": "🥤", "Soepen": "🍲", "Salades & Bowls": "🥗",
-  "Lunch": "🍽️", "Broodjes": "🥪", "Gebak": "🥐", "Dranken": "🍹",
-  "Pannenkoeken": "🥞", "Koffie": "☕", "Thee": "🫖", "Frisdrank": "🥤",
-  "Sapjes": "🧃", "Alcohol": "🍷", "Kleine borrelhapjes": "🫒",
-  "Frietjes": "🍟", "Borrelplanken": "🧀", "Verse sinaasappelsap": "🍊",
+  "Koffie": "☕", "Thee & Warme dranken": "🫖", "Koude dranken": "🥤",
+  "Alcohol": "🍷", "Gebak": "🧁", "Verse Sinaasappelsap": "🍊",
+  "Lunch": "🍽️", "Lekkere Trek": "🫒", "Acties": "🏷️", "Arrangementen": "🎉",
+  "Ontbijt": "🍳", "Soepen": "🍲", "Salades & Bowls": "🥗",
+  "Broodjes": "🥪", "Pannenkoeken": "🥞",
 };
 
 export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, onClearCart, orders, onUpdateStatus }: Props) {
   const { addOrder, deleteOrder, updateOrderItems, markOrderPaid } = useOrdersContext();
   const { user } = useAuthContext();
 
-  const [tab, setTab] = useState<"dranken" | "eten">("eten");
+  const [tab, setTab] = useState<"dranken" | "eten">("dranken");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [deleteConfirmLineId, setDeleteConfirmLineId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
@@ -415,8 +415,8 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
 
         {/* Eten / Dranken tabs */}
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
-          <button onClick={() => switchTab("eten")} style={{ flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", background: tab === "eten" ? "#2c3e50" : "#e0e0e0", color: tab === "eten" ? "white" : "#333" }}>🍽️ Eten</button>
           <button onClick={() => switchTab("dranken")} style={{ flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", background: tab === "dranken" ? "#2c3e50" : "#e0e0e0", color: tab === "dranken" ? "white" : "#333" }}>🍹 Dranken</button>
+          <button onClick={() => switchTab("eten")} style={{ flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", background: tab === "eten" ? "#2c3e50" : "#e0e0e0", color: tab === "eten" ? "white" : "#333" }}>🍽️ Eten</button>
         </div>
 
         {/* Terug */}

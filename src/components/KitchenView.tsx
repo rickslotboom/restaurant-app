@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Order, OrderItem, OrderStatus, Dish } from "../types";
 
-const BAR_CATEGORIES = ["Dranken"];
+const BAR_CATEGORIES = ["Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol", "Gebak", "Verse Sinaasappelsap"];
 
 const isToday = (ts?: number) => {
   if (!ts) return false;
