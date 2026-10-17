@@ -29,18 +29,18 @@ type CartLine = {
 
 // Categorieën zichtbaar in Dranken-tab (inclusief Verse sinaasappelsap)
 const DRANKEN_CATEGORIES = new Set([
-  "Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol",
-  "Gebak", "Verse Sinaasappelsap",
+  "Koffie", "Thee & Warme Dranken", "Koude dranken", "Sapjes", "Alcohol",
+  "Verse Sinaasappelsap",
 ]);
 
 // Categorieën die ALLEEN in Dranken-tab staan (niet ook in Eten)
 const DRANKEN_ONLY = new Set([
-  "Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol",
+  "Koffie", "Thee & Warme 'Dranken", "Koude dranken", "Sapjes", "Alcohol",
   "Verse Sinaasappelsap",
 ]);
 
 // Volgorde Dranken: Koffie, Thee, Frisdrank eerst — dan rest alfabetisch
-const DRANKEN_PRIORITY = ["Koffie", "Thee & Warme dranken", "Koude dranken", "Sapjes", "Alcohol", "Verse Sinaasappelsap"];
+const DRANKEN_PRIORITY = ["Koffie", "Thee & Warme Dranken", "Koude dranken", "Sapjes", "Alcohol", "Verse Sinaasappelsap"];
 
 // Volgorde Eten: prioriteit bovenaan — dan rest alfabetisch
 const ETEN_PRIORITY = ["Gebak", "Lunch", "Lekkere Trek", "Acties", "Arrangementen"];

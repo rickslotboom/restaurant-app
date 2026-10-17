@@ -167,8 +167,7 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAABUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:43:56.049Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -191,7 +190,7 @@
               "RelativeDocumentMoniker": "src\\components\\Menu.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
               "RelativeToolTip": "src\\components\\Menu.tsx",
-              "ViewState": "AgIAAM8AAAAAAAAAAAAAAC0AAABUAAAAAAAAAA==",
+              "ViewState": "AgIAABIAAAAAAAAAAAAmwCAAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:46:10.703Z",
               "EditorCaption": ""
@@ -206,8 +205,7 @@
               "RelativeToolTip": "src\\components\\PaymentModal.tsx",
               "ViewState": "AgIAAAwAAAAAAAAAAAAmwCAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:03Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:52:03Z"
             },
             {
               "$type": "Document",
@@ -255,8 +253,7 @@
               "RelativeToolTip": "src\\components\\KitchenView.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAABUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:43:46.901Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:43:46.901Z"
             },
             {
               "$type": "Document",
