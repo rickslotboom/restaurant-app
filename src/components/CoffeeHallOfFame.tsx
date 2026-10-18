@@ -24,7 +24,7 @@ export default function CoffeeHallOfFame({ orders, menu }: Props) {
     const byDay: Record<string, number> = {};
     orders.forEach((o) => {
       if (o.status !== "Betaald") return;
-      const day = new Date(o.timestamp).toLocaleDateString("nl-NL", {
+      const day = new Date(o.timestamp ?? 0).toLocaleDateString("nl-NL", {
         day: "2-digit", month: "long", year: "numeric",
       });
       o.items.forEach((item) => {
