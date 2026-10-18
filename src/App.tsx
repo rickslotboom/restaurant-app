@@ -16,6 +16,8 @@ import { useAuthContext } from "./hooks/useAuth";
 import { OrderItem } from "./types";
 import RoosterView from "./components/RoosterView";
 import CoffeeHallOfFame from "./components/CoffeeHallOfFame";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
 console.log("Header:", Header);
 console.log("Menu:", Menu);
@@ -97,26 +99,37 @@ export default function App() {
   };
 
   const handleSplitConfirm = async (
-    remainingItems: OrderItem[],
-    method: "cash" | "pin",
-    tip: number
-  ) => {
-    if (!splitTable) return;
-    const order = orders.find(
-      (o) => o.table === splitTable && o.status !== "Betaald"
-    );
-    if (!order) return;
-    try {
-      if (remainingItems.length === 0) {
-        await updateOrderStatus(order.id, "Betaald");
-      } else {
-        await updateOrderItems(order.id, remainingItems);
-      }
-      setSplitTable(null);
-    } catch (err) {
-      alert("Er ging iets mis bij het splitsen.");
+  remainingItems: OrderItem[],
+  method: "cash" | "pin",
+  tip: number
+) => {
+  if (!splitTable) return;
+  const order = orders.find(
+    (o) => o.table === splitTable && o.status !== "Betaald"
+  );
+  if (!order) return;
+  try {
+    if (remainingItems.length === 0) {
+      await updateOrderStatus(order.id, "Betaald");
+    } else {
+      const remainingMap: Record<string, number> = {};
+      remainingItems.forEach((i) => {
+        remainingMap[i.dishId] = (remainingMap[i.dishId] || 0) + i.qty;
+      });
+      const paidItems = order.items.flatMap((item) => {
+        const remainQty = remainingMap[item.dishId] || 0;
+        const paidQty = item.qty - remainQty;
+        if (paidQty <= 0) return [];
+        return [{ ...item, qty: paidQty }];
+      });
+      await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
+      await updateOrderItems(order.id, remainingItems);
     }
-  };
+    setSplitTable(null);
+  } catch (err) {
+    alert("Er ging iets mis bij het splitsen.");
+  }
+};
 
   const splitOrder = splitTable
     ? orders.find((o) => o.table === splitTable && o.status !== "Betaald")
