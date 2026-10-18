@@ -102,6 +102,17 @@ export default function ReportsView({ orders }: Props) {
       }
     });
 
+    const itemSales: Record<string, { name: string; qty: number; revenue: number }> = {};
+paidInRange.forEach((o) => {
+  o.items.forEach((item) => {
+    const key = item.name;
+    if (!itemSales[key]) itemSales[key] = { name: item.name, qty: 0, revenue: 0 };
+    itemSales[key].qty += item.qty;
+    itemSales[key].revenue += item.price * item.qty;
+  });
+});
+const topItems = Object.values(itemSales).sort((a, b) => b.qty - a.qty);
+
     return {
       orderCount: paidInRange.length,
       grossRevenue,
@@ -111,6 +122,7 @@ export default function ReportsView({ orders }: Props) {
       vatTotal,
       vat9Total,
       vat21Total,
+      topItems,
     };
   }, [orders, fromTs, toTs]);
 
@@ -211,6 +223,8 @@ export default function ReportsView({ orders }: Props) {
               <div style={valueStyle}>€{stats.pinTotal.toFixed(2)}</div>
             </div>
 
+
+
             <div style={cardStyle}>
               <div style={labelStyle}>🙌 Fooi</div>
               <div style={valueStyle}>€{stats.tipTotal.toFixed(2)}</div>
@@ -224,6 +238,34 @@ export default function ReportsView({ orders }: Props) {
               </div>
             </div>
           </div>
+
+          {stats.topItems.length > 0 && (
+  <div style={{ marginTop: "1.5rem" }}>
+    <h3 style={{ marginBottom: "0.75rem" }}>🏆 Verkochte items</h3>
+    <div style={{ border: "1px solid #e0e0e0", borderRadius: "12px", overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem" }}>
+        <thead>
+          <tr style={{ background: "#f5f5f5" }}>
+            <th style={{ textAlign: "left", padding: "0.6rem 1rem", fontWeight: "bold", color: "#555" }}>#</th>
+            <th style={{ textAlign: "left", padding: "0.6rem 1rem", fontWeight: "bold", color: "#555" }}>Item</th>
+            <th style={{ textAlign: "right", padding: "0.6rem 1rem", fontWeight: "bold", color: "#555" }}>Aantal</th>
+            <th style={{ textAlign: "right", padding: "0.6rem 1rem", fontWeight: "bold", color: "#555" }}>Omzet</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stats.topItems.map((item, i) => (
+            <tr key={item.name} style={{ borderTop: "1px solid #eee", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+              <td style={{ padding: "0.6rem 1rem", color: "#aaa" }}>{i + 1}</td>
+              <td style={{ padding: "0.6rem 1rem" }}>{item.name}</td>
+              <td style={{ padding: "0.6rem 1rem", textAlign: "right", fontWeight: "bold" }}>{item.qty}×</td>
+              <td style={{ padding: "0.6rem 1rem", textAlign: "right", color: "#2e7d32" }}>€{item.revenue.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
           {stats.orderCount === 0 && (
             <p style={{ color: "#888" }}>Geen betaalde bonnen in deze periode.</p>
