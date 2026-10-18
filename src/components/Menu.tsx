@@ -368,6 +368,7 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
     }
   };
 
+
   const handlePaymentConfirm = (orderId: string, method: "cash" | "pin", tip: number, paidTotal: number, discountAmount: number) => {
     markOrderPaid(orderId, method, tip, paidTotal, discountAmount);
     setShowPayment(false);
@@ -378,7 +379,21 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
   const toggleCategory = (cat: string) => setOpenCategory((prev) => prev === cat ? null : cat);
 
   const lineToDelete = cart.find((l) => l.lineId === deleteConfirmLineId);
-  const openCatDishes = openCategory ? visibleDishes.filter((d) => d.category === openCategory) : [];
+
+  const salesMap = React.useMemo(() => {
+  const map: Record<string, number> = {};
+  orders.forEach((o) => {
+    if (o.status !== "Betaald") return;
+    o.items.forEach((item) => { map[item.name] = (map[item.name] || 0) + item.qty; });
+  });
+  return map;
+}, [orders]);
+
+const openCatDishes = openCategory
+  ? visibleDishes
+      .filter((d) => d.category === openCategory)
+      .sort((a, b) => (salesMap[b.name] || 0) - (salesMap[a.name] || 0))
+  : [];
 
   return (
     <div style={{ display: "flex", gap: "1.5rem", padding: "1rem", alignItems: "flex-start" }}>
