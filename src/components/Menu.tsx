@@ -263,7 +263,7 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
 }
 
 const categoryIcons: Record<string, string> = {
-  "Koffie": "☕", "Thee & Warme dranken": "🫖", "Koude dranken": "🥤",
+  "Koffie": "☕", "Thee & Warme Dranken": "🫖", "Koude dranken": "🥤",
   "Alcohol": "🍷", "Gebak": "🧁", "Verse Sinaasappelsap": "🍊",
   "Lunch": "🍽️", "Lekkere Trek": "🫒", "Acties": "🏷️", "Arrangementen": "🎉",
   "Ontbijt": "🍳", "Soepen": "🍲", "Salades & Bowls": "🥗",
