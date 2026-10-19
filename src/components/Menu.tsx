@@ -531,7 +531,9 @@ const openCatDishes = openCategory
                       <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
                         <button onClick={() => removeFromCart(line.lineId)}>-</button>
                         <span style={{ margin: "0 0.4rem" }}>{line.qty}</span>
-                        <button onClick={() => { const dish = menu.find((d) => d.id === line.dishId); if (dish) addToCart(dish, line.modifiers); }}>+</button>
+                        <button onClick={() => setCart((prev) =>
+  prev.map((l) => l.lineId === line.lineId ? { ...l, qty: l.qty + 1 } : l)
+)}>+</button>
                       </div>
                       <span style={{ minWidth: "55px", textAlign: "right" }}>€{(line.basePrice * line.qty).toFixed(2)}</span>
                       <button onClick={() => setDeleteConfirmLineId(line.lineId)} style={{ background: "none", border: "none", color: "#d9534f", cursor: "pointer" }} title="Verwijder">🗑️</button>
