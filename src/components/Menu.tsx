@@ -318,13 +318,27 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
   };
 
   const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; price: number }[]) => {
-    const lineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
-    setCart((prev) => {
-      const existing = prev.find((l) => l.lineId === lineId);
-      if (existing) return prev.map((l) => l.lineId === lineId ? { ...l, qty: l.qty + 1 } : l);
-      return [...prev, { lineId, dishId: dish.id, name: dish.name, basePrice: dish.price, vatRate: dish.vatRate ?? 9, modifiers: chosenModifiers, qty: 1, note: "" }];
-    });
-  };
+  const baseLineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
+  setCart((prev) => {
+    const existing = prev.find((l) => l.lineId === baseLineId && !l.note);
+    if (existing) {
+      return prev.map((l) =>
+        l.lineId === baseLineId && !l.note ? { ...l, qty: l.qty + 1 } : l
+      );
+    }
+    const uniqueLineId = `${baseLineId}_${Date.now()}`;
+    return [...prev, {
+      lineId: uniqueLineId,
+      dishId: dish.id,
+      name: dish.name,
+      basePrice: dish.price,
+      vatRate: dish.vatRate ?? 9,
+      modifiers: chosenModifiers,
+      qty: 1,
+      note: "",
+    }];
+  });
+};
 
   const removeFromCart = (lineId: string) => {
     setCart((prev) => {

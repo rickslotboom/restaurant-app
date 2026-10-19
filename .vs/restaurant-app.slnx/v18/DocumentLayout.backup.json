@@ -184,8 +184,7 @@
               "ViewState": "AgIAAJYBAAAAAAAAAAAUwLEBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:45:58.885Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -197,8 +196,7 @@
               "RelativeToolTip": "src\\components\\CoffeeHallOfFame.tsx",
               "ViewState": "AgIAAC4AAAAAAAAAAAAUwEkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-10-18T10:21:57.252Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-10-18T10:21:57.252Z"
             },
             {
               "$type": "Document",
@@ -210,8 +208,7 @@
               "RelativeToolTip": "src\\components\\PaymentModal.tsx",
               "ViewState": "AgIAAJYBAAAAAAAAAAAmwKQBAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:03Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:52:03Z"
             },
             {
               "$type": "Document",
@@ -223,8 +220,7 @@
               "RelativeToolTip": "src\\components\\SplitPaymentModal.tsx",
               "ViewState": "AgIAAPQBAAAAAAAAAAAUwA8CAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:10.393Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:52:10.393Z"
             },
             {
               "$type": "Document",
@@ -236,8 +232,7 @@
               "RelativeToolTip": "src\\components\\FloorPlan.tsx",
               "ViewState": "AgIAAKEAAAAAAAAAAAAUwLwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-08-13T07:24:57.46Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-13T07:24:57.46Z"
             },
             {
               "$type": "Document",
@@ -247,7 +242,7 @@
               "RelativeDocumentMoniker": "src\\App.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeToolTip": "src\\App.tsx",
-              "ViewState": "AgIAAGgAAAAAAAAAAAAUwIMAAAACAAAAAAAAAA==",
+              "ViewState": "AgIAAN0AAAAAAAAAAAAYwPgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-07-31T16:49:44.784Z",
               "EditorCaption": ""
