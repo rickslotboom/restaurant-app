@@ -58,9 +58,11 @@ function makeLineId(dishId: string, modifierIds: string[]): string {
 function OrderItemsList({
   items,
   onRemoveItem,
+  onDecreaseItem,
 }: {
   items: OrderItem[];
   onRemoveItem?: (dishId: string) => void;
+  onDecreaseItem?: (dishId: string) => void;
 }) {
   return (
     <ul style={{ margin: "0.25rem 0", padding: 0, listStyle: "none" }}>
@@ -74,6 +76,13 @@ function OrderItemsList({
               <span>{item.qty}× {item.name}</span>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span>€{(basePrice * item.qty).toFixed(2)}</span>
+                {onDecreaseItem && (
+                  <button
+                    onClick={() => onDecreaseItem(item.dishId)}
+                    style={{ background: "none", border: "1px solid #ccc", borderRadius: "4px", color: "#555", cursor: "pointer", fontSize: "0.85rem", padding: "0 0.4rem", lineHeight: "1.6" }}
+                    title="Één minder"
+                  >−</button>
+                )}
                 {onRemoveItem && (
                   <button
                     onClick={() => onRemoveItem(item.dishId)}
@@ -302,6 +311,23 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
     else await updateOrderItems(openOrder.id, updatedItems);
   };
 
+    const handleDecreaseItem = async (dishId: string) => {
+    if (!openOrder) return;
+    const item = openOrder.items.find((i) => i.dishId === dishId);
+    if (!item) return;
+    let updatedItems: typeof openOrder.items;
+    if (item.qty <= 1) {
+      if (!window.confirm("Laatste exemplaar — item verwijderen?")) return;
+      updatedItems = openOrder.items.filter((i) => i.dishId !== dishId);
+    } else {
+      updatedItems = openOrder.items.map((i) =>
+        i.dishId === dishId ? { ...i, qty: i.qty - 1 } : i
+      );
+    }
+    if (updatedItems.length === 0) await deleteOrder(openOrder.id);
+    else await updateOrderItems(openOrder.id, updatedItems);
+  };
+
   const existingTotal = openOrder
     ? openOrder.items.reduce((sum, item) => sum + item.price * item.qty, 0)
     : 0;
@@ -504,7 +530,7 @@ const openCatDishes = openCategory
         {openOrder && (
           <div style={{ border: "2px solid #4a90e2", borderRadius: "12px", padding: "1rem", backgroundColor: "#eef6ff" }}>
             <h2 style={{ marginTop: 0 }}>📋 Reeds besteld</h2>
-            <OrderItemsList items={openOrder.items} onRemoveItem={handleRemoveItem} />
+            <OrderItemsList items={openOrder.items} onRemoveItem={handleRemoveItem} onDecreaseItem={handleDecreaseItem} />
             <hr style={{ margin: "1rem 0" }} />
             <h3 style={{ margin: 0 }}>Geplaatst: €{existingTotal.toFixed(2)}</h3>
             <button
