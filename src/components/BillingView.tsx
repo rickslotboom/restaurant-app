@@ -364,7 +364,30 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
                     {order.orderNumber && ` — ${order.orderNumber}`}
                   </p>
 
-                  <OrderItemsList items={order.items} />
+                                    <OrderItemsList items={order.items} />
+
+                  {tab === "paid" && (
+                    <div style={{ fontSize: "0.85rem", color: "#555", marginTop: "0.25rem" }}>
+                      {(order.discountAmount ?? 0) > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span>Korting</span>
+                          <span style={{ color: "#d9534f" }}>−€{(order.discountAmount!).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {(order.tip ?? 0) > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span>Fooi</span>
+                          <span style={{ color: "#2e7d32" }}>+€{(order.tip!).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {order.paymentMethod && (
+                        <div style={{ color: "#888", marginTop: "0.15rem" }}>
+                          Betaald via {order.paymentMethod === "cash" ? "contant" : "pin"}
+                          {order.paidAt ? ` om ${new Date(order.paidAt).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {tab === "paid" && (
                     <button onClick={() => handleUndoClick(order)} style={{
