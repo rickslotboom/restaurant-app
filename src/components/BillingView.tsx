@@ -401,9 +401,12 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
                 </div>
               ))}
 
-              <strong style={{ fontSize: "1rem" }}>
-                Totaal: €{getTotal(tableOrders).toFixed(2)}
-              </strong>
+<strong style={{ fontSize: "1rem" }}>
+  Totaal: €{tab === "paid"
+    ? tableOrders.reduce((s, o) => s + (o.paidTotal ?? o.items.reduce((a, i) => a + i.price * i.qty, 0)), 0).toFixed(2)
+    : getTotal(tableOrders).toFixed(2)
+  }
+</strong>
 
               {tab === "open" && (
                 <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>

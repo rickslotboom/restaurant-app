@@ -181,7 +181,7 @@
               "RelativeDocumentMoniker": "src\\components\\BillingView.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
               "RelativeToolTip": "src\\components\\BillingView.tsx",
-              "ViewState": "AgIAADUAAAAAAAAAAAAmwEUAAAA9AAAAAAAAAA==",
+              "ViewState": "AgIAAIcBAAAAAAAAAAAAAJIBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-06-14T12:45:58.885Z",
               "IsPinned": true,
@@ -197,8 +197,7 @@
               "RelativeToolTip": "src\\components\\SplitPaymentModal.tsx",
               "ViewState": "AgIAAKMAAAAAAAAAAAAmwLEAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T12:52:10.393Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T12:52:10.393Z"
             },
             {
               "$type": "Document",
@@ -210,8 +209,7 @@
               "RelativeToolTip": "src\\hooks\\useOrders.tsx",
               "ViewState": "AgIAAL8AAAAAAAAAAAAUwNoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-06-14T13:14:55.115Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-14T13:14:55.115Z"
             },
             {
               "$type": "Document",
@@ -235,8 +233,7 @@
               "RelativeToolTip": "src\\App.tsx",
               "ViewState": "AgIAAGcAAAAAAAAAAAAAAAMBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-07-31T16:49:44.784Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T16:49:44.784Z"
             },
             {
               "$type": "Document",
@@ -248,8 +245,7 @@
               "RelativeToolTip": "src\\index.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-07-31T16:49:40.831Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T16:49:40.831Z"
             },
             {
               "$type": "Document",
@@ -261,8 +257,7 @@
               "RelativeToolTip": "src\\types\\index.ts",
               "ViewState": "AgIAACIAAAAAAAAAAAAUwC8AAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-07-31T16:51:06.256Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T16:51:06.256Z"
             },
             {
               "$type": "Document",
