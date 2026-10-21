@@ -52,7 +52,6 @@ export default function ReportsView({ orders }: Props) {
       const label = `${mon.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} — ${sun.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}`;
       return { fromTs: startOfDay(mon), toTs: endOfDay(sun), rangeLabel: `Week van ${label}` };
     }
-    // mode === "month"
     const [yStr, mStr] = selectedMonth.split("-");
     const y = parseInt(yStr, 10);
     const m = parseInt(mStr, 10) - 1;
@@ -85,12 +84,12 @@ export default function ReportsView({ orders }: Props) {
       const orderTip = o.tip ?? 0;
       const orderNet = orderPaidTotal - orderTip;
 
-      netRevenue += orderNet;
       grossRevenue += orderPaidTotal;
+      netRevenue += orderNet;
       tipTotal += orderTip;
 
-      if (o.paymentMethod === "cash") cashTotal += orderPaidTotal;
-      if (o.paymentMethod === "pin") pinTotal += orderPaidTotal;
+      if (o.paymentMethod === "cash") cashTotal += orderNet;
+      if (o.paymentMethod === "pin") pinTotal += orderNet;
 
       if (itemsSubtotal > 0) {
         const discountRatio = orderPaidTotal / itemsSubtotal;
@@ -118,8 +117,8 @@ export default function ReportsView({ orders }: Props) {
 
     return {
       orderCount: paidInRange.length,
-      netRevenue,
       grossRevenue,
+      netRevenue,
       cashTotal,
       pinTotal,
       tipTotal,
@@ -230,11 +229,13 @@ export default function ReportsView({ orders }: Props) {
             <div style={cardStyle}>
               <div style={labelStyle}>💵 Cash</div>
               <div style={valueStyle}>€{stats.cashTotal.toFixed(2)}</div>
+              <div style={{ fontSize: "0.8rem", color: "#aaa", marginTop: "0.3rem" }}>excl. fooi</div>
             </div>
 
             <div style={cardStyle}>
               <div style={labelStyle}>💳 Pin</div>
               <div style={valueStyle}>€{stats.pinTotal.toFixed(2)}</div>
+              <div style={{ fontSize: "0.8rem", color: "#aaa", marginTop: "0.3rem" }}>excl. fooi</div>
             </div>
 
             <div style={cardStyle}>
