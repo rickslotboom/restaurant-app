@@ -98,49 +98,59 @@ export default function App() {
     setSplitTable(tableId);
   };
 
-      const handleSplitConfirm = async (
-    remainingItems: OrderItem[],
-    method: "cash" | "pin",
-    tip: number,
-    discountAmount: number
-  ) => {
-    if (!splitTable) return;
-    const order = orders.find(
-      (o) => o.table === splitTable && o.status !== "Betaald"
-    );
-    if (!order) return;
-    try {
-      if (remainingItems.length === 0) {
-        await updateOrderStatus(order.id, "Betaald");
-      } else {
-        const paidItems = order.items.flatMap((item) => {
-          const remainQty = remainingItems.find(r => r.dishId === item.dishId)?.qty ?? 0;
-          const paidQty = item.qty - remainQty;
-          if (paidQty <= 0) return [];
-          return [{ ...item, qty: paidQty }];
-        });
+  const handleSplitConfirm = async (
+  remainingItems: OrderItem[],
+  method: "cash" | "pin",
+  tip: number,
+  discountAmount: number
+) => {
+  if (!splitTable) return;
+  const order = orders.find(
+    (o) => o.table === splitTable && o.status !== "Betaald"
+  );
+  if (!order) return;
+  try {
+    if (remainingItems.length === 0) {
+      await updateOrderStatus(order.id, "Betaald");
+    } else {
+      const paidItems = order.items.flatMap((item) => {
+        const remainQty = remainingItems.find(r => r.dishId === item.dishId)?.qty ?? 0;
+        const paidQty = item.qty - remainQty;
+        if (paidQty <= 0) return [];
+        return [{ ...item, qty: paidQty }];
+      });
 
-        await addOrder({
-          table: order.table,
-          status: "Betaald",
-          waiter: order.waiter,
-          timestamp: Date.now(),
-          items: paidItems,
-          paymentMethod: method,
-          tip,
-          paidTotal: paidItems.reduce((s, i) => s + i.price * i.qty, 0) - discountAmount + tip,
-          paidAt: Date.now(),
-          discountAmount,
-        });
+      const origSubtotal = paidItems.reduce((s, i) => s + i.price * i.qty, 0);
+      const paidTotal = origSubtotal - discountAmount + tip;
 
-        await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
-        await updateOrderItems(order.id, remainingItems);
-      }
-      setSplitTable(null);
-    } catch (err) {
-      alert("Er ging iets mis bij het splitsen.");
+      console.log("[Split] paidItems:", paidItems);
+      console.log("[Split] origSubtotal:", origSubtotal);
+      console.log("[Split] discountAmount:", discountAmount);
+      console.log("[Split] tip:", tip);
+      console.log("[Split] paidTotal:", paidTotal);
+
+      await addOrder({
+        table: order.table,
+        status: "Betaald",
+        waiter: order.waiter,
+        timestamp: Date.now(),
+        items: paidItems,
+        paymentMethod: method,
+        tip,
+        paidTotal,
+        paidAt: Date.now(),
+        discountAmount,
+      });
+
+      await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
+      await updateOrderItems(order.id, remainingItems);
     }
-  };
+    setSplitTable(null);
+  } catch (err) {
+    console.error("Split error:", err);
+    alert("Er ging iets mis bij het splitsen: " + (err as Error).message);
+  }
+};
 
   const splitOrder = splitTable
     ? orders.find((o) => o.table === splitTable && o.status !== "Betaald")
