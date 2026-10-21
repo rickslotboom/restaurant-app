@@ -5,7 +5,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 
 type Props = {
   order: Order;
-  onConfirm: (remainingItems: OrderItem[], method: "cash" | "pin", tip: number) => void;
+  onConfirm: (remainingItems: OrderItem[], method: "cash" | "pin", tip: number, discountAmount: number) => void;
   onCancel: () => void;
 };
 
@@ -109,7 +109,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
           };
         }
       });
-      onConfirm(Object.values(remainingMap), "pin", tipAmount);
+            onConfirm(Object.values(remainingMap), "pin", tipAmount, savings);
     } else if (data?.sumupStatus === "failed" || data?.sumupStatus === "cancelled") {
       setPinError("Betaling mislukt of geweigerd. Probeer opnieuw.");
       setStep("method");
@@ -135,7 +135,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
         };
       }
     });
-    onConfirm(Object.values(remainingMap), "cash", tipAmount);
+     onConfirm(Object.values(remainingMap), "cash", tipAmount, savings);
   };
 
  const handlePinClick = async () => {

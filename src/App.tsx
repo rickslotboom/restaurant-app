@@ -98,10 +98,11 @@ export default function App() {
     setSplitTable(tableId);
   };
 
-    const handleSplitConfirm = async (
+      const handleSplitConfirm = async (
     remainingItems: OrderItem[],
     method: "cash" | "pin",
-    tip: number
+    tip: number,
+    discountAmount: number
   ) => {
     if (!splitTable) return;
     const order = orders.find(
@@ -127,9 +128,9 @@ export default function App() {
           items: paidItems,
           paymentMethod: method,
           tip,
-          paidTotal: paidItems.reduce((s, i) => s + i.price * i.qty, 0) + tip,
+          paidTotal: paidItems.reduce((s, i) => s + i.price * i.qty, 0) - discountAmount + tip,
           paidAt: Date.now(),
-          discountAmount: 0,
+          discountAmount,
         });
 
         await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
