@@ -70,7 +70,6 @@ export default function ReportsView({ orders }: Props) {
     });
 
     let grossRevenue = 0;
-    let netRevenue = 0;
     let cashTotal = 0;
     let pinTotal = 0;
     let tipTotal = 0;
@@ -82,17 +81,16 @@ export default function ReportsView({ orders }: Props) {
       const itemsSubtotal = o.items.reduce((s, i) => s + i.price * i.qty, 0);
       const orderPaidTotal = o.paidTotal ?? itemsSubtotal;
       const orderTip = o.tip ?? 0;
-      const orderNet = orderPaidTotal - orderTip;
+      const orderBruto = orderPaidTotal - orderTip;
 
-      grossRevenue += orderPaidTotal;
-      netRevenue += orderNet;
+      grossRevenue += orderBruto;
       tipTotal += orderTip;
 
-      if (o.paymentMethod === "cash") cashTotal += orderNet;
-      if (o.paymentMethod === "pin") pinTotal += orderNet;
+      if (o.paymentMethod === "cash") cashTotal += orderBruto;
+      if (o.paymentMethod === "pin") pinTotal += orderBruto;
 
       if (itemsSubtotal > 0) {
-        const discountRatio = orderPaidTotal / itemsSubtotal;
+        const discountRatio = orderBruto / itemsSubtotal;
         o.items.forEach((item) => {
           const itemGross = item.price * item.qty * discountRatio;
           const rate = item.vatRate ?? 9;
@@ -103,6 +101,8 @@ export default function ReportsView({ orders }: Props) {
         });
       }
     });
+
+    const netRevenue = grossRevenue - vatTotal + tipTotal;
 
     const itemSales: Record<string, { name: string; qty: number; revenue: number }> = {};
     paidInRange.forEach((o) => {
@@ -211,10 +211,10 @@ export default function ReportsView({ orders }: Props) {
         <>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ ...cardStyle, background: "#2c3e50", color: "white" }}>
-              <div style={{ ...labelStyle, color: "#cdd6df" }}>Totale brutoomzet</div>
+              <div style={{ ...labelStyle, color: "#cdd6df" }}>Brutoomzet</div>
               <div style={{ ...valueStyle, color: "white" }}>€{stats.grossRevenue.toFixed(2)}</div>
               <div style={{ fontSize: "0.8rem", color: "#cdd6df", marginTop: "0.3rem" }}>
-                incl. €{stats.tipTotal.toFixed(2)} fooi
+                incl. BTW, excl. fooi
               </div>
             </div>
 
@@ -222,7 +222,7 @@ export default function ReportsView({ orders }: Props) {
               <div style={{ ...labelStyle, color: "#cdd6df" }}>Netto-omzet</div>
               <div style={{ ...valueStyle, color: "white" }}>€{stats.netRevenue.toFixed(2)}</div>
               <div style={{ fontSize: "0.8rem", color: "#cdd6df", marginTop: "0.3rem" }}>
-                excl. fooi
+                excl. BTW, incl. fooi
               </div>
             </div>
 
