@@ -31,7 +31,7 @@ type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" 
 
 export default function App() {
   const { user, logout } = useAuthContext();
-  const { orders, updateOrderStatus, updateOrderTable, updateOrderItems } = useOrdersContext();
+  const { orders, updateOrderStatus, updateOrderTable, addOrder, updateOrderItems } = useOrdersContext();
   const { menu, addDish, deleteDish, updateDish } = useMenuContext();
 
   const [view, setView] = useState<ViewType>("floorplan");
@@ -98,38 +98,48 @@ export default function App() {
     setSplitTable(tableId);
   };
 
-  const handleSplitConfirm = async (
-  remainingItems: OrderItem[],
-  method: "cash" | "pin",
-  tip: number
-) => {
-  if (!splitTable) return;
-  const order = orders.find(
-    (o) => o.table === splitTable && o.status !== "Betaald"
-  );
-  if (!order) return;
-  try {
-    if (remainingItems.length === 0) {
-      await updateOrderStatus(order.id, "Betaald");
-    } else {
-      const remainingMap: Record<string, number> = {};
-      remainingItems.forEach((i) => {
-        remainingMap[i.dishId] = (remainingMap[i.dishId] || 0) + i.qty;
-      });
-      const paidItems = order.items.flatMap((item) => {
-        const remainQty = remainingMap[item.dishId] || 0;
-        const paidQty = item.qty - remainQty;
-        if (paidQty <= 0) return [];
-        return [{ ...item, qty: paidQty }];
-      });
-      await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
-      await updateOrderItems(order.id, remainingItems);
+    const handleSplitConfirm = async (
+    remainingItems: OrderItem[],
+    method: "cash" | "pin",
+    tip: number
+  ) => {
+    if (!splitTable) return;
+    const order = orders.find(
+      (o) => o.table === splitTable && o.status !== "Betaald"
+    );
+    if (!order) return;
+    try {
+      if (remainingItems.length === 0) {
+        await updateOrderStatus(order.id, "Betaald");
+      } else {
+        const paidItems = order.items.flatMap((item) => {
+          const remainQty = remainingItems.find(r => r.dishId === item.dishId)?.qty ?? 0;
+          const paidQty = item.qty - remainQty;
+          if (paidQty <= 0) return [];
+          return [{ ...item, qty: paidQty }];
+        });
+
+        await addOrder({
+          table: order.table,
+          status: "Betaald",
+          waiter: order.waiter,
+          timestamp: Date.now(),
+          items: paidItems,
+          paymentMethod: method,
+          tip,
+          paidTotal: paidItems.reduce((s, i) => s + i.price * i.qty, 0) + tip,
+          paidAt: Date.now(),
+          discountAmount: 0,
+        });
+
+        await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
+        await updateOrderItems(order.id, remainingItems);
+      }
+      setSplitTable(null);
+    } catch (err) {
+      alert("Er ging iets mis bij het splitsen.");
     }
-    setSplitTable(null);
-  } catch (err) {
-    alert("Er ging iets mis bij het splitsen.");
-  }
-};
+  };
 
   const splitOrder = splitTable
     ? orders.find((o) => o.table === splitTable && o.status !== "Betaald")
