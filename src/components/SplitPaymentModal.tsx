@@ -117,7 +117,7 @@ export default function SplitPaymentModal({ order, onConfirm, onCancel }: Props)
   });
 
   return () => unsubscribe();
-}, [step, order.id, tipAmount, lines, onConfirm]);
+}, [step, order.id, tipAmount, lines, onConfirm, savings]);
 
   const handleCashConfirm = () => {
     const unselectedLines = lines.filter((l) => !l.selected);
