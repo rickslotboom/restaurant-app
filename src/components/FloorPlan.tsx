@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Order } from "../types";
 import { useFloorPlanContext, TableDef, TableSize } from "../hooks/useFloorPlan";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 type Props = {
   orders: Order[];
@@ -22,18 +24,19 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
   const [moveMode, setMoveMode] = useState(false);
   const [splitMode, setSplitMode] = useState(false);
   const [sourceTable, setSourceTable] = useState<string | null>(null);
+  const [printMode, setPrintMode] = useState(false);
 
   const hasOpenOrder = (name: string) =>
     orders.some((o) => o.table === name && o.status !== "Betaald");
 
   const floorTables = tables.filter((t) => t.floor === floor);
 
-  // Bereken canvas grootte op basis van tafels
   const canvasWidth = Math.max(900, ...floorTables.map((t) => t.x + SIZE_DIMS[t.size].width + 40));
   const canvasHeight = Math.max(400, ...floorTables.map((t) => t.y + SIZE_DIMS[t.size].height + 40));
 
-  const handleTableClick = (t: TableDef) => {
+  const handleTableClick = async (t: TableDef) => {
     const id = t.name;
+
     if (moveMode) {
       if (!sourceTable) {
         if (!hasOpenOrder(id)) return;
@@ -50,12 +53,27 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
       }
       return;
     }
+
     if (splitMode) {
       if (!hasOpenOrder(id)) return;
       onSplitBill?.(id);
       setSplitMode(false);
       return;
     }
+
+    if (printMode) {
+      if (!hasOpenOrder(id)) return;
+      const tableOrders = orders.filter((o) => o.table === id && o.status !== "Betaald");
+      await Promise.all(tableOrders.map((o) =>
+        updateDoc(doc(db, "orders", o.id), { printPreview: false })
+      ));
+      await Promise.all(tableOrders.map((o) =>
+        updateDoc(doc(db, "orders", o.id), { printPreview: true })
+      ));
+      setPrintMode(false);
+      return;
+    }
+
     onTableSelect(id);
   };
 
@@ -65,6 +83,10 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
       if (t.name === sourceTable) return { backgroundColor: "#1565C0", border: "3px solid #0D47A1", boxShadow: "0 0 12px rgba(21,101,192,0.7)", cursor: "pointer" };
       if (open) return { backgroundColor: "#E65100", border: "3px solid #BF360C", cursor: "pointer" };
       return { backgroundColor: "#2e7d32", border: "3px dashed #1b5e20", cursor: sourceTable ? "pointer" : "not-allowed", opacity: sourceTable ? 1 : 0.4 };
+    }
+    if (printMode) {
+      if (open) return { backgroundColor: "#607d8b", border: "3px solid #37474f", cursor: "pointer" };
+      return { backgroundColor: "#4a5568", border: "3px solid transparent", cursor: "not-allowed", opacity: 0.35 };
     }
     if (splitMode) {
       if (open) return { backgroundColor: "#7B1FA2", border: "3px solid #4A148C", cursor: "pointer" };
@@ -78,13 +100,9 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
     };
   };
 
-  const cancelModes = () => {
-    setMoveMode(false);
-    setSplitMode(false);
-    setSourceTable(null);
-  };
+  const cancelModes = () => { setMoveMode(false); setSplitMode(false); setPrintMode(false); setSourceTable(null); };
 
-  const activeMode = moveMode || splitMode;
+  const activeMode = moveMode || splitMode || printMode;
 
   return (
     <div style={{ padding: "1.5rem", overflowX: "auto" }}>
@@ -116,6 +134,10 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
                 background: "#7B1FA2", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "14px",
               }}>✂️ Splits rekening</button>
             )}
+            <button onClick={() => setPrintMode(true)} style={{
+              padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
+              background: "#607d8b", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "14px",
+            }}>🖨️ Rekening</button>
           </div>
         )}
 
@@ -123,14 +145,16 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <span style={{
               padding: "0.5rem 1rem", borderRadius: "8px",
-              background: moveMode ? "#fff3cd" : "#f3e5f5",
-              color: moveMode ? "#856404" : "#4A148C",
+              background: moveMode ? "#fff3cd" : splitMode ? "#f3e5f5" : "#e3f2fd",
+              color: moveMode ? "#856404" : splitMode ? "#4A148C" : "#37474f",
               fontWeight: "600", fontSize: "14px",
-              border: `1px solid ${moveMode ? "#ffc107" : "#CE93D8"}`,
+              border: `1px solid ${moveMode ? "#ffc107" : splitMode ? "#CE93D8" : "#90a4ae"}`,
             }}>
               {moveMode
                 ? (!sourceTable ? "🟠 Klik op de tafel die je wilt verplaatsen" : "🔵 Klik op de doeltafel")
-                : "🟣 Klik op de tafel om te splitsen"}
+                : splitMode
+                ? "🟣 Klik op de tafel om te splitsen"
+                : "🖨️ Klik op de tafel om de rekening te printen"}
             </span>
             <button onClick={cancelModes} style={{
               padding: "0.5rem 1rem", borderRadius: "8px",
