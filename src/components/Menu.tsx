@@ -27,22 +27,17 @@ type CartLine = {
   note: string;
 };
 
-// Categorieën zichtbaar in Dranken-tab (inclusief Verse sinaasappelsap)
 const DRANKEN_CATEGORIES = new Set([
   "Koffie", "Thee & Warme Dranken", "Koude dranken", "Sapjes", "Alcohol",
   "Verse Sinaasappelsap",
 ]);
 
-// Categorieën die ALLEEN in Dranken-tab staan (niet ook in Eten)
 const DRANKEN_ONLY = new Set([
   "Koffie", "Thee & Warme Dranken", "Koude dranken", "Sapjes", "Alcohol",
   "Verse Sinaasappelsap",
 ]);
 
-// Volgorde Dranken: Koffie, Thee, Frisdrank eerst — dan rest alfabetisch
 const DRANKEN_PRIORITY = ["Koffie", "Thee & Warme Dranken", "Koude dranken", "Sapjes", "Alcohol", "Verse Sinaasappelsap"];
-
-// Volgorde Eten: prioriteit bovenaan — dan rest alfabetisch
 const ETEN_PRIORITY = ["Gebak", "Lunch", "Lekkere Trek", "Acties", "Arrangementen"];
 
 function sortCategories(cats: string[], priority: string[]): string[] {
@@ -121,22 +116,15 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
   onConfirm: (chosen: { id: string; name: string; price: number }[]) => void;
   onCancel: () => void;
 }) {
-  // Legacy enkelvoudige modifiers (checkbox, optioneel)
   const [checkedLegacy, setCheckedLegacy] = useState<Record<string, boolean>>({});
-  // Groepen: single → één geselecteerde optie-id per groep, multiple → set van ids
   const [groupSingle, setGroupSingle] = useState<Record<string, string>>({});
   const [groupMulti, setGroupMulti] = useState<Record<string, Record<string, boolean>>>({});
 
   const groups: ModifierGroup[] = dish.modifierGroups ?? [];
   const legacyMods = dish.modifiers ?? [];
 
-  // Verzamel alle gekozen modifiers
   const chosenModifiers: { id: string; name: string; price: number }[] = [];
-
-  // Legacy
   legacyMods.forEach((m) => { if (checkedLegacy[m.id]) chosenModifiers.push(m); });
-
-  // Groepen
   groups.forEach((g) => {
     if (g.type === "single") {
       const id = groupSingle[g.id];
@@ -150,11 +138,9 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
     }
   });
 
-  // Validatie: zijn alle verplichte groepen ingevuld?
   const missingRequired = groups.filter((g) => {
     if (!g.required) return false;
     if (g.type === "single") return !groupSingle[g.id];
-    // multiple + required: minstens 1 optie gekozen
     return !Object.values(groupMulti[g.id] ?? {}).some(Boolean);
   });
   const canConfirm = missingRequired.length === 0;
@@ -176,7 +162,6 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
         <h2 style={{ margin: "0 0 0.25rem 0" }}>{dish.name}</h2>
         <p style={{ margin: "0 0 1.25rem 0", color: "#555" }}>Basisprijs: €{dish.price.toFixed(2)}</p>
 
-        {/* Verplichte / gegroepeerde keuzes */}
         {groups.map((g) => (
           <div key={g.id} style={{ marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
@@ -222,7 +207,6 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
           </div>
         ))}
 
-        {/* Legacy enkelvoudige modifiers */}
         {legacyMods.length > 0 && (
           <div style={{ marginBottom: "1.25rem" }}>
             <p style={{ fontWeight: "bold", fontSize: "0.95rem", marginBottom: "0.5rem" }}>
@@ -247,7 +231,6 @@ function ModifierModal({ dish, onConfirm, onCancel }: {
           </div>
         )}
 
-        {/* Waarschuwing verplichte velden */}
         {!canConfirm && (
           <p style={{ color: "#e53935", fontSize: "0.85rem", margin: "0 0 0.75rem 0" }}>
             Maak nog een keuze bij: {missingRequired.map((g) => g.name).join(", ")}
@@ -311,7 +294,7 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
     else await updateOrderItems(openOrder.id, updatedItems);
   };
 
-    const handleDecreaseItem = async (dishId: string) => {
+  const handleDecreaseItem = async (dishId: string) => {
     if (!openOrder) return;
     const item = openOrder.items.find((i) => i.dishId === dishId);
     if (!item) return;
@@ -344,27 +327,27 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
   };
 
   const addToCart = (dish: Dish, chosenModifiers: { id: string; name: string; price: number }[]) => {
-  const baseLineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
-  setCart((prev) => {
-    const existing = prev.find((l) => l.lineId === baseLineId && !l.note);
-    if (existing) {
-      return prev.map((l) =>
-        l.lineId === baseLineId && !l.note ? { ...l, qty: l.qty + 1 } : l
-      );
-    }
-    const uniqueLineId = `${baseLineId}_${Date.now()}`;
-    return [...prev, {
-      lineId: uniqueLineId,
-      dishId: dish.id,
-      name: dish.name,
-      basePrice: dish.price,
-      vatRate: dish.vatRate ?? 9,
-      modifiers: chosenModifiers,
-      qty: 1,
-      note: "",
-    }];
-  });
-};
+    const baseLineId = makeLineId(dish.id, chosenModifiers.map((m) => m.id));
+    setCart((prev) => {
+      const existing = prev.find((l) => l.lineId === baseLineId && !l.note);
+      if (existing) {
+        return prev.map((l) =>
+          l.lineId === baseLineId && !l.note ? { ...l, qty: l.qty + 1 } : l
+        );
+      }
+      const uniqueLineId = `${baseLineId}_${Date.now()}`;
+      return [...prev, {
+        lineId: uniqueLineId,
+        dishId: dish.id,
+        name: dish.name,
+        basePrice: dish.price,
+        vatRate: dish.vatRate ?? 9,
+        modifiers: chosenModifiers,
+        qty: 1,
+        note: "",
+      }];
+    });
+  };
 
   const removeFromCart = (lineId: string) => {
     setCart((prev) => {
@@ -408,7 +391,6 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
     }
   };
 
-
   const handlePaymentConfirm = (orderId: string, method: "cash" | "pin", tip: number, paidTotal: number, discountAmount: number) => {
     markOrderPaid(orderId, method, tip, paidTotal, discountAmount);
     setShowPayment(false);
@@ -421,19 +403,19 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
   const lineToDelete = cart.find((l) => l.lineId === deleteConfirmLineId);
 
   const salesMap = React.useMemo(() => {
-  const map: Record<string, number> = {};
-  orders.forEach((o) => {
-    if (o.status !== "Betaald") return;
-    o.items.forEach((item) => { map[item.name] = (map[item.name] || 0) + item.qty; });
-  });
-  return map;
-}, [orders]);
+    const map: Record<string, number> = {};
+    orders.forEach((o) => {
+      if (o.status !== "Betaald") return;
+      o.items.forEach((item) => { map[item.name] = (map[item.name] || 0) + item.qty; });
+    });
+    return map;
+  }, [orders]);
 
-const openCatDishes = openCategory
-  ? visibleDishes
-      .filter((d) => d.category === openCategory)
-      .sort((a, b) => (salesMap[b.name] || 0) - (salesMap[a.name] || 0))
-  : [];
+  const openCatDishes = openCategory
+    ? visibleDishes
+        .filter((d) => d.category === openCategory)
+        .sort((a, b) => (salesMap[b.name] || 0) - (salesMap[a.name] || 0))
+    : [];
 
   return (
     <div style={{ display: "flex", gap: "1.5rem", padding: "1rem", alignItems: "flex-start" }}>
@@ -467,17 +449,13 @@ const openCatDishes = openCategory
 
       {/* LINKERKANT */}
       <div style={{ flex: 1, minWidth: 0 }}>
-
-        {/* Eten / Dranken tabs */}
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
           <button onClick={() => switchTab("dranken")} style={{ flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", background: tab === "dranken" ? "#2c3e50" : "#e0e0e0", color: tab === "dranken" ? "white" : "#333" }}>🍹 Dranken</button>
           <button onClick={() => switchTab("eten")} style={{ flex: 1, padding: "0.65rem 1rem", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", background: tab === "eten" ? "#2c3e50" : "#e0e0e0", color: tab === "eten" ? "white" : "#333" }}>🍽️ Eten</button>
         </div>
 
-        {/* Terug */}
         <button onClick={onBack} style={{ marginBottom: "1rem", padding: "0.4rem 0.8rem", borderRadius: "8px", border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: "0.9rem" }}>← Terug</button>
 
-        {/* Categorie-tiles naast elkaar */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
           {sortedCategories.map((category) => {
             const isOpen = openCategory === category;
@@ -502,7 +480,6 @@ const openCatDishes = openCategory
           })}
         </div>
 
-        {/* Gerechten van geselecteerde categorie */}
         {openCategory && (
           <div style={{ border: "2px solid #2c3e50", borderRadius: "10px", padding: "0.75rem", background: "#fff", display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
             {openCatDishes.map((dish) => (
@@ -527,18 +504,6 @@ const openCatDishes = openCategory
 
       {/* RECHTERKANT */}
       <div style={{ width: "370px", minWidth: "370px", display: "flex", flexDirection: "column", gap: "1rem", position: "sticky", top: "1rem" }}>
-        {openOrder && (
-          <div style={{ border: "2px solid #4a90e2", borderRadius: "12px", padding: "1rem", backgroundColor: "#eef6ff" }}>
-            <h2 style={{ marginTop: 0 }}>📋 Reeds besteld</h2>
-            <OrderItemsList items={openOrder.items} onRemoveItem={handleRemoveItem} onDecreaseItem={handleDecreaseItem} />
-            <hr style={{ margin: "1rem 0" }} />
-            <h3 style={{ margin: 0 }}>Geplaatst: €{existingTotal.toFixed(2)}</h3>
-            <button
-              onClick={async () => { if (!openOrder) return; if (!window.confirm("Hele order verwijderen?")) return; await deleteOrder(openOrder.id); onBack(); }}
-              style={{ marginTop: "0.5rem", width: "100%", background: "#d9534f", color: "white", border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem" }}
-            >🗑️ Verwijder hele order</button>
-          </div>
-        )}
 
         <div style={{ border: "2px solid #ddd", borderRadius: "12px", padding: "1rem", backgroundColor: "#fafafa" }}>
           <h2 style={{ marginTop: 0 }}>🛒 Nieuwe items toevoegen</h2>
@@ -558,8 +523,8 @@ const openCatDishes = openCategory
                         <button onClick={() => removeFromCart(line.lineId)}>-</button>
                         <span style={{ margin: "0 0.4rem" }}>{line.qty}</span>
                         <button onClick={() => setCart((prev) =>
-  prev.map((l) => l.lineId === line.lineId ? { ...l, qty: l.qty + 1 } : l)
-)}>+</button>
+                          prev.map((l) => l.lineId === line.lineId ? { ...l, qty: l.qty + 1 } : l)
+                        )}>+</button>
                       </div>
                       <span style={{ minWidth: "55px", textAlign: "right" }}>€{(line.basePrice * line.qty).toFixed(2)}</span>
                       <button onClick={() => setDeleteConfirmLineId(line.lineId)} style={{ background: "none", border: "none", color: "#d9534f", cursor: "pointer" }} title="Verwijder">🗑️</button>
@@ -598,6 +563,20 @@ const openCatDishes = openCategory
             )}
           </div>
         </div>
+
+        {openOrder && (
+          <div style={{ border: "2px solid #4a90e2", borderRadius: "12px", padding: "1rem", backgroundColor: "#eef6ff" }}>
+            <h2 style={{ marginTop: 0 }}>📋 Reeds besteld</h2>
+            <OrderItemsList items={openOrder.items} onRemoveItem={handleRemoveItem} onDecreaseItem={handleDecreaseItem} />
+            <hr style={{ margin: "1rem 0" }} />
+            <h3 style={{ margin: 0 }}>Geplaatst: €{existingTotal.toFixed(2)}</h3>
+            <button
+              onClick={async () => { if (!openOrder) return; if (!window.confirm("Hele order verwijderen?")) return; await deleteOrder(openOrder.id); onBack(); }}
+              style={{ marginTop: "0.5rem", width: "100%", background: "#d9534f", color: "white", border: "none", padding: "0.5rem", borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem" }}
+            >🗑️ Verwijder hele order</button>
+          </div>
+        )}
+
       </div>
     </div>
   );
