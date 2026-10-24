@@ -18,8 +18,6 @@ const ALL_TABLES = [
   "19","20","21","22","23","24","25","26","27",
 ];
 
-const [printMode, setPrintMode] = useState(false);
-
 const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
