@@ -16,8 +16,6 @@ import { useAuthContext } from "./hooks/useAuth";
 import { OrderItem } from "./types";
 import RoosterView from "./components/RoosterView";
 import CoffeeHallOfFame from "./components/CoffeeHallOfFame";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "./firebase";
 
 console.log("Header:", Header);
 console.log("Menu:", Menu);
