@@ -142,7 +142,6 @@ export default function App() {
         discountAmount,
       });
 
-      await updateDoc(doc(db, "orders", order.id), { splitPrint: paidItems });
       await updateOrderItems(order.id, remainingItems);
     }
     setSplitTable(null);
