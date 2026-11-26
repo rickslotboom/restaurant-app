@@ -92,6 +92,27 @@ export default function App() {
   }
 };
 
+const handleMergeTable = async (fromTable: string, toTable: string) => {
+  const fromOrders = orders.filter((o) => o.table === fromTable && o.status !== "Betaald");
+  const toOrder = orders.find((o) => o.table === toTable && o.status !== "Betaald");
+  if (!toOrder || fromOrders.length === 0) return;
+  try {
+    // Voeg items samen in de doeltafel-order
+    const mergedItems = [...toOrder.items];
+    fromOrders.flatMap((o) => o.items).forEach((newItem) => {
+      const existing = mergedItems.find((i) => i.dishId === newItem.dishId);
+      if (existing) existing.qty += newItem.qty;
+      else mergedItems.push(newItem);
+    });
+    await updateOrderItems(toOrder.id, mergedItems);
+    // Verwijder brontafel-orders
+    await Promise.all(fromOrders.map((o) => deleteOrder(o.id)));
+    alert(`✅ Tafel ${fromTable} samengevoegd met tafel ${toTable}`);
+  } catch (err) {
+    alert("Er ging iets mis bij het samenvoegen.");
+  }
+};
+
   const handleSplitBill = (tableId: string) => {
     setSplitTable(tableId);
   };

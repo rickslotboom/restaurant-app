@@ -8,6 +8,7 @@ type Props = {
   orders: Order[];
   onTableSelect: (table: string) => void;
   onMoveTable?: (fromTable: string, toTable: string) => void;
+  onMergeTable?: (fromTable: string, toTable: string) => void;
   onSplitBill?: (table: string) => void;
 };
 
@@ -18,7 +19,7 @@ const SIZE_DIMS: Record<TableSize, { width: number; height: number }> = {
   wide:   { width: 140, height: 72  },
 };
 
-export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitBill }: Props) {
+export default function FloorPlan({ orders, onTableSelect, onMoveTable, onMergeTable, onSplitBill }: Props) {
   const { tables } = useFloorPlanContext();
   const [floor, setFloor] = useState<"binnen" | "buiten">("binnen");
   const [moveMode, setMoveMode] = useState(false);
@@ -48,12 +49,7 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
             `Tafel ${id} heeft al een open bestelling.\n\nOK = Samenvoegen\nAnnuleren = Niet verplaatsen`
           );
           if (!merge) return;
-          const tableOrders = orders.filter(
-            (o) => o.table === sourceTable && o.status !== "Betaald"
-          );
-          await Promise.all(
-            tableOrders.map((o) => updateDoc(doc(db, "orders", o.id), { table: id }))
-          );
+          onMergeTable?.(sourceTable, id);
           setSourceTable(null);
           setMoveMode(false);
           return;
