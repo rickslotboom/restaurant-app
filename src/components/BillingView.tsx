@@ -103,10 +103,16 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
   const openOrders = orders.filter((o) => o.status !== "Betaald" && inRange(o));
 
   const paidByTable = paidOrders.reduce<Record<string, Order[]>>((acc, o) => {
-    if (!acc[o.table]) acc[o.table] = [];
-    acc[o.table].push(o);
-    return acc;
-  }, {});
+  if (!acc[o.table]) acc[o.table] = [];
+  acc[o.table].push(o);
+  return acc;
+}, {});
+
+const sortedPaidTables = Object.entries(paidByTable).sort(([, aOrders], [, bOrders]) => {
+  const aMax = Math.max(...aOrders.map(o => o.paidAt ?? o.timestamp ?? 0));
+  const bMax = Math.max(...bOrders.map(o => o.paidAt ?? o.timestamp ?? 0));
+  return bMax - aMax;
+});
 
   const openByTable = openOrders.reduce<Record<string, Order[]>>((acc, o) => {
     if (!acc[o.table]) acc[o.table] = [];
@@ -349,7 +355,7 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
         <p>Geen bonnen.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {Object.entries(displayedByTable).map(([tableId, tableOrders]) => (
+          {(tab === "paid" ? sortedPaidTables : Object.entries(displayedByTable)).map(([tableId, tableOrders]) => (
             <div key={tableId} style={{
               border: "2px solid #ccc", borderRadius: "10px", padding: "1rem",
               backgroundColor: tab === "paid" ? "#e8f5e9" : "#fff",
