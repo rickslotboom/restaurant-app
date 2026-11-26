@@ -112,11 +112,24 @@ export default function App() {
       await updateOrderStatus(order.id, "Betaald");
     } else {
       const paidItems = order.items.flatMap((item) => {
-        const remainQty = remainingItems.find(r => r.dishId === item.dishId)?.qty ?? 0;
-        const paidQty = item.qty - remainQty;
-        if (paidQty <= 0) return [];
-        return [{ ...item, qty: paidQty }];
-      });
+  const remainQty = remainingItems.find(r => r.dishId === item.dishId)?.qty ?? 0;
+  const paidQty = item.qty - remainQty;
+  if (paidQty <= 0) return [];
+  const clean: any = {
+    dishId: item.dishId,
+    name: item.name,
+    price: item.price,
+    qty: paidQty,
+    vatRate: item.vatRate ?? 9,
+    modifiers: (item.modifiers ?? []).map(m => ({
+      id: m.id,
+      name: m.name,
+      price: m.price,
+    })),
+  };
+  if (item.note !== undefined) clean.note = item.note;
+  return [clean];
+});
 
       const origSubtotal = paidItems.reduce((s, i) => s + i.price * i.qty, 0);
       const paidTotal = origSubtotal - discountAmount + tip;
@@ -130,7 +143,7 @@ export default function App() {
       await addOrder({
         table: order.table,
         status: "Betaald",
-        waiter: order.waiter,
+        waiter: order.waiter ?? "Onbekend",
         timestamp: Date.now(),
         items: paidItems,
         paymentMethod: method,

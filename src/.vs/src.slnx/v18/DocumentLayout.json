@@ -3,12 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Header.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:components\\Header.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:App.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:components\\PaymentModal.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:components\\Menu.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:hooks\\useOrders.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:components\\BillingView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Header.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:components\\Header.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\RoosterView.tsx||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -22,37 +38,89 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
+              "Title": "Menu.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
+              "RelativeDocumentMoniker": "components\\Menu.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Menu.tsx",
+              "RelativeToolTip": "components\\Menu.tsx",
+              "ViewState": "AgIAACsCAAAAAAAAAAAYwEYCAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-11-25T11:12:42.235Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "useOrders.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx",
+              "RelativeDocumentMoniker": "hooks\\useOrders.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\hooks\\useOrders.tsx",
+              "RelativeToolTip": "hooks\\useOrders.tsx",
+              "ViewState": "AgIAAL8AAAAAAAAAAAAUwNoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-11-25T11:12:04.44Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "BillingView.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
+              "RelativeDocumentMoniker": "components\\BillingView.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\BillingView.tsx",
+              "RelativeToolTip": "components\\BillingView.tsx",
+              "ViewState": "AgIAALABAAAAAAAAAAAYwMEBAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-11-25T11:06:54.215Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PaymentModal.tsx",
+              "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
+              "RelativeDocumentMoniker": "components\\PaymentModal.tsx",
+              "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\PaymentModal.tsx",
+              "RelativeToolTip": "components\\PaymentModal.tsx",
+              "ViewState": "AgIAAJUBAAAAAAAAAAAUwLABAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-11-25T11:06:09.161Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "Header.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Header.tsx",
               "RelativeDocumentMoniker": "components\\Header.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\Header.tsx",
               "RelativeToolTip": "components\\Header.tsx",
-              "ViewState": "AgIAAFoAAAAAAAAAAAAUwHUAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-09-16T07:23:51.202Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "App.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeDocumentMoniker": "App.tsx",
               "ToolTip": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\App.tsx",
               "RelativeToolTip": "App.tsx",
-              "ViewState": "AgIAAMAAAAAAAAAAAAAAANUAAAACAAAAAAAAAA==",
+              "ViewState": "AgIAAIMAAAAAAAAAAAAmwJEAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
               "WhenOpened": "2026-09-16T07:19:54.392Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "RoosterView.tsx",
               "DocumentMoniker": "C:\\Users\\ricks\\source\\repos\\restaurant-app\\src\\components\\RoosterView.tsx",
               "RelativeDocumentMoniker": "components\\RoosterView.tsx",
@@ -60,8 +128,7 @@
               "RelativeToolTip": "components\\RoosterView.tsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
-              "WhenOpened": "2026-09-16T07:18:09.189Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-16T07:18:09.189Z"
             }
           ]
         }

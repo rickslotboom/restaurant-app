@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\components"
+    "\\components",
+    "\\hooks"
   ],
-  "SelectedNode": "\\components\\Header.tsx",
+  "SelectedNode": "\\App.tsx",
   "PreviewInSolutionExplorer": false
 }
