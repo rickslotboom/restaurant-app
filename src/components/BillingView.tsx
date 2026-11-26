@@ -71,8 +71,7 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
 
   const { fromTs, toTs } = useMemo(() => {
     if (range === "today") {
-      return { fromTs: startOfDay(today), toTs: endOfDay(today) };
-    }
+  return { fromTs: startOfDay(new Date()), toTs: endOfDay(new Date()) };
     if (range === "day") {
       const d = new Date(selectedDay);
       return { fromTs: startOfDay(d), toTs: endOfDay(d) };
@@ -97,8 +96,10 @@ export default function BillingView({ orders, onUpdateStatus }: Props) {
     order.timestamp >= fromTs &&
     order.timestamp <= toTs;
 
-  const paidOrders = orders.filter((o) => o.status === "Betaald" && inRange(o));
-  const openOrders = orders.filter((o) => o.status !== "Betaald");
+  const paidOrders = orders
+  .filter((o) => o.status === "Betaald" && inRange(o))
+  .sort((a, b) => (b.paidAt ?? b.timestamp ?? 0) - (a.paidAt ?? a.timestamp ?? 0));
+  const openOrders = orders.filter((o) => o.status !== "Betaald" && inRange(o));
 
   const paidByTable = paidOrders.reduce<Record<string, Order[]>>((acc, o) => {
     if (!acc[o.table]) acc[o.table] = [];
