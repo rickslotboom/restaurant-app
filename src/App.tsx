@@ -209,12 +209,12 @@ const handleMergeTable = async (fromTable: string, toTable: string) => {
         {/* Plattegrond */}
         {(isBediening || isManager) && view === "floorplan" && (
           <FloorPlan
-            orders={orders}
-            onTableSelect={handleTableSelect}
-            onMoveTable={handleMoveTable}
-            onSplitBill={handleSplitBill}
-          />
-        )}
+  orders={orders}
+  onTableSelect={handleTableSelect}
+  onMoveTable={handleMoveTable}
+  onMergeTable={handleMergeTable}
+  onSplitBill={handleSplitBill}
+/>
 
         {/* Menu / bestellen */}
         {(isBediening || isManager) && view === "menu" && (
