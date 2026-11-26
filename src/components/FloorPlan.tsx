@@ -44,7 +44,18 @@ export default function FloorPlan({ orders, onTableSelect, onMoveTable, onSplitB
       } else {
         if (id === sourceTable) { setSourceTable(null); return; }
         if (hasOpenOrder(id)) {
-          alert(`Tafel ${id} heeft al een open bestelling.`);
+          const merge = window.confirm(
+            `Tafel ${id} heeft al een open bestelling.\n\nOK = Samenvoegen\nAnnuleren = Niet verplaatsen`
+          );
+          if (!merge) return;
+          const tableOrders = orders.filter(
+            (o) => o.table === sourceTable && o.status !== "Betaald"
+          );
+          await Promise.all(
+            tableOrders.map((o) => updateDoc(doc(db, "orders", o.id), { table: id }))
+          );
+          setSourceTable(null);
+          setMoveMode(false);
           return;
         }
         onMoveTable?.(sourceTable, id);
