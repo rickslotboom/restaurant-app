@@ -80,17 +80,17 @@ export default function App() {
   };
 
   const handleMoveTable = async (fromTable: string, toTable: string) => {
-    const order = orders.find(
-      (o) => o.table === fromTable && o.status !== "Betaald"
-    );
-    if (!order) return;
-    try {
-      await updateOrderTable(order.id, toTable);
-      alert(`✅ Tafel ${fromTable} verplaatst naar tafel ${toTable}`);
-    } catch (err) {
-      alert("Er ging iets mis bij het verplaatsen.");
-    }
-  };
+  const tableOrders = orders.filter(
+    (o) => o.table === fromTable && o.status !== "Betaald"
+  );
+  if (tableOrders.length === 0) return;
+  try {
+    await Promise.all(tableOrders.map((o) => updateOrderTable(o.id, toTable)));
+    alert(`✅ Tafel ${fromTable} verplaatst naar tafel ${toTable}`);
+  } catch (err) {
+    alert("Er ging iets mis bij het verplaatsen.");
+  }
+};
 
   const handleSplitBill = (tableId: string) => {
     setSplitTable(tableId);
