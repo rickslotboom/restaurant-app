@@ -215,6 +215,7 @@ const handleMergeTable = async (fromTable: string, toTable: string) => {
   onMergeTable={handleMergeTable}
   onSplitBill={handleSplitBill}
 />
+        )}
 
         {/* Menu / bestellen */}
         {(isBediening || isManager) && view === "menu" && (
