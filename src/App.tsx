@@ -29,7 +29,7 @@ type ViewType = "floorplan" | "menu" | "kitchen" | "billing" | "bar" | "beheer" 
 
 export default function App() {
   const { user, logout } = useAuthContext();
-  const { orders, updateOrderStatus, updateOrderTable, addOrder, updateOrderItems } = useOrdersContext();
+  const { orders, updateOrderStatus, updateOrderTable, addOrder, updateOrderItems, deleteOrder } = useOrdersContext();
   const { menu, addDish, deleteDish, updateDish } = useMenuContext();
 
   const [view, setView] = useState<ViewType>("floorplan");
