@@ -271,6 +271,7 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
   const [deleteConfirmLineId, setDeleteConfirmLineId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const [modifierDish, setModifierDish] = useState<Dish | null>(null);
 
   const activeMenu = menu.filter((dish) => !(dish as any).blocked);
@@ -374,6 +375,8 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
 
   const handleConfirm = async () => {
     if (cart.length === 0) { alert("ℹ️ Geen nieuwe items om te bestellen."); return; }
+    if (submitting) return;
+    setSubmitting(true);
     const newItems = cartToOrderItems(cart);
     if (openOrder) {
       const updatedItems: OrderItem[] = [...openOrder.items];
@@ -383,11 +386,11 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
         else updatedItems.push(newItem);
       });
       try { await updateOrderItems(openOrder.id, updatedItems); alert("✅ Extra items zijn toegevoegd!"); setCart([]); onClearCart(); onBack(); }
-      catch { alert("Er ging iets mis bij het updaten van de bestelling."); }
+      catch { alert("Er ging iets mis bij het updaten van de bestelling."); setSubmitting(false); }
     } else {
       const order: Omit<Order, "id"> = { table, items: newItems, status: "Open", timestamp: Date.now(), waiter: user?.username || "Onbekend" };
       try { await addOrder(order); alert("✅ Bestelling is geplaatst!"); setCart([]); onClearCart(); onBack(); }
-      catch { alert("Er ging iets mis bij het plaatsen van de bestelling."); }
+      catch { alert("Er ging iets mis bij het plaatsen van de bestelling."); setSubmitting(false); }
     }
   };
 
@@ -557,7 +560,16 @@ export default function Menu({ menu, selected, table, onBack, onAdd, onRemove, o
           <h3>Nieuw totaal: €{cartTotal.toFixed(2)}</h3>
 
           <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <button onClick={handleConfirm} disabled={cart.length === 0} style={{ backgroundColor: "#4CAF50", color: "white", border: "none", padding: "0.75rem", cursor: cart.length === 0 ? "not-allowed" : "pointer", borderRadius: "8px", fontWeight: "bold" }}>Bestelling plaatsen</button>
+            <button 
+  onClick={handleConfirm} 
+  disabled={cart.length === 0 || submitting} 
+  style={{ 
+    backgroundColor: "#4CAF50", color: "white", border: "none", 
+    padding: "0.75rem", borderRadius: "8px", fontWeight: "bold",
+    cursor: cart.length === 0 || submitting ? "not-allowed" : "pointer",
+    opacity: submitting ? 0.6 : 1 
+  }}
+>Bestelling plaatsen</button>
             {openOrder && (
               <button onClick={() => setShowPayment(true)} style={{ backgroundColor: "#2196F3", color: "white", border: "none", padding: "0.75rem", cursor: "pointer", borderRadius: "8px", fontWeight: "bold" }}>💳 Afrekenen</button>
             )}

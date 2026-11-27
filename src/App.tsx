@@ -34,6 +34,7 @@ export default function App() {
 
   const [view, setView] = useState<ViewType>("floorplan");
   const [selected, setSelected] = useState<Record<string, number>>({});
+
   const [table, setTable] = useState("1");
   const [splitTable, setSplitTable] = useState<string | null>(null);
 
