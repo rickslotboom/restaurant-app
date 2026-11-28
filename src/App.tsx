@@ -162,6 +162,8 @@ const handleMergeTable = async (fromTable: string, toTable: string) => {
       console.log("[Split] tip:", tip);
       console.log("[Split] paidTotal:", paidTotal);
 
+      await updateOrderItems(order.id, remainingItems);
+      
       await addOrder({
         table: order.table,
         status: "Betaald",
@@ -175,7 +177,6 @@ const handleMergeTable = async (fromTable: string, toTable: string) => {
         discountAmount,
       });
 
-      await updateOrderItems(order.id, remainingItems);
     }
     setSplitTable(null);
   } catch (err) {

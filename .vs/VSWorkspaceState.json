@@ -4,9 +4,10 @@
     "\\api",
     "\\src",
     "\\src\\components",
+    "\\src\\data",
     "\\src\\hooks",
     "\\src\\types"
   ],
-  "SelectedNode": "\\src\\components\\Menu.tsx",
+  "SelectedNode": "\\src\\components\\SplitPaymentModal.tsx",
   "PreviewInSolutionExplorer": false
 }
